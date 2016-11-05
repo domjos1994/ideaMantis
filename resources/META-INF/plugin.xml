@@ -1,0 +1,18 @@
+<idea-plugin version="2">
+  <id>de.domjos.ideaMantis</id>
+  <name>ideaMantis</name>
+  <version>0.1</version>
+  <vendor email="webmaster@domjos.de" url="http://domjos.de">Dominic Joas</vendor>
+
+  <description><![CDATA[Connect intelliJ Idea with your MantisBT Installation.]]></description>
+
+  <idea-version since-build="141.0"/>
+
+  <resource-bundle>de.domjos.ideaMantis.messages.lang</resource-bundle>
+
+  <extensions defaultExtensionNs="com.intellij">
+    <toolWindow id="ideaMantis -Issues" icon="/de/domjos/ideaMantis/images/icon.png" anchor="right" factoryClass="de.domjos.ideaMantis.ui.ideaMantisIssues"/>
+    <projectService serviceImplementation="de.domjos.ideaMantis.service.ConnectionSettings"/>
+    <projectConfigurable id="de.domjos.ideaMantis.ui.ideaMantisConfigurable" nonDefaultProject="true" groupId="tools" instance="de.domjos.ideaMantis.ui.ideaMantisConfigurable"/>
+  </extensions>
+</idea-plugin>
