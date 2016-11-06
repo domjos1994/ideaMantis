@@ -1,16 +1,26 @@
 package de.domjos.ideaMantis.model;
 
 public class IssueNote {
+    private int id;
     private MantisUser reporter;
     private String text;
     private String view_state;
     private String date;
 
     public IssueNote() {
+        this.setId(0);
         this.reporter = null;
         this.text = "";
         this.view_state = "";
         this.date = null;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public MantisUser getReporter() {
