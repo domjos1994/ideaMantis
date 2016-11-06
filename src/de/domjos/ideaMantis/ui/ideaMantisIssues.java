@@ -80,6 +80,10 @@ public class ideaMantisIssues implements ToolWindowFactory {
                 tblIssues.removeAll();
             } else {
                 tblIssues.removeAll();
+                for(int i = 0; i<=tblIssueModel.getRowCount()-1; i++) {
+                    tblIssueModel.removeRow(i);
+                }
+                tblIssues.setModel(tblIssueModel);
                 for(MantisIssue issue : new MantisSoapAPI(this.settings).getIssues(this.settings.getProjectID())) {
                     tblIssueModel.addRow(new Object[]{issue.getId(), issue.getSummary(), issue.getStatus()});
                 }

@@ -118,7 +118,11 @@ public class MantisSoapAPI {
             SoapObject obj = (SoapObject) structEnvelope.bodyIn;
             for(Object objIssue : (Vector)obj.getProperty(0)) {
                 SoapObject soapObjIssue = (SoapObject) objIssue;
-                issueList.add(this.getIssueFromSoap(soapObjIssue));
+                MantisIssue issue = new MantisIssue();
+                issue.setId(Integer.parseInt(soapObjIssue.getProperty("id").toString()));
+                issue.setStatus(Helper.getParam(soapObjIssue, "status", true, 1));
+                issue.setSummary(Helper.getParam(soapObjIssue, "summary", false, 0));
+                issueList.add(issue);
             }
         } catch (Exception ex) {
             return null;
@@ -197,12 +201,7 @@ public class MantisSoapAPI {
             structEnvelope.setOutputSoapObject(structRequest);
             structTransport.call("SOAPAction", structEnvelope);
             SoapObject obj = (SoapObject) structEnvelope.bodyIn;
-
-            if(obj.getProperty(0)==null) {
-                return false;
-            } else {
-                return Boolean.parseBoolean(obj.getProperty(0).toString());
-            }
+            return checkProperty(obj);
         } catch (Exception ex) {
             return false;
         }
@@ -238,7 +237,7 @@ public class MantisSoapAPI {
             structEnvelope.setOutputSoapObject(structRequest);
             structTransport.call("SOAPAction", structEnvelope);
             SoapObject obj = (SoapObject) structEnvelope.bodyIn;
-            return Boolean.parseBoolean(obj.getProperty(0).toString());
+            return checkProperty(obj);
         } catch (Exception ex) {
             return false;
         }
@@ -335,7 +334,7 @@ public class MantisSoapAPI {
             structEnvelope.setOutputSoapObject(structRequest);
             structTransport.call("SOAPAction", structEnvelope);
             SoapObject obj = (SoapObject) structEnvelope.bodyIn;
-            return Boolean.parseBoolean(obj.getProperty(0).toString());
+            return checkProperty(obj);
         } catch (Exception ex) {
             return false;
         }
@@ -531,5 +530,19 @@ public class MantisSoapAPI {
             Helper.printNotification("Problem", ex.toString(), NotificationType.ERROR);
         }
         return issue;
+    }
+
+    private boolean checkProperty(SoapObject result) {
+        if(result.getProperty(0)!=null) {
+            if(result.getProperty(0) instanceof Integer) {
+                return true;
+            } else if(result.getProperty(0) instanceof Boolean) {
+                return Boolean.parseBoolean(result.getProperty(0).toString());
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
     }
 }
