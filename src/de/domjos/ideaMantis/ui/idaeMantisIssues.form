@@ -407,13 +407,13 @@
                                 </properties>
                                 <border type="none"/>
                                 <children>
-                                  <component id="9be9e" class="javax.swing.JList" binding="lvIssueNotes">
+                                  <component id="b3609" class="javax.swing.JTable" binding="tblIssueNotes">
                                     <constraints>
                                       <splitpane position="left"/>
                                     </constraints>
                                     <properties/>
                                   </component>
-                                  <grid id="4e219" layout-manager="GridLayoutManager" row-count="4" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+                                  <grid id="4e219" layout-manager="GridLayoutManager" row-count="5" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
                                     <margin top="0" left="0" bottom="0" right="0"/>
                                     <constraints>
                                       <splitpane position="right"/>
@@ -468,7 +468,7 @@
                                       <grid id="9b6e3" layout-manager="GridLayoutManager" row-count="3" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
                                         <margin top="0" left="0" bottom="0" right="0"/>
                                         <constraints>
-                                          <grid row="2" column="0" row-span="1" col-span="2" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                                          <grid row="3" column="0" row-span="1" col-span="2" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
                                         </constraints>
                                         <properties/>
                                         <border type="none" title="Reporter"/>
@@ -545,7 +545,7 @@
                                       </component>
                                       <component id="b3bc3" class="javax.swing.JLabel">
                                         <constraints>
-                                          <grid row="3" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                                          <grid row="4" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                                         </constraints>
                                         <properties>
                                           <text value="Text"/>
@@ -553,9 +553,23 @@
                                       </component>
                                       <component id="a3e0e" class="javax.swing.JTextArea" binding="txtIssueNoteText">
                                         <constraints>
-                                          <grid row="3" column="1" row-span="1" col-span="1" vsize-policy="6" hsize-policy="6" anchor="0" fill="3" indent="0" use-parent-layout="false">
+                                          <grid row="4" column="1" row-span="1" col-span="1" vsize-policy="6" hsize-policy="6" anchor="0" fill="3" indent="0" use-parent-layout="false">
                                             <preferred-size width="150" height="50"/>
                                           </grid>
+                                        </constraints>
+                                        <properties/>
+                                      </component>
+                                      <component id="867b6" class="javax.swing.JLabel">
+                                        <constraints>
+                                          <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                                        </constraints>
+                                        <properties>
+                                          <text value="ViewState"/>
+                                        </properties>
+                                      </component>
+                                      <component id="826bf" class="javax.swing.JComboBox" binding="cmbIssueNoteViewState">
+                                        <constraints>
+                                          <grid row="2" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
                                         </constraints>
                                         <properties/>
                                       </component>
@@ -580,12 +594,12 @@
                                   </grid>
                                 </constraints>
                                 <properties>
-                                  <dividerLocation value="200"/>
+                                  <dividerLocation value="97"/>
                                   <orientation value="0"/>
                                 </properties>
                                 <border type="none"/>
                                 <children>
-                                  <component id="a9a53" class="javax.swing.JList" binding="lvIssueAttachments">
+                                  <component id="78618" class="javax.swing.JTable" binding="tblIssueAttachments">
                                     <constraints>
                                       <splitpane position="left"/>
                                     </constraints>
@@ -657,7 +671,9 @@
                                             <preferred-size width="150" height="-1"/>
                                           </grid>
                                         </constraints>
-                                        <properties/>
+                                        <properties>
+                                          <enabled value="false"/>
+                                        </properties>
                                       </component>
                                       <component id="83f5c" class="javax.swing.JLabel">
                                         <constraints>
@@ -673,7 +689,9 @@
                                             <preferred-size width="150" height="-1"/>
                                           </grid>
                                         </constraints>
-                                        <properties/>
+                                        <properties>
+                                          <enabled value="false"/>
+                                        </properties>
                                       </component>
                                     </children>
                                   </grid>
@@ -687,7 +705,7 @@
                                   <text value="..."/>
                                 </properties>
                               </component>
-                              <vspacer id="d018d">
+                              <vspacer id="88e3e">
                                 <constraints>
                                   <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
                                 </constraints>
