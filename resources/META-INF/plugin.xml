@@ -11,8 +11,36 @@
   <resource-bundle>de.domjos.ideaMantis.messages.lang</resource-bundle>
 
   <extensions defaultExtensionNs="com.intellij">
-    <toolWindow id="ideaMantis -Issues" icon="/de/domjos/ideaMantis/images/icon.png" anchor="right" factoryClass="de.domjos.ideaMantis.ui.ideaMantisIssues"/>
-    <projectService serviceImplementation="de.domjos.ideaMantis.service.ConnectionSettings"/>
-    <projectConfigurable id="de.domjos.ideaMantis.ui.ideaMantisConfigurable" nonDefaultProject="true" groupId="tools" instance="de.domjos.ideaMantis.ui.ideaMantisConfigurable"/>
+    <toolWindow
+            id="ideaMantis -Issues"
+            icon="/de/domjos/ideaMantis/images/icon.png"
+            anchor="right"
+            factoryClass="de.domjos.ideaMantis.ui.ideaMantisIssues"/>
+
+    <projectService
+            serviceImplementation="de.domjos.ideaMantis.service.ConnectionSettings"/>
+
+    <projectConfigurable
+            id="de.domjos.ideaMantis.ui.ideaMantisConfigurable"
+            nonDefaultProject="true"
+            groupId="tools"
+            instance="de.domjos.ideaMantis.ui.ideaMantisConfigurable"/>
+
   </extensions>
+
+  <actions>
+
+    <action
+            id="MarkedCodeAsBug"
+            icon="/de/domjos/ideaMantis/images/icon.png"
+            class="de.domjos.ideaMantis.editor.MarkedTextAsBug"
+            text="Mark code as bug!"
+            description="Marked selected code as Bug and send it to MantisBT">
+
+      <add-to-group
+              group-id="EditorPopupMenu"
+              anchor="last"/>
+
+    </action>
+  </actions>
 </idea-plugin>
