@@ -1,17 +1,21 @@
 package de.domjos.ideaMantis.ui;
 
+import com.intellij.ide.util.TreeFileChooser;
+import com.intellij.ide.util.TreeFileChooserDialog;
+import com.intellij.ide.util.TreeFileChooserFactory;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.fileChooser.FileChooser;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
+import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.vcs.changes.ui.SelectFilesDialog;
+import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.openapi.vfs.VirtualFileSystem;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
+import com.intellij.psi.PsiFile;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
-import com.intellij.util.ui.MouseEventHandler;
+import com.intellij.util.Consumer;
 import de.domjos.ideaMantis.model.IssueAttachment;
 import de.domjos.ideaMantis.model.IssueNote;
 import de.domjos.ideaMantis.model.MantisIssue;
@@ -20,14 +24,13 @@ import de.domjos.ideaMantis.service.ConnectionSettings;
 import de.domjos.ideaMantis.soap.MantisSoapAPI;
 import de.domjos.ideaMantis.utils.Helper;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseMotionListener;
+import java.awt.*;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 
 public class ideaMantisIssues implements ToolWindowFactory {
@@ -49,19 +52,19 @@ public class ideaMantisIssues implements ToolWindowFactory {
     private JTextField txtIssueSummary, txtIssueDate, txtIssueReporterName, txtIssueReporterEMail;
 
     private JComboBox<String> cmbIssueReporterName, cmbIssueNoteReporterUser;
-    private JComboBox<String> cmbIssueTargetVersion, cmbIssueFixedInVersion;
+    private JComboBox<String> cmbIssueTargetVersion, cmbIssueFixedInVersion, cmbIssueNoteViewState;
     private JComboBox<String> cmbIssuePriority, cmbIssueSeverity, cmbIssueStatus, cmbIssueCategory;
 
-    private JTextArea txtIssueDescription, txtIssueStepsToReproduce, txtIssueAdditionalInformation, txtIssueNoteText;
+    public JTextArea txtIssueDescription, txtIssueStepsToReproduce, txtIssueAdditionalInformation, txtIssueNoteText;
 
     private JTextField txtIssueNoteReporterName, txtIssueNoteReporterEMail, txtIssueNoteDate, txtIssueAttachmentFileName;
     private JTextField txtIssueAttachmentSize;
-    private JTable tblIssues;
-    private JTable tblIssueAttachments;
-    private JTable tblIssueNotes;
-    private JComboBox<String> cmbIssueNoteViewState;
 
+    private JTable tblIssues, tblIssueAttachments, tblIssueNotes;
+
+    private JProgressBar pbMain;
     private ToolWindow toolWindow;
+
 
     public ideaMantisIssues() {
         tblIssues.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -73,25 +76,41 @@ public class ideaMantisIssues implements ToolWindowFactory {
         controlIssues(false, false);
         cmdIssueNew.setEnabled(false);
 
+
         cmdReload.addActionListener(e -> {
-            settings = ConnectionSettings.getInstance(project);
-            if(!settings.validateSettings()) {
-                Helper.printNotification("Settings incorrect!", "Your Settings are <b>incorrect</b>!<br/>Please change them in the ConnectionSettings!",NotificationType.ERROR);
-                tblIssues.removeAll();
-            } else {
-                tblIssues.removeAll();
-                for(int i = 0; i<=tblIssueModel.getRowCount()-1; i++) {
-                    tblIssueModel.removeRow(i);
+            try {
+                pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                if(!settings.validateSettings()) {
+                    Helper.printNotification("Settings incorrect!", "Your Settings are <b>incorrect</b>!<br/>Please change them in the ConnectionSettings!",NotificationType.ERROR);
+                    tblIssues.removeAll();
+                } else {
+                    tblIssues.removeAll();
+                    for(int i = 0; i<=tblIssueModel.getRowCount()-1; i++) {
+                        tblIssueModel.removeRow(i);
+                    }
+                    tblIssues.setModel(tblIssueModel);
+                    List<MantisIssue> mantisIssues = new MantisSoapAPI(this.settings).getIssues(this.settings.getProjectID());
+                    pbMain.setMinimum(0);
+                    pbMain.setValue(pbMain.getMinimum());
+                    pbMain.setMaximum(mantisIssues.size());
+                    for(MantisIssue issue : mantisIssues) {
+                        tblIssueModel.addRow(new Object[]{issue.getId(), issue.getSummary(), issue.getStatus()});
+                        pbMain.setValue((pbMain.getValue()+1));
+                        pbMain.updateUI();
+                    }
+                    tblIssues.setModel(tblIssueModel);
+                    this.loadComboBoxes();
+                    cmdIssueNew.setEnabled(true);
                 }
-                tblIssues.setModel(tblIssueModel);
-                for(MantisIssue issue : new MantisSoapAPI(this.settings).getIssues(this.settings.getProjectID())) {
-                    tblIssueModel.addRow(new Object[]{issue.getId(), issue.getSummary(), issue.getStatus()});
-                }
-                tblIssues.setModel(tblIssueModel);
-                this.loadComboBoxes();
-                cmdIssueNew.setEnabled(true);
+                resetIssues();
+                tblIssues.getColumnModel().getColumn(0).setWidth(40);
+                tblIssues.getColumnModel().getColumn(0).setMaxWidth(100);
+            } catch (Exception ex) {
+                Helper.printNotification("Error", ex.toString(), NotificationType.ERROR);
+            } finally {
+                pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+                pbMain.setValue(pbMain.getMinimum());
             }
-            resetIssues();
         });
 
         tblIssues.getSelectionModel().addListSelectionListener(e -> {
@@ -250,6 +269,7 @@ public class ideaMantisIssues implements ToolWindowFactory {
                 for(MantisUser user : new MantisSoapAPI(this.settings).getUsers(this.settings.getProjectID())) {
                     if(user.getUserName().equals(cmbIssueNoteReporterUser.getSelectedItem().toString())) {
                         note.setReporter(user);
+                        break;
                     }
                 }
             }
@@ -356,11 +376,12 @@ public class ideaMantisIssues implements ToolWindowFactory {
         cmdIssueAttachmentAbort.addActionListener(e -> controlAttachments(false, false));
 
         cmdIssueAttachmentSearch.addActionListener(e -> {
-            VirtualFile virtualFile = FileChooser.chooseFile(new FileChooserDescriptor(true, false, false, false, false, true), project, null);
-            if(virtualFile!=null) {
-                txtIssueAttachmentFileName.setText(virtualFile.getPath());
-                txtIssueAttachmentSize.setText(String.valueOf(virtualFile.getLength()));
-            }
+            FileChooser.chooseFile(new FileChooserDescriptor(true, false, false, false, false, false), project, null, (virtualFile) -> {
+                if(virtualFile!=null) {
+                    txtIssueAttachmentFileName.setText(virtualFile.getPath());
+                    txtIssueAttachmentSize.setText(String.valueOf(virtualFile.getLength()));
+                }
+            });
         });
 
         cmbIssueReporterName.addItemListener(e -> {
@@ -391,6 +412,8 @@ public class ideaMantisIssues implements ToolWindowFactory {
         ContentFactory contentFactory = ContentFactory.SERVICE.getInstance();
         Content content = contentFactory.createContent(this.pnlMain, "", false);
         this.toolWindow.getContentManager().addContent(content);
+        settings = ConnectionSettings.getInstance(project);
+        cmdReload.doClick();
     }
 
     private void controlIssues(boolean selected, boolean editMode) {
