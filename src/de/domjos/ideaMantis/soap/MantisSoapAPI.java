@@ -183,25 +183,34 @@ public class MantisSoapAPI {
             issueObject.addProperty("steps_to_reproduce", issue.getSteps_to_reproduce());
             issueObject.addProperty("additional_information", issue.getAdditional_information());
 
-            SoapObject[] tmp = buildAttachmentRequests(issue.getIssueAttachmentList());
-            if(tmp.length!=0) {
-                if(tmp[0]!=null) {
-                    issueObject.addProperty("attachments", tmp);
-                }
-            }
-
-            tmp = buildNoteRequests(issue.getIssueNoteList());
-            if(tmp.length!=0) {
-                if(tmp[0]!=null) {
-                    issueObject.addProperty("notes", tmp);
-                }
-            }
+            /* ************************************************************************** */
+            /* * Can't add attachments and notes direct because of serialisation error  * */
+            /* ************************************************************************** */
 
             structRequest.addProperty("issue", issueObject);
             structEnvelope.setOutputSoapObject(structRequest);
+            System.out.println(structEnvelope.bodyOut);
             structTransport.call("SOAPAction", structEnvelope);
             SoapObject obj = (SoapObject) structEnvelope.bodyIn;
-            return checkProperty(obj);
+            int id = checkIntProperty(obj);
+
+            if(id!=0) {
+                for(IssueAttachment attachment : issue.getIssueAttachmentList()) {
+                    boolean state = addAttachment(id, attachment);
+                    if(!state) {
+                        Helper.printNotification("Problem", "Can't add Attachment!", NotificationType.ERROR);
+                    }
+                }
+                for(IssueNote note : issue.getIssueNoteList()) {
+                    boolean state = addNote(id, note);
+                    if(!state) {
+                        Helper.printNotification("Problem", "Can't add Note!", NotificationType.ERROR);
+                    }
+                }
+                return true;
+            } else {
+                return false;
+            }
         } catch (Exception ex) {
             return false;
         }
@@ -533,16 +542,22 @@ public class MantisSoapAPI {
     }
 
     private boolean checkProperty(SoapObject result) {
-        if(result.getProperty(0)!=null) {
-            if(result.getProperty(0) instanceof Integer) {
+        try {
+            try {
+                Integer.parseInt(result.getProperty(0).toString());
                 return true;
-            } else if(result.getProperty(0) instanceof Boolean) {
-                return Boolean.parseBoolean(result.getProperty(0).toString());
-            } else {
-                return false;
-            }
-        } else {
+            } catch (Exception ignored) {}
+            return Boolean.parseBoolean(result.getProperty(0).toString());
+        } catch (Exception ex) {
             return false;
+        }
+    }
+
+    private int checkIntProperty(SoapObject result) {
+        try {
+            return Integer.parseInt(result.getProperty(0).toString());
+        } catch (Exception ex) {
+            return 0;
         }
     }
 }
