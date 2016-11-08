@@ -6,7 +6,10 @@ import com.intellij.notification.Notifications;
 import org.ksoap2.serialization.SoapObject;
 
 import javax.swing.*;
+import javax.swing.event.CellEditorListener;
+import javax.swing.table.TableCellEditor;
 import java.awt.*;
+import java.util.EventObject;
 
 public abstract class Helper {
 
@@ -69,5 +72,14 @@ public abstract class Helper {
                 resetControlsInAPanel((JPanel)cmp);
             }
         }
+    }
+
+    public static JTable disableEditingTable(JTable table) {
+        for(int row = 0; row<=table.getRowCount()-1; row++) {
+            for(int column = 0; column<=table.getRowCount()-1; column++) {
+                table.setCellEditor(null);
+            }
+        }
+        return table;
     }
 }
