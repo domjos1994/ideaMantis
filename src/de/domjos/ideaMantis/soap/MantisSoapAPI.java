@@ -139,11 +139,7 @@ public class MantisSoapAPI {
             structEnvelope.setOutputSoapObject(structRequest);
             structTransport.call("SOAPAction", structEnvelope);
             SoapObject obj = (SoapObject) structEnvelope.bodyIn;
-            if(obj.getProperty(0)==null) {
-                return false;
-            } else {
-                return Boolean.parseBoolean(obj.getProperty(0).toString());
-            }
+            return checkProperty(obj);
         } catch (Exception ex) {
             return false;
         }
@@ -192,7 +188,17 @@ public class MantisSoapAPI {
             System.out.println(structEnvelope.bodyOut);
             structTransport.call("SOAPAction", structEnvelope);
             SoapObject obj = (SoapObject) structEnvelope.bodyIn;
-            int id = checkIntProperty(obj);
+
+            int id;
+            if(issue.getId()!=0) {
+                if(!checkProperty(obj)) {
+                    return false;
+                } else {
+                    id = issue.getId();
+                }
+            } else {
+                id = checkIntProperty(obj);
+            }
 
             if(id!=0) {
                 for(IssueAttachment attachment : issue.getIssueAttachmentList()) {
@@ -225,7 +231,7 @@ public class MantisSoapAPI {
             structEnvelope.setOutputSoapObject(structRequest);
             structTransport.call("SOAPAction", structEnvelope);
             SoapObject obj = (SoapObject) structEnvelope.bodyIn;
-            return Boolean.parseBoolean(obj.getProperty(0).toString());
+            return checkProperty(obj);
         } catch (Exception ex) {
             return false;
         }
@@ -260,6 +266,7 @@ public class MantisSoapAPI {
         if(!note.getView_state().equals("")) {
             SoapObject objectRef = new SoapObject(NAMESPACE, "ObjectRef");
             ObjectRef ref = getEnum("view_states", note.getView_state());
+            assert ref != null;
             objectRef.addProperty("id", ref.getId());
             objectRef.addProperty("name", ref.getName());
             issueNoteData.addProperty("view_state", objectRef);
@@ -267,33 +274,10 @@ public class MantisSoapAPI {
         return issueNoteData;
     }
 
-    private SoapObject[] buildAttachmentRequests(List<IssueAttachment> attachments) {
-        SoapObject[] objects = new SoapObject[attachments.size()];
-        try {
-            for(int i = 0; i<=attachments.size()-1; i++) {
-                objects[i] = new SoapObject(NAMESPACE, "AttachmentData");
-                objects[i].addProperty("id", attachments.get(i).getId());
-                objects[i].addProperty("name", new File(attachments.get(i).getFilename()).getName());
-                objects[i].addProperty("file_type", new File(attachments.get(i).getFilename()).getName());
-                objects[i].addProperty("content", Files.readAllBytes(Paths.get(new File(attachments.get(i).getFilename()).toURI())));
-            }
-        } catch (Exception ignored) {}
-        return objects;
-    }
-
-    private SoapObject[] buildNoteRequests(List<IssueNote> notes) {
-        SoapObject[] objects = new SoapObject[notes.size()];
-        try {
-            for(int i = 0; i<=notes.size()-1; i++) {
-                objects[i] = buildNoteRequest(notes.get(i));
-            }
-        } catch (Exception ignored) {}
-        return objects;
-    }
-
     private SoapObject buildObjectRef(String strEnum, String value) {
         SoapObject objectRef = new SoapObject(NAMESPACE, "ObjectRef");
         ObjectRef ref = getEnum(strEnum, value);
+        assert ref != null;
         objectRef.addProperty("id", ref.getId());
         objectRef.addProperty("name", ref.getName());
         return objectRef;
@@ -320,7 +304,7 @@ public class MantisSoapAPI {
             structEnvelope.setOutputSoapObject(structRequest);
             structTransport.call("SOAPAction", structEnvelope);
             SoapObject obj = (SoapObject) structEnvelope.bodyIn;
-            return Boolean.parseBoolean(obj.getProperty(0).toString());
+            return checkProperty(obj);
         } catch (Exception ex) {
             return false;
         }
@@ -386,7 +370,7 @@ public class MantisSoapAPI {
         return enumList;
     }
 
-    public ObjectRef getEnum(String type, String value) {
+    private ObjectRef getEnum(String type, String value) {
         ObjectRef ref = new ObjectRef("", "");
         SoapObject structRequest = new SoapObject(this.settings.getHostName() + "/api/soap/mantisconnect.php", "mc_enum_" + type);
         try {
@@ -434,6 +418,7 @@ public class MantisSoapAPI {
             structRequest.addProperty("username", this.settings.getUserName());
             structRequest.addProperty("password", this.settings.getPassword());
             structRequest.addProperty("project_id", pid);
+            assert accessLevels != null;
             for(int level : accessLevels) {
                 structRequest.addProperty("access", level);
                 structEnvelope.setOutputSoapObject(structRequest);
@@ -544,9 +529,13 @@ public class MantisSoapAPI {
     private boolean checkProperty(SoapObject result) {
         try {
             try {
-                Integer.parseInt(result.getProperty(0).toString());
-                return true;
+                if(checkIntProperty(result)!=0) {
+                    return true;
+                }
             } catch (Exception ignored) {}
+            if(result.getProperty(0)==null) {
+                return true;
+            }
             return Boolean.parseBoolean(result.getProperty(0).toString());
         } catch (Exception ex) {
             return false;
