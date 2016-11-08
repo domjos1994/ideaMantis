@@ -33,9 +33,21 @@
     <action
             id="MarkedCodeAsBug"
             icon="/de/domjos/ideaMantis/images/icon.png"
-            class="de.domjos.ideaMantis.editor.MarkedTextAsBug"
+            class="de.domjos.ideaMantis.editor.MarkedTextAsBugEditorAction"
             text="Mark code as bug!"
             description="Marked selected code as Bug and send it to MantisBT">
+      <add-to-group
+              group-id="EditorPopupMenu"
+              anchor="last"/>
+
+    </action>
+
+    <action
+            id="WholeFileAsBug"
+            icon="/de/domjos/ideaMantis/images/icon.png"
+            class="de.domjos.ideaMantis.editor.WholeFileAsBugEditorAction"
+            text="Add File to new bug!"
+            description="Add File as Attachment to new Bug and send it to MantisBT">
 
       <add-to-group
               group-id="EditorPopupMenu"
