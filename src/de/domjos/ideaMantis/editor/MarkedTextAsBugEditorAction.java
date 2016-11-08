@@ -1,6 +1,5 @@
 package de.domjos.ideaMantis.editor;
 
-import com.intellij.notification.NotificationType;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
@@ -10,20 +9,14 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.SelectionModel;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
-import com.intellij.openapi.wm.ToolWindow;
-import com.intellij.openapi.wm.ToolWindowFactory;
-import com.intellij.util.PathUtilRt;
-import de.domjos.ideaMantis.ui.ideaMantisIssues;
-import de.domjos.ideaMantis.utils.Helper;
-import org.jetbrains.annotations.NotNull;
 
-public class MarkedTextAsBug extends AnAction {
+import java.io.File;
+
+public class MarkedTextAsBugEditorAction extends AnAction {
     @Override
     public void update(final AnActionEvent e) {
-        //Get required data keys
         final Project project = e.getData(CommonDataKeys.PROJECT);
         final Editor editor = e.getData(CommonDataKeys.EDITOR);
-        //Set visibility only in case of existing project and editor and if some text in the editor is selected
         e.getPresentation().setVisible((project != null && editor != null && editor.getSelectionModel().hasSelection()));
     }
 
@@ -41,9 +34,21 @@ public class MarkedTextAsBug extends AnAction {
 
         //Making the replacement
         WriteCommandAction.runWriteCommandAction(project,()->{
-            ideaMantisIssues ideaMantisIssues = new ideaMantisIssues();
-            ideaMantisIssues.createToolWindowContent();
-            ideaMantisIssues.txtIssueDescription.setText(document.getText(new TextRange(start, end)));
+            String pathToDocument = "";
+            String pathToDocumentArray[] = document.toString().split("file://");
+            if(pathToDocumentArray.length==2) {
+                pathToDocument = pathToDocumentArray[1].replace("]", "").trim();
+            } else {
+                pathToDocument = document.toString();
+            }
+
+            MarkedTextAsBugDialog markedTextAsBugDialog = null;
+            if(new File(pathToDocument).exists()) {
+                markedTextAsBugDialog = new MarkedTextAsBugDialog(project, document.getText(new TextRange(start, end)), pathToDocument);
+            } else {
+                markedTextAsBugDialog = new MarkedTextAsBugDialog(project, document.getText(new TextRange(start, end)));
+            }
+            markedTextAsBugDialog.show();
         });
         selectionModel.removeSelection();
     }
