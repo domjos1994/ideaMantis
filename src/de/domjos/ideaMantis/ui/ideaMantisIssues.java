@@ -1,21 +1,13 @@
 package de.domjos.ideaMantis.ui;
 
-import com.intellij.ide.util.TreeFileChooser;
-import com.intellij.ide.util.TreeFileChooserDialog;
-import com.intellij.ide.util.TreeFileChooserFactory;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.fileChooser.FileChooser;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
-import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.ui.TextFieldWithBrowseButton;
-import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
-import com.intellij.psi.PsiFile;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
-import com.intellij.util.Consumer;
 import de.domjos.ideaMantis.model.IssueAttachment;
 import de.domjos.ideaMantis.model.IssueNote;
 import de.domjos.ideaMantis.model.MantisIssue;
@@ -24,13 +16,22 @@ import de.domjos.ideaMantis.service.ConnectionSettings;
 import de.domjos.ideaMantis.soap.MantisSoapAPI;
 import de.domjos.ideaMantis.utils.Helper;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.datatransfer.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.net.URI;
+import java.net.URL;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
+import java.util.ArrayList;
 import java.util.Date;
-import java.util.LinkedList;
 import java.util.List;
 
 public class ideaMantisIssues implements ToolWindowFactory {
@@ -38,7 +39,7 @@ public class ideaMantisIssues implements ToolWindowFactory {
     private ConnectionSettings settings;
     private MantisIssue currentIssue;
 
-    private JPanel pnlContent, pnlIssueBasics, pnlIssueDescriptions, pnlIssueNotes, pnlIssueAttachments, pnlMain;
+    private JPanel pnlIssueDescriptions, pnlIssueBasics, pnlIssueAttachments, pnlIssueNotes, pnlMain, pnlContent;
 
     private JButton cmdIssueNew, cmdIssueEdit, cmdIssueDelete, cmdIssueSave,cmdIssueAbort;
     private JButton cmdIssueNoteNew, cmdIssueNoteEdit, cmdIssueNoteDelete, cmdIssueNoteSave, cmdIssueNoteAbort;
@@ -55,7 +56,7 @@ public class ideaMantisIssues implements ToolWindowFactory {
     private JComboBox<String> cmbIssueTargetVersion, cmbIssueFixedInVersion, cmbIssueNoteViewState;
     private JComboBox<String> cmbIssuePriority, cmbIssueSeverity, cmbIssueStatus, cmbIssueCategory;
 
-    public JTextArea txtIssueDescription, txtIssueStepsToReproduce, txtIssueAdditionalInformation, txtIssueNoteText;
+    private JTextArea txtIssueDescription, txtIssueStepsToReproduce, txtIssueAdditionalInformation, txtIssueNoteText;
 
     private JTextField txtIssueNoteReporterName, txtIssueNoteReporterEMail, txtIssueNoteDate, txtIssueAttachmentFileName;
     private JTextField txtIssueAttachmentSize;
@@ -63,7 +64,7 @@ public class ideaMantisIssues implements ToolWindowFactory {
     private JTable tblIssues, tblIssueAttachments, tblIssueNotes;
 
     private JProgressBar pbMain;
-    private ToolWindow toolWindow;
+    private JLabel lblValidation;
 
 
     public ideaMantisIssues() {
@@ -75,7 +76,46 @@ public class ideaMantisIssues implements ToolWindowFactory {
         DefaultTableModel tblIssueNoteModel = this.addColumnsToIssueNoteTable();
         controlIssues(false, false);
         cmdIssueNew.setEnabled(false);
+        tblIssueAttachments.setDragEnabled(true);
+        tblIssueAttachments = Helper.disableEditingTable(tblIssueAttachments);
 
+        tblIssueAttachments.addMouseListener(new MouseListener() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                try {
+                    if (e.getClickCount() == 2 && !e.isConsumed()) {
+                        if (!tblIssueAttachments.getSelectionModel().isSelectionEmpty()) {
+                            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                            MantisIssue issue = new MantisSoapAPI(settings).getIssue(Integer.parseInt(tblIssues.getValueAt(tblIssues.getSelectedRow(), 0).toString()));
+                            for (IssueAttachment attachment : issue.getIssueAttachmentList()) {
+                                if (attachment.getId() == Integer.parseInt(tblIssueAttachments.getValueAt(tblIssueAttachments.getSelectedRow(), 0).toString())) {
+                                    if (Desktop.isDesktopSupported()) {
+                                        Desktop.getDesktop().browse(new URI(attachment.getDownload_url()));
+                                    } else {
+                                        StringSelection selection = new StringSelection(attachment.getDownload_url());
+                                        clipboard.setContents(selection, selection);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } catch (Exception ex) {
+                    Helper.printNotification("Can't copy file!", ex.toString(), NotificationType.ERROR);
+                }
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {}
+
+            @Override
+            public void mouseReleased(MouseEvent e) {}
+
+            @Override
+            public void mouseEntered(MouseEvent e) {}
+
+            @Override
+            public void mouseExited(MouseEvent e) {}
+        });
 
         cmdReload.addActionListener(e -> {
             try {
@@ -83,9 +123,12 @@ public class ideaMantisIssues implements ToolWindowFactory {
                 if(!settings.validateSettings()) {
                     Helper.printNotification("Settings incorrect!", "Your Settings are <b>incorrect</b>!<br/>Please change them in the ConnectionSettings!",NotificationType.ERROR);
                     tblIssues.removeAll();
+                    for (int i = tblIssueModel.getRowCount() - 1; i >= 0; i--) {
+                        tblIssueModel.removeRow(i);
+                    }
                 } else {
                     tblIssues.removeAll();
-                    for(int i = 0; i<=tblIssueModel.getRowCount()-1; i++) {
+                    for (int i = tblIssueModel.getRowCount() - 1; i >= 0; i--) {
                         tblIssueModel.removeRow(i);
                     }
                     tblIssues.setModel(tblIssueModel);
@@ -113,62 +156,84 @@ public class ideaMantisIssues implements ToolWindowFactory {
             }
         });
 
-        tblIssues.getSelectionModel().addListSelectionListener(e -> {
-            if(tblIssues.getSelectedRow()!=-1) {
-                int id = Integer.parseInt(tblIssueModel.getValueAt(tblIssues.getSelectedRow(), 0).toString());
-                MantisSoapAPI api = new MantisSoapAPI(this.settings);
-                MantisIssue issue = api.getIssue(id);
-                this.currentIssue = issue;
-                cmdIssueEdit.setEnabled(true);
-                cmdIssueDelete.setEnabled(true);
-                txtIssueSummary.setText(issue.getSummary());
-                txtIssueDate.setText(issue.getDate_submitted());
-                txtIssueAdditionalInformation.setText(issue.getAdditional_information());
-                txtIssueDescription.setText(issue.getDescription());
-                txtIssueStepsToReproduce.setText(issue.getSteps_to_reproduce());
-                if(issue.getReporter()!=null) {
-                    cmbIssueReporterName.setSelectedItem(issue.getReporter().getUserName());
-                    txtIssueReporterName.setText(issue.getReporter().getName());
-                    txtIssueReporterEMail.setText(issue.getReporter().getEmail());
-                }
-                cmbIssueCategory.setSelectedItem(issue.getCategory());
-                cmbIssueTargetVersion.setSelectedItem(issue.getTarget_version());
-                cmbIssueFixedInVersion.setSelectedItem(issue.getFixed_in_version());
-                cmbIssuePriority.setSelectedItem(issue.getPriority());
-                cmbIssueSeverity.setSelectedItem(issue.getSeverity());
-                cmbIssueStatus.setSelectedItem(issue.getStatus());
+        tblIssues.addMouseListener(new MouseListener() {
+            @Override
+            public void mouseClicked(MouseEvent e) {}
 
-                tblIssueNotes.removeAll();
-                for(int i = 0; i<=tblIssueNoteModel.getRowCount()-1; i++) {
-                    tblIssueNoteModel.removeRow(i);
-                }
-                for(IssueNote note : issue.getIssueNoteList()) {
-                    tblIssueNoteModel.addRow(new Object[]{note.getId(), note.getText(), note.getView_state()});
-                }
-                tblIssueNotes.setModel(tblIssueNoteModel);
+            @Override
+            public void mousePressed(MouseEvent e) {}
 
-                tblIssueAttachments.removeAll();
-                for(int i = 0; i<=tblIssueAttachmentModel.getRowCount()-1; i++) {
-                    tblIssueAttachmentModel.removeRow(i);
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                try {
+                    if(tblIssues.getSelectedRow()!=-1) {
+                        pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                        int id = Integer.parseInt(tblIssueModel.getValueAt(tblIssues.getSelectedRow(), 0).toString());
+                        MantisSoapAPI api = new MantisSoapAPI(settings);
+                        MantisIssue issue = api.getIssue(id);
+                        currentIssue = issue;
+                        cmdIssueEdit.setEnabled(true);
+                        cmdIssueDelete.setEnabled(true);
+                        txtIssueSummary.setText(issue.getSummary());
+                        txtIssueDate.setText(issue.getDate_submitted());
+                        txtIssueAdditionalInformation.setText(issue.getAdditional_information());
+                        txtIssueDescription.setText(issue.getDescription());
+                        txtIssueStepsToReproduce.setText(issue.getSteps_to_reproduce());
+                        if(issue.getReporter()!=null) {
+                            cmbIssueReporterName.setSelectedItem(issue.getReporter().getUserName());
+                            txtIssueReporterName.setText(issue.getReporter().getName());
+                            txtIssueReporterEMail.setText(issue.getReporter().getEmail());
+                        }
+                        cmbIssueCategory.setSelectedItem(issue.getCategory());
+                        cmbIssueTargetVersion.setSelectedItem(issue.getTarget_version());
+                        cmbIssueFixedInVersion.setSelectedItem(issue.getFixed_in_version());
+                        cmbIssuePriority.setSelectedItem(issue.getPriority());
+                        cmbIssueSeverity.setSelectedItem(issue.getSeverity());
+                        cmbIssueStatus.setSelectedItem(issue.getStatus());
+
+                        tblIssueNotes.removeAll();
+                        for (int i = tblIssueNoteModel.getRowCount() - 1; i >= 0; i--) {
+                            tblIssueNoteModel.removeRow(i);
+                        }
+                        for(IssueNote note : issue.getIssueNoteList()) {
+                            tblIssueNoteModel.addRow(new Object[]{note.getId(), note.getText(), note.getView_state()});
+                        }
+                        tblIssueNotes.setModel(tblIssueNoteModel);
+
+                        tblIssueAttachments.removeAll();
+                        for (int i = tblIssueAttachmentModel.getRowCount() - 1; i >= 0; i--) {
+                            tblIssueAttachmentModel.removeRow(i);
+                        }
+                        for(IssueAttachment attachment : issue.getIssueAttachmentList()) {
+                            tblIssueAttachmentModel.addRow(new Object[]{attachment.getId(), attachment.getFilename()});
+                        }
+                        tblIssueAttachments.setModel(tblIssueAttachmentModel);
+                        controlIssues(true, false);
+                        controlNotes(false, false);
+                        controlAttachments(false, false);
+                    }
+                } catch (Exception ex) {
+                    Helper.printNotification("Error", ex.toString(), NotificationType.ERROR);
+                } finally {
+                    pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
                 }
-                for(IssueAttachment attachment : issue.getIssueAttachmentList()) {
-                    tblIssueAttachmentModel.addRow(new Object[]{attachment.getId(), attachment.getFilename()});
-                }
-                tblIssueAttachments.setModel(tblIssueAttachmentModel);
-                controlIssues(true, false);
-                controlNotes(false, false);
-                controlAttachments(false, false);
             }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {}
+
+            @Override
+            public void mouseExited(MouseEvent e) {}
         });
 
         cmdIssueNew.addActionListener(e -> {
             currentIssue = new MantisIssue();
             tblIssueAttachments.removeAll();
-            for(int i = 0; i<=tblIssueAttachmentModel.getRowCount()-1; i++) {
+            for (int i = tblIssueAttachmentModel.getRowCount() - 1; i >= 0; i--) {
                 tblIssueAttachmentModel.removeRow(i);
             }
             tblIssueNotes.removeAll();
-            for(int i = 0; i<=tblIssueNoteModel.getRowCount()-1; i++) {
+            for (int i = tblIssueNoteModel.getRowCount() - 1; i >= 0; i--) {
                 tblIssueNoteModel.removeRow(i);
             }
             controlIssues(false, true);
@@ -178,67 +243,104 @@ public class ideaMantisIssues implements ToolWindowFactory {
         cmdIssueEdit.addActionListener(e -> controlIssues(true, true));
 
         cmdIssueDelete.addActionListener(e -> {
-            int id = Integer.parseInt(tblIssueModel.getValueAt(tblIssues.getSelectedRow(), 0).toString());
-            if(!new MantisSoapAPI(this.settings).removeIssue(id)) {
-                Helper.printNotification("Problem", "Can't delete Issue!", NotificationType.ERROR);
+            try {
+                pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                if(tblIssues.getSelectedRow()!=-1) {
+                    int id = Integer.parseInt(tblIssueModel.getValueAt(tblIssues.getSelectedRow(), 0).toString());
+                    if(!new MantisSoapAPI(this.settings).removeIssue(id)) {
+                        Helper.printNotification("Problem", "Can't delete Issue!", NotificationType.ERROR);
+                    }
+                    controlIssues(false, false);
+                    cmdReload.doClick();
+                }
+            } catch (Exception ex) {
+                Helper.printNotification("Error", ex.toString(), NotificationType.ERROR);
+            } finally {
+                pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
             }
-            controlIssues(false, false);
-            cmdReload.doClick();
         });
 
         cmdIssueSave.addActionListener(e -> {
-            MantisIssue issue = currentIssue;
-            issue.setSummary(txtIssueSummary.getText());
-            issue.setDate_submitted(txtIssueDate.getText());
-            issue.setAdditional_information(txtIssueAdditionalInformation.getText());
-            issue.setDescription(txtIssueDescription.getText());
-            issue.setSteps_to_reproduce(txtIssueStepsToReproduce.getText());
-            issue.setCategory(cmbIssueCategory.getSelectedItem().toString());
-            issue.setPriority(cmbIssuePriority.getSelectedItem().toString());
-            issue.setSeverity(cmbIssueSeverity.getSelectedItem().toString());
-            issue.setFixed_in_version(cmbIssueFixedInVersion.getSelectedItem().toString());
-            issue.setTarget_version(cmbIssueTargetVersion.getSelectedItem().toString());
-            if(!txtIssueReporterName.getText().equals("")) {
-                for(MantisUser user : new MantisSoapAPI(this.settings).getUsers(this.settings.getProjectID())) {
-                    if(user.getUserName().equals(cmbIssueReporterName.getSelectedItem().toString())) {
-                        issue.setReporter(user);
-                        break;
-                    }
-                }
-            }
+           try {
+               pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+               lblValidation.setText(this.validateIssue());
+               if(lblValidation.getText().equals("")) {
 
-            if(!tblIssues.getSelectionModel().isSelectionEmpty()) {
-                issue.setId(Integer.parseInt(tblIssues.getValueAt(tblIssues.getSelectedRow(), 0).toString()));
-            }
+                   MantisIssue issue = currentIssue;
+                   issue.setSummary(txtIssueSummary.getText());
+                   issue.setDate_submitted(txtIssueDate.getText());
+                   issue.setAdditional_information(txtIssueAdditionalInformation.getText());
+                   issue.setDescription(txtIssueDescription.getText());
+                   issue.setSteps_to_reproduce(txtIssueStepsToReproduce.getText());
 
-            if(!new MantisSoapAPI(this.settings).addIssue(issue)) {
-                Helper.printNotification("Problem", "Can't add Issue!", NotificationType.ERROR);
-            }
-            controlIssues(false, false);
-            cmdReload.doClick();
+                   if(cmbIssueCategory.getSelectedItem()!=null)
+                       issue.setCategory(cmbIssueCategory.getSelectedItem().toString());
+                   if(cmbIssuePriority.getSelectedItem()!=null)
+                       issue.setPriority(cmbIssuePriority.getSelectedItem().toString());
+                   if(cmbIssueSeverity.getSelectedItem()!=null)
+                       issue.setSeverity(cmbIssueSeverity.getSelectedItem().toString());
+                   if(cmbIssueFixedInVersion.getSelectedItem()!=null)
+                       issue.setFixed_in_version(cmbIssueFixedInVersion.getSelectedItem().toString());
+                   if(cmbIssueTargetVersion.getSelectedItem()!=null)
+                       issue.setTarget_version(cmbIssueTargetVersion.getSelectedItem().toString());
+
+                   if(!txtIssueReporterName.getText().equals("")) {
+                       for(MantisUser user : new MantisSoapAPI(this.settings).getUsers(this.settings.getProjectID())) {
+                           if(user.getUserName().equals(cmbIssueReporterName.getSelectedItem().toString())) {
+                               issue.setReporter(user);
+                               break;
+                           }
+                       }
+                   }
+
+                   if(!tblIssues.getSelectionModel().isSelectionEmpty()) {
+                       issue.setId(Integer.parseInt(tblIssues.getValueAt(tblIssues.getSelectedRow(), 0).toString()));
+                   }
+
+                   if(!new MantisSoapAPI(this.settings).addIssue(issue)) {
+                       Helper.printNotification("Problem", "Can't add Issue!", NotificationType.ERROR);
+                   }
+                   controlIssues(false, false);
+                   cmdReload.doClick();
+               }
+           } catch (Exception ex) {
+               Helper.printNotification("Error", ex.toString(), NotificationType.ERROR);
+           } finally {
+               pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+           }
         });
 
-        cmdIssueAbort.addActionListener(e -> controlIssues(false, false));
+        cmdIssueAbort.addActionListener(e -> {
+            lblValidation.setText("");
+            controlIssues(false, false);
+        });
 
 
 
         tblIssueNotes.getSelectionModel().addListSelectionListener(e -> {
-            if(tblIssueNotes.getSelectedRow()!=-1) {
-                int id = Integer.parseInt(tblIssueNoteModel.getValueAt(tblIssueNotes.getSelectedRow(), 0).toString());
-                for(IssueNote note : currentIssue.getIssueNoteList()) {
-                    if(note.getId()==id) {
-                        txtIssueNoteDate.setText(note.getDate());
-                        txtIssueNoteText.setText(note.getText());
-                        cmbIssueNoteViewState.setSelectedItem(note.getView_state());
-                        if(note.getReporter()!=null) {
-                            cmbIssueNoteReporterUser.setSelectedItem(note.getReporter().getUserName());
-                            txtIssueNoteReporterName.setText(note.getReporter().getName());
-                            txtIssueNoteReporterEMail.setText(note.getReporter().getEmail());
+            try {
+                if(tblIssueNotes.getSelectedRow()!=-1) {
+                    pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                    int id = Integer.parseInt(tblIssueNoteModel.getValueAt(tblIssueNotes.getSelectedRow(), 0).toString());
+                    for(IssueNote note : currentIssue.getIssueNoteList()) {
+                        if(note.getId()==id) {
+                            txtIssueNoteDate.setText(note.getDate());
+                            txtIssueNoteText.setText(note.getText());
+                            cmbIssueNoteViewState.setSelectedItem(note.getView_state());
+                            if(note.getReporter()!=null) {
+                                cmbIssueNoteReporterUser.setSelectedItem(note.getReporter().getUserName());
+                                txtIssueNoteReporterName.setText(note.getReporter().getName());
+                                txtIssueNoteReporterEMail.setText(note.getReporter().getEmail());
+                            }
+                            break;
                         }
-                        break;
                     }
+                    controlNotes(true, false);
                 }
-                controlNotes(true, false);
+            } catch (Exception ex) {
+                Helper.printNotification("Error", ex.toString(), NotificationType.ERROR);
+            } finally {
+                pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
             }
         });
 
@@ -249,77 +351,111 @@ public class ideaMantisIssues implements ToolWindowFactory {
         cmdIssueNoteEdit.addActionListener(e -> controlNotes(true, true));
 
         cmdIssueNoteDelete.addActionListener(e -> {
-            int id = Integer.parseInt(tblIssueNoteModel.getValueAt(tblIssueNotes.getSelectedRow(), 0).toString());
-            if(!new MantisSoapAPI(this.settings).removeNote(id)) {
-                Helper.printNotification("Problem", "Can't delete Note!", NotificationType.ERROR);
+            try {
+                pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                if(tblIssueNotes.getSelectedRow()!=-1) {
+                    int id = Integer.parseInt(tblIssueNoteModel.getValueAt(tblIssueNotes.getSelectedRow(), 0).toString());
+                    if(!new MantisSoapAPI(this.settings).removeNote(id)) {
+                        Helper.printNotification("Problem", "Can't delete Note!", NotificationType.ERROR);
+                    }
+                    int nid = tblIssueNotes.getSelectedRow();
+                    tblIssueAttachments.getSelectionModel().clearSelection();
+                    tblIssueNoteModel.removeRow(nid);
+                    tblIssueNotes.setModel(tblIssueNoteModel);
+                }
+                controlNotes(false, false);
+            } catch (Exception ex) {
+                Helper.printNotification("Error", ex.toString(), NotificationType.ERROR);
+            } finally {
+                pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
             }
-            int nid = tblIssueNotes.getSelectedRow();
-            tblIssueAttachments.getSelectionModel().clearSelection();
-            tblIssueNoteModel.removeRow(nid);
-            tblIssueNotes.setModel(tblIssueNoteModel);
-            controlNotes(false, false);
         });
 
         cmdIssueNoteSave.addActionListener(e -> {
-            IssueNote note = new IssueNote();
-            note.setText(txtIssueNoteText.getText());
-            note.setDate(txtIssueNoteDate.getText());
-            note.setView_state(cmbIssueNoteViewState.getSelectedItem().toString());
-            if(!txtIssueNoteReporterName.getText().equals("")) {
-                for(MantisUser user : new MantisSoapAPI(this.settings).getUsers(this.settings.getProjectID())) {
-                    if(user.getUserName().equals(cmbIssueNoteReporterUser.getSelectedItem().toString())) {
-                        note.setReporter(user);
-                        break;
-                    }
-                }
-            }
-            if(!tblIssueNotes.getSelectionModel().isSelectionEmpty()) {
-                note.setId(Integer.parseInt(tblIssueNotes.getValueAt(tblIssueNotes.getSelectedRow(), 0).toString()));
-            }
-            if(currentIssue.getId()!=0) {
-                if(new MantisSoapAPI(this.settings).addNote(currentIssue.getId(), note)) {
-                    Helper.printNotification("Problem", "Can't add Attachment!", NotificationType.ERROR);
-                    return;
-                }
-                int id = tblIssues.getSelectedRow();
-                tblIssues.getSelectionModel().clearSelection();
-                tblIssues.setRowSelectionInterval(0, id);
-            } else {
-                if (tblIssueNotes.getSelectionModel().isSelectionEmpty()) {
-                    tblIssueNoteModel.addRow(new Object[]{0, txtIssueNoteText.getText(), cmbIssueNoteViewState.getSelectedItem()});
-                    currentIssue.addNote(note);
-                } else {
-                    int id = Integer.parseInt(tblIssueNoteModel.getValueAt(tblIssueNotes.getSelectedRow(), 0).toString());
-                    String text = tblIssueNoteModel.getValueAt(tblIssueNotes.getSelectedRow(), 1).toString();
-                    tblIssueNoteModel.setValueAt(txtIssueNoteText.getText(), tblIssueNotes.getSelectedRow(), 1);
-                    tblIssueNoteModel.setValueAt(cmbIssueNoteViewState.getSelectedItem(), tblIssueNotes.getSelectedRow(), 2);
+            try {
+                pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                lblValidation.setText(this.validateNote());
+                if(lblValidation.getText().equals("")) {
+                    IssueNote note = new IssueNote();
+                    note.setText(txtIssueNoteText.getText());
+                    note.setDate(txtIssueNoteDate.getText());
 
-                    for(int i = 0; i<=currentIssue.getIssueNoteList().size()-1; i++) {
-                        if(currentIssue.getIssueNoteList().get(i).getText().equals(text)&&currentIssue.getIssueNoteList().get(i).getId()==id) {
-                            currentIssue.getIssueNoteList().set(i, note);
+                    if(cmbIssueNoteViewState.getSelectedItem()!=null)
+                        note.setView_state(cmbIssueNoteViewState.getSelectedItem().toString());
+
+                    if(!txtIssueNoteReporterName.getText().equals("")) {
+                        for(MantisUser user : new MantisSoapAPI(this.settings).getUsers(this.settings.getProjectID())) {
+                            if(user.getUserName().equals(cmbIssueNoteReporterUser.getSelectedItem().toString())) {
+                                note.setReporter(user);
+                                break;
+                            }
                         }
                     }
+
+                    if(!tblIssueNotes.getSelectionModel().isSelectionEmpty()) {
+                        note.setId(Integer.parseInt(tblIssueNotes.getValueAt(tblIssueNotes.getSelectedRow(), 0).toString()));
+                    }
+
+                    if(currentIssue.getId()!=0) {
+                        if(!new MantisSoapAPI(this.settings).addNote(currentIssue.getId(), note)) {
+                            Helper.printNotification("Problem", "Can't add Attachment!", NotificationType.ERROR);
+                            return;
+                        }
+                        int id = tblIssues.getSelectedRow();
+                        tblIssues.getSelectionModel().clearSelection();
+                        tblIssues.setRowSelectionInterval(0, id);
+                    } else {
+                        if (tblIssueNotes.getSelectionModel().isSelectionEmpty()) {
+                            tblIssueNoteModel.addRow(new Object[]{0, txtIssueNoteText.getText(), cmbIssueNoteViewState.getSelectedItem()});
+                            currentIssue.addNote(note);
+                        } else {
+                            int id = Integer.parseInt(tblIssueNoteModel.getValueAt(tblIssueNotes.getSelectedRow(), 0).toString());
+                            String text = tblIssueNoteModel.getValueAt(tblIssueNotes.getSelectedRow(), 1).toString();
+                            tblIssueNoteModel.setValueAt(txtIssueNoteText.getText(), tblIssueNotes.getSelectedRow(), 1);
+                            tblIssueNoteModel.setValueAt(cmbIssueNoteViewState.getSelectedItem(), tblIssueNotes.getSelectedRow(), 2);
+
+                            for(int i = 0; i<=currentIssue.getIssueNoteList().size()-1; i++) {
+                                if(currentIssue.getIssueNoteList().get(i).getText().equals(text)&&currentIssue.getIssueNoteList().get(i).getId()==id) {
+                                    currentIssue.getIssueNoteList().set(i, note);
+                                }
+                            }
+                        }
+                        tblIssueNotes.setModel(tblIssueNoteModel);
+                    }
+                    controlNotes(false, false);
                 }
-                tblIssueNotes.setModel(tblIssueNoteModel);
+            } catch (Exception ex) {
+                Helper.printNotification("Error", ex.toString(), NotificationType.ERROR);
+            } finally {
+                pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
             }
-            controlNotes(false, false);
         });
 
-        cmdIssueNoteAbort.addActionListener(e -> controlNotes(false, false));
+        cmdIssueNoteAbort.addActionListener(e -> {
+            lblValidation.setText("");
+            controlNotes(false, false);
+        });
 
 
 
         tblIssueAttachments.getSelectionModel().addListSelectionListener(e -> {
-            if(tblIssueAttachments.getSelectedRow()!=-1) {
-                int id = Integer.parseInt(tblIssueAttachmentModel.getValueAt(tblIssueAttachments.getSelectedRow(), 0).toString());
-                for(IssueAttachment attachment : currentIssue.getIssueAttachmentList()) {
-                    if(attachment.getId()==id) {
-                        txtIssueAttachmentSize.setText(String.valueOf(attachment.getSize()));
-                        txtIssueAttachmentFileName.setText(attachment.getFilename());
-                        break;
+            try {
+                pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                if(tblIssueAttachments.getSelectedRow()!=-1) {
+                    int id = Integer.parseInt(tblIssueAttachmentModel.getValueAt(tblIssueAttachments.getSelectedRow(), 0).toString());
+                    for(IssueAttachment attachment : currentIssue.getIssueAttachmentList()) {
+                        if(attachment.getId()==id) {
+                            txtIssueAttachmentSize.setText(String.valueOf(attachment.getSize()));
+                            txtIssueAttachmentFileName.setText(attachment.getFilename());
+                            break;
+                        }
                     }
+                    controlAttachments(true, false);
                 }
-                controlAttachments(true, false);
+            } catch (Exception ex) {
+                Helper.printNotification("Error", ex.toString(), NotificationType.ERROR);
+            } finally {
+                pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
             }
         });
 
@@ -327,62 +463,86 @@ public class ideaMantisIssues implements ToolWindowFactory {
         cmdIssueAttachmentEdit.addActionListener(e -> controlAttachments(true, true));
 
         cmdIssueAttachmentDelete.addActionListener(e -> {
-            int id = Integer.parseInt(tblIssueAttachmentModel.getValueAt(tblIssueAttachments.getSelectedRow(), 0).toString());
-            if(!new MantisSoapAPI(this.settings).removeAttachment(id)) {
-                Helper.printNotification("Problem", "Can't delete Note!", NotificationType.ERROR);
+            try {
+                pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                if(tblIssueAttachments.getSelectedRow()!=-1) {
+                    int id = Integer.parseInt(tblIssueAttachmentModel.getValueAt(tblIssueAttachments.getSelectedRow(), 0).toString());
+                    if(!new MantisSoapAPI(this.settings).removeAttachment(id)) {
+                        Helper.printNotification("Problem", "Can't delete Note!", NotificationType.ERROR);
+                    }
+                    int aid = tblIssueAttachments.getSelectedRow();
+                    tblIssueAttachments.getSelectionModel().clearSelection();
+                    tblIssueAttachmentModel.removeRow(aid);
+                    tblIssueAttachments.setModel(tblIssueAttachmentModel);
+                    controlAttachments(false, false);
+                }
+            } catch (Exception ex) {
+                Helper.printNotification("Error", ex.toString(), NotificationType.ERROR);
+            } finally {
+                pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
             }
-            int aid = tblIssueAttachments.getSelectedRow();
-            tblIssueAttachments.getSelectionModel().clearSelection();
-            tblIssueAttachmentModel.removeRow(aid);
-            tblIssueAttachments.setModel(tblIssueAttachmentModel);
-            controlAttachments(false, false);
         });
 
         cmdIssueAttachmentSave.addActionListener(e -> {
-            IssueAttachment attachment = new IssueAttachment();
-            attachment.setFilename(txtIssueAttachmentFileName.getText());
-            attachment.setSize(Integer.parseInt(txtIssueAttachmentSize.getText()));
-            if(!tblIssueAttachments.getSelectionModel().isSelectionEmpty()) {
-                attachment.setId(Integer.parseInt(tblIssueAttachments.getValueAt(tblIssueAttachments.getSelectedRow(), 0).toString()));
-            }
-            if(currentIssue.getId()!=0) {
-                if(new MantisSoapAPI(this.settings).addAttachment(currentIssue.getId(), attachment)) {
-                    Helper.printNotification("Problem", "Can't add Attachment!", NotificationType.ERROR);
-                    return;
-                }
-                int id = tblIssues.getSelectedRow();
-                tblIssues.getSelectionModel().clearSelection();
-                tblIssues.setRowSelectionInterval(0, id);
-            } else {
-                if (tblIssueAttachments.getSelectionModel().isSelectionEmpty()) {
-                    tblIssueAttachmentModel.addRow(new Object[]{0, txtIssueAttachmentFileName.getText()});
-                    currentIssue.addAttachment(attachment);
-                } else {
-                    int id = Integer.parseInt(tblIssueNoteModel.getValueAt(tblIssueNotes.getSelectedRow(), 0).toString());
-                    String fileName = tblIssueNoteModel.getValueAt(tblIssueNotes.getSelectedRow(), 1).toString();
-                    tblIssueAttachmentModel.setValueAt(txtIssueAttachmentFileName.getText(), tblIssueAttachments.getSelectedRow(), 1);
+            try {
+                pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                lblValidation.setText(this.validateAttachment());
+                if(lblValidation.getText().equals("")) {
+                    IssueAttachment attachment = new IssueAttachment();
+                    attachment.setFilename(txtIssueAttachmentFileName.getText());
+                    attachment.setSize(Integer.parseInt(txtIssueAttachmentSize.getText()));
 
-                    for(int i = 0; i<=currentIssue.getIssueAttachmentList().size()-1; i++) {
-                        if(currentIssue.getIssueAttachmentList().get(i).getFilename().equals(fileName)&&currentIssue.getIssueAttachmentList().get(i).getId()==id) {
-                            currentIssue.getIssueAttachmentList().set(i, attachment);
-                        }
+                    if(!tblIssueAttachments.getSelectionModel().isSelectionEmpty()) {
+                        attachment.setId(Integer.parseInt(tblIssueAttachments.getValueAt(tblIssueAttachments.getSelectedRow(), 0).toString()));
                     }
+
+                    if(currentIssue.getId()!=0) {
+                        if(!new MantisSoapAPI(this.settings).addAttachment(currentIssue.getId(), attachment)) {
+                            Helper.printNotification("Problem", "Can't add Attachment!", NotificationType.ERROR);
+                            return;
+                        }
+                        int id = tblIssues.getSelectedRow();
+                        tblIssues.getSelectionModel().clearSelection();
+                        tblIssues.setRowSelectionInterval(0, id);
+                    } else {
+                        if (tblIssueAttachments.getSelectionModel().isSelectionEmpty()) {
+                            tblIssueAttachmentModel.addRow(new Object[]{0, txtIssueAttachmentFileName.getText()});
+                            currentIssue.addAttachment(attachment);
+                        } else {
+                            int id = Integer.parseInt(tblIssueNoteModel.getValueAt(tblIssueNotes.getSelectedRow(), 0).toString());
+                            String fileName = tblIssueNoteModel.getValueAt(tblIssueNotes.getSelectedRow(), 1).toString();
+                            tblIssueAttachmentModel.setValueAt(txtIssueAttachmentFileName.getText(), tblIssueAttachments.getSelectedRow(), 1);
+
+                            for(int i = 0; i<=currentIssue.getIssueAttachmentList().size()-1; i++) {
+                                if(currentIssue.getIssueAttachmentList().get(i).getFilename().equals(fileName)&&currentIssue.getIssueAttachmentList().get(i).getId()==id) {
+                                    currentIssue.getIssueAttachmentList().set(i, attachment);
+                                }
+                            }
+                        }
+                        tblIssueAttachments.setModel(tblIssueAttachmentModel);
+                    }
+                    controlAttachments(false, false);
                 }
-                tblIssueAttachments.setModel(tblIssueAttachmentModel);
+            } catch (Exception ex) {
+                Helper.printNotification("Error", ex.toString(), NotificationType.ERROR);
+            } finally {
+                pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
             }
+        });
+
+        cmdIssueAttachmentAbort.addActionListener(e -> {
+            lblValidation.setText("");
             controlAttachments(false, false);
         });
 
-        cmdIssueAttachmentAbort.addActionListener(e -> controlAttachments(false, false));
-
-        cmdIssueAttachmentSearch.addActionListener(e -> {
+        cmdIssueAttachmentSearch.addActionListener(e ->
             FileChooser.chooseFile(new FileChooserDescriptor(true, false, false, false, false, false), project, null, (virtualFile) -> {
                 if(virtualFile!=null) {
                     txtIssueAttachmentFileName.setText(virtualFile.getPath());
                     txtIssueAttachmentSize.setText(String.valueOf(virtualFile.getLength()));
                 }
-            });
-        });
+            })
+        );
 
         cmbIssueReporterName.addItemListener(e -> {
             for(MantisUser user : new MantisSoapAPI(this.settings).getUsers(this.settings.getProjectID())) {
@@ -405,13 +565,39 @@ public class ideaMantisIssues implements ToolWindowFactory {
         });
     }
 
+    private String validateIssue() {
+        if(txtIssueDescription.getText().equals("")) {
+            return "Description is a mandatory field!";
+        }
+        if(txtIssueSummary.getText().equals("")) {
+            return "Summary is a mandatory field!";
+        }
+        if(cmbIssueCategory.getSelectedItem()==null) {
+            return "Category is a mandatory field!";
+        }
+        return "";
+    }
+
+    private String validateAttachment() {
+        if(txtIssueAttachmentFileName.getText().equals("")) {
+            return "Please choose a file as Attachment!";
+        }
+        return "";
+    }
+
+    private String validateNote() {
+        if(txtIssueNoteText.getText().equals("")) {
+            return "Please insert a note-text!";
+        }
+        return "";
+    }
+
     @Override
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
         this.project = project;
-        this.toolWindow = toolWindow;
         ContentFactory contentFactory = ContentFactory.SERVICE.getInstance();
         Content content = contentFactory.createContent(this.pnlMain, "", false);
-        this.toolWindow.getContentManager().addContent(content);
+        toolWindow.getContentManager().addContent(content);
         settings = ConnectionSettings.getInstance(project);
         cmdReload.doClick();
     }
