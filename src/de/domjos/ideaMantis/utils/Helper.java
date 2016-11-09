@@ -3,13 +3,18 @@ package de.domjos.ideaMantis.utils;
 import com.intellij.notification.Notification;
 import com.intellij.notification.NotificationType;
 import com.intellij.notification.Notifications;
+import com.intellij.openapi.project.Project;
+import org.jetbrains.annotations.NotNull;
 import org.ksoap2.serialization.SoapObject;
 
 import javax.swing.*;
-import javax.swing.event.CellEditorListener;
-import javax.swing.table.TableCellEditor;
 import java.awt.*;
-import java.util.EventObject;
+import java.io.File;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.Enumeration;
+import java.util.Locale;
+import java.util.ResourceBundle;
 
 public abstract class Helper {
 
@@ -81,5 +86,15 @@ public abstract class Helper {
             }
         }
         return table;
+    }
+
+    public static ResourceBundle getBundle() {
+        ResourceBundle bundle;
+        try{
+            bundle = ResourceBundle.getBundle("de.domjos.ideaMantis.messages.lang", Locale.getDefault());
+        } catch (Exception ex) {
+           bundle = null;
+        }
+        return bundle;
     }
 }
