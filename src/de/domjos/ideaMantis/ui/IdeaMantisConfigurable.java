@@ -14,14 +14,16 @@ import de.domjos.ideaMantis.model.MantisProject;
 import de.domjos.ideaMantis.model.MantisUser;
 import de.domjos.ideaMantis.service.ConnectionSettings;
 import de.domjos.ideaMantis.soap.MantisSoapAPI;
+import de.domjos.ideaMantis.utils.Helper;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.ResourceBundle;
 
-public class ideaMantisConfigurable implements SearchableConfigurable {
+public class IdeaMantisConfigurable implements SearchableConfigurable {
     private JBTextField txtHostName, txtUserName;
     private JBPasswordField txtPassword;
     private java.awt.Label lblConnectionState;
@@ -29,9 +31,11 @@ public class ideaMantisConfigurable implements SearchableConfigurable {
     private ComboBox<String> cmbProjects;
     private int projectID = 0;
     private Project project;
+    private ResourceBundle bundle;
 
-    public ideaMantisConfigurable(@NotNull Project project) {
+    public IdeaMantisConfigurable(@NotNull Project project) {
         this.project = project;
+        this.bundle = Helper.getBundle();
     }
 
     @NotNull
@@ -49,7 +53,7 @@ public class ideaMantisConfigurable implements SearchableConfigurable {
     @Nls
     @Override
     public String getDisplayName() {
-        return "ideaMantis - Connection";
+        return bundle.getString("settings.header");
     }
 
     @Nullable
@@ -74,14 +78,14 @@ public class ideaMantisConfigurable implements SearchableConfigurable {
         this.txtPassword = new JBPasswordField();
         this.txtPassword.setName("txtPassword");
 
-        java.awt.Label lblHostName = new java.awt.Label("HostName");
-        java.awt.Label lblUserName = new java.awt.Label("UserName");
-        java.awt.Label lblPassword = new java.awt.Label("Password");
-        java.awt.Label lblProjects = new java.awt.Label("Choose Project");
-        this.lblConnectionState = new Label("Not Connected!");
+        java.awt.Label lblHostName = new java.awt.Label(bundle.getString("settings.hostName"));
+        java.awt.Label lblUserName = new java.awt.Label(bundle.getString("settings.userName"));
+        java.awt.Label lblPassword = new java.awt.Label(bundle.getString("settings.password"));
+        java.awt.Label lblProjects = new java.awt.Label(bundle.getString("settings.chooseProject"));
+        this.lblConnectionState = new Label(bundle.getString("settings.connection.notConnected"));
         this.changeConnectionLabel(null);
 
-        this.cmdTestConnection = new JButton("Test Connection");
+        this.cmdTestConnection = new JButton(bundle.getString("settings.connection.test"));
         this.cmdTestConnection.addActionListener(e -> {
             MantisSoapAPI connection = new MantisSoapAPI(ConnectionSettings.getInstance(this.project));
             if(this.changeConnectionLabel(connection.testConnection())) {
@@ -114,12 +118,12 @@ public class ideaMantisConfigurable implements SearchableConfigurable {
         connPanel.add(txtPassword, txtConstraint);
         connPanel.add(lblConnectionState, txtConstraint);
         connPanel.add(cmdTestConnection, txtConstraint);
-        connPanel.setBorder(IdeBorderFactory.createTitledBorder("Connection-Settings"));
+        connPanel.setBorder(IdeBorderFactory.createTitledBorder(bundle.getString("settings.connection.header")));
 
         JPanel projectPanel = new JPanel(new GridBagLayout());
         projectPanel.add(lblProjects, labelConstraint);
         projectPanel.add(cmbProjects, txtConstraint);
-        projectPanel.setBorder(IdeBorderFactory.createTitledBorder("Project-Choice"));
+        projectPanel.setBorder(IdeBorderFactory.createTitledBorder(bundle.getString("settings.connection.project")));
 
         JPanel root = new JPanel(new GridBagLayout());
         GridBagConstraints constraints = new GridBagConstraints();
@@ -140,14 +144,14 @@ public class ideaMantisConfigurable implements SearchableConfigurable {
         ConnectionSettings connection = ConnectionSettings.getInstance(this.project);
         if(connection!=null) {
 
-            String pwd = "";
+            StringBuffer buf = new StringBuffer();
             for(char ch : txtPassword.getPassword()) {
-                pwd += ch;
+                buf.append(ch);
             }
             return
                     !connection.getHostName().equals(txtHostName.getText()) ||
                             !connection.getUserName().equals(txtUserName.getText()) ||
-                            !connection.getPassword().equals(pwd) ||
+                            !connection.getPassword().equals(buf.toString()) ||
                             (connection.getProjectID()!=projectID && projectID!=0);
         } else {
             return false;
@@ -160,11 +164,11 @@ public class ideaMantisConfigurable implements SearchableConfigurable {
         if(connection!=null) {
             connection.setHostName(txtHostName.getText());
             connection.setUserName(txtUserName.getText());
-            String pwd = "";
+            StringBuffer buf = new StringBuffer();
             for(char ch : txtPassword.getPassword()) {
-                pwd += ch;
+                buf.append(ch);
             }
-            connection.setPassword(pwd);
+            connection.setPassword(buf.toString());
             connection.setProjectID(projectID);
         }
     }
@@ -194,11 +198,11 @@ public class ideaMantisConfigurable implements SearchableConfigurable {
 
     private boolean changeConnectionLabel(MantisUser user) {
         if(user==null) {
-            this.lblConnectionState.setText("Not connected!");
+            this.lblConnectionState.setText(bundle.getString("settings.connection.notConnected"));
             this.lblConnectionState.setForeground(JBColor.RED);
             return false;
         } else {
-            this.lblConnectionState.setText("Connected as " + user.getName() + "!");
+            this.lblConnectionState.setText(String.format(bundle.getString("settings.connection.connected"), user.getName()));
             this.lblConnectionState.setForeground(JBColor.GREEN);
             return true;
         }
