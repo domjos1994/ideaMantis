@@ -2,11 +2,11 @@ package de.domjos.ideaMantis.soap;
 
 import org.ksoap2.serialization.SoapObject;
 
-public class ObjectRef extends SoapObject {
+class ObjectRef extends SoapObject {
     private int id;
     private String name;
 
-    public ObjectRef(String s, String s1) {
+    ObjectRef(String s, String s1) {
         super(s, s1);
         this.id = 0;
         this.name = "";

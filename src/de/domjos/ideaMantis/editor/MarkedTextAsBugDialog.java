@@ -1,5 +1,6 @@
 package de.domjos.ideaMantis.editor;
 
+import com.intellij.notification.NotificationType;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.openapi.ui.DialogWrapper;
@@ -11,12 +12,14 @@ import de.domjos.ideaMantis.model.IssueAttachment;
 import de.domjos.ideaMantis.model.MantisIssue;
 import de.domjos.ideaMantis.service.ConnectionSettings;
 import de.domjos.ideaMantis.soap.MantisSoapAPI;
+import de.domjos.ideaMantis.utils.Helper;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.util.Date;
+import java.util.ResourceBundle;
 
 class MarkedTextAsBugDialog extends DialogWrapper {
     private JBTextField txtSummary, txtDocumentPath, txtDate;
@@ -26,38 +29,49 @@ class MarkedTextAsBugDialog extends DialogWrapper {
 
     private MantisSoapAPI api;
     private ConnectionSettings settings;
+    private ResourceBundle bundle;
 
     MarkedTextAsBugDialog(@Nullable Project project, String description) {
         this(project, description, "");
     }
 
+
     MarkedTextAsBugDialog(@Nullable Project project, String description, String documentPath) {
         super(project);
-        this.description = description;
-        this.documentPath = documentPath;
-        this.settings = ConnectionSettings.getInstance(project);
-        this.api = new MantisSoapAPI(settings);
-        this.setTitle("Add New Issue from Selected Code");
-        this.setOKButtonText("Add Issue");
-        this.init();
-        if(this.getButton(this.getOKAction())!=null) {
-            this.getButton(this.getOKAction()).addActionListener((event) -> {
-                MantisIssue issue = new MantisIssue();
-                issue.setDescription(txtDescription.getText());
-                issue.setSummary(txtSummary.getText());
-                issue.setDate_submitted(txtDate.getText());
-                issue.setCategory(cmbCategory.getSelectedItem().toString());
-                issue.setSeverity(cmbSeverity.getSelectedItem().toString());
-                issue.setPriority(cmbPriority.getSelectedItem().toString());
-                issue.setStatus(cmbStatus.getSelectedItem().toString());
-                issue.setTarget_version(cmbTargetVersion.getSelectedItem().toString());
-                issue.setFixed_in_version(cmbFixedInVersion.getSelectedItem().toString());
-                IssueAttachment attachment = new IssueAttachment();
-                attachment.setFilename(txtDocumentPath.getText());
-                attachment.setSize((int) new File(txtDocumentPath.getText()).getTotalSpace());
-                issue.addAttachment(attachment);
-                api.addIssue(issue);
-            });
+        try {
+            this.description = description;
+            this.documentPath = documentPath;
+            this.settings = ConnectionSettings.getInstance(project);
+            this.api = new MantisSoapAPI(settings);
+            bundle = Helper.getBundle();
+            this.setTitle(bundle.getString("editor.dialog.header"));
+            this.setOKButtonText(bundle.getString("buttons.addIssue"));
+            this.init();
+            if(this.getButton(this.getOKAction())!=null) {
+                this.getButton(this.getOKAction()).addActionListener((event) -> {
+                    try {
+                        MantisIssue issue = new MantisIssue();
+                        issue.setDescription(txtDescription.getText());
+                        issue.setSummary(txtSummary.getText());
+                        issue.setDate_submitted(txtDate.getText());
+                        issue.setCategory(cmbCategory.getSelectedItem().toString());
+                        issue.setSeverity(cmbSeverity.getSelectedItem().toString());
+                        issue.setPriority(cmbPriority.getSelectedItem().toString());
+                        issue.setStatus(cmbStatus.getSelectedItem().toString());
+                        issue.setTarget_version(cmbTargetVersion.getSelectedItem().toString());
+                        issue.setFixed_in_version(cmbFixedInVersion.getSelectedItem().toString());
+                        IssueAttachment attachment = new IssueAttachment();
+                        attachment.setFilename(txtDocumentPath.getText());
+                        attachment.setSize((int) new File(txtDocumentPath.getText()).getTotalSpace());
+                        issue.addAttachment(attachment);
+                        api.addIssue(issue);
+                    } catch (Exception ex) {
+                        Helper.printNotification(bundle.getString("message.error.header"), ex.toString(), NotificationType.ERROR);
+                    }
+                });
+            }
+        }catch (Exception ex) {
+            Helper.printNotification(bundle.getString("message.error.header"), ex.toString(), NotificationType.ERROR);
         }
     }
 
@@ -65,10 +79,10 @@ class MarkedTextAsBugDialog extends DialogWrapper {
     protected ValidationInfo doValidate() {
         ValidationInfo  info = null;
         if(txtSummary.getText().equals("")) {
-            info = new ValidationInfo("Summary is a Mandatory Field!");
+            info = new ValidationInfo(String.format(bundle.getString("messages.mandatory"), bundle.getString("basics.summary").replace("*", "")));
         }
         if(txtDescription.getText().equals("")) {
-            info = new ValidationInfo("Description is a Mandatory Field!");
+            info = new ValidationInfo(String.format(bundle.getString("messages.mandatory"), bundle.getString("descriptions.description").replace("*", "")));
         }
 
         return info;
@@ -114,10 +128,10 @@ class MarkedTextAsBugDialog extends DialogWrapper {
         api.getCategories(settings.getProjectID()).forEach(cmbCategory::addItem);
 
 
-        java.awt.Label lblSummary = new java.awt.Label("Summary");
-        java.awt.Label lblDate = new java.awt.Label("Current Time");
-        java.awt.Label lblDescription = new java.awt.Label("Description");
-        java.awt.Label lblCategory = new java.awt.Label("Category");
+        java.awt.Label lblSummary = new java.awt.Label(bundle.getString("basics.summary"));
+        java.awt.Label lblDate = new java.awt.Label(bundle.getString("basics.date"));
+        java.awt.Label lblDescription = new java.awt.Label(bundle.getString("descriptions.description"));
+        java.awt.Label lblCategory = new java.awt.Label(bundle.getString("basics.category"));
 
 
         JPanel basicsPanel = new JPanel(new GridBagLayout());
@@ -130,7 +144,7 @@ class MarkedTextAsBugDialog extends DialogWrapper {
         basicsPanel.add(lblCategory, labelConstraint);
         basicsPanel.add(cmbCategory, txtConstraint);
 
-        basicsPanel.setBorder(IdeBorderFactory.createTitledBorder("Basics"));
+        basicsPanel.setBorder(IdeBorderFactory.createTitledBorder(bundle.getString("basics.header")));
         root.add(basicsPanel, constraints);
 
 
@@ -141,8 +155,8 @@ class MarkedTextAsBugDialog extends DialogWrapper {
             cmbTargetVersion.addItem(version);
         });
 
-        java.awt.Label lblFixedInVersion = new java.awt.Label("Fixed in Version");
-        java.awt.Label lblTargetVersion = new java.awt.Label("Target Version");
+        java.awt.Label lblFixedInVersion = new java.awt.Label(bundle.getString("basics.fixedInVersion"));
+        java.awt.Label lblTargetVersion = new java.awt.Label(bundle.getString("basics.targetVersion"));
 
         JPanel versionPanel = new JPanel(new GridBagLayout());
         versionPanel.add(lblTargetVersion, labelConstraint);
@@ -150,7 +164,7 @@ class MarkedTextAsBugDialog extends DialogWrapper {
         versionPanel.add(lblFixedInVersion, labelConstraint);
         versionPanel.add(cmbFixedInVersion, txtConstraint);
 
-        versionPanel.setBorder(IdeBorderFactory.createTitledBorder("Version"));
+        versionPanel.setBorder(IdeBorderFactory.createTitledBorder(bundle.getString("basics.version")));
         root.add(versionPanel, constraints);
 
 
@@ -161,9 +175,9 @@ class MarkedTextAsBugDialog extends DialogWrapper {
         api.getEnum("severities").forEach(cmbSeverity::addItem);
         api.getEnum("status").forEach(cmbStatus::addItem);
 
-        java.awt.Label lblPriority = new java.awt.Label("Priority");
-        java.awt.Label lblSeverity = new java.awt.Label("Severity");
-        java.awt.Label lblStatus = new java.awt.Label("Status");
+        java.awt.Label lblPriority = new java.awt.Label(bundle.getString("basics.priority"));
+        java.awt.Label lblSeverity = new java.awt.Label(bundle.getString("basics.severity"));
+        java.awt.Label lblStatus = new java.awt.Label(bundle.getString("basics.status"));
 
         JPanel statePanel = new JPanel(new GridBagLayout());
         statePanel.add(lblPriority, labelConstraint);
@@ -173,7 +187,7 @@ class MarkedTextAsBugDialog extends DialogWrapper {
         statePanel.add(lblStatus, labelConstraint);
         statePanel.add(cmbStatus, txtConstraint);
 
-        statePanel.setBorder(IdeBorderFactory.createTitledBorder("State"));
+        statePanel.setBorder(IdeBorderFactory.createTitledBorder(bundle.getString("basics.states")));
         root.add(statePanel, constraints);
 
 
@@ -182,11 +196,11 @@ class MarkedTextAsBugDialog extends DialogWrapper {
             txtDocumentPath = new JBTextField();
             txtDocumentPath.setEnabled(false);
             txtDocumentPath.setText(this.documentPath);
-            java.awt.Label lblDocumentPath = new java.awt.Label("Attachment");
+            java.awt.Label lblDocumentPath = new java.awt.Label(bundle.getString("attachments.fileName"));
             attachmentPanel.add(lblDocumentPath, labelConstraint);
             attachmentPanel.add(txtDocumentPath, txtConstraint);
 
-            attachmentPanel.setBorder(IdeBorderFactory.createTitledBorder("Attachment"));
+            attachmentPanel.setBorder(IdeBorderFactory.createTitledBorder(bundle.getString("attachments.header")));
             root.add(attachmentPanel, constraints);
         }
         return root;
