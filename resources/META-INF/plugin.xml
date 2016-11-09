@@ -1,10 +1,43 @@
 <idea-plugin version="2">
   <id>de.domjos.ideaMantis</id>
   <name>ideaMantis</name>
-  <version>0.1</version>
+  <version>0.3</version>
   <vendor email="webmaster@domjos.de" url="http://domjos.de">Dominic Joas</vendor>
 
-  <description><![CDATA[Connect intelliJ Idea with your MantisBT Installation.]]></description>
+  <description>
+    <![CDATA[
+      <img src='https://raw.githubusercontent.com/domjos1994/ideaMantis/master/resources/de/domjos/ideaMantis/images/icon.png' alt='Logo' title='Logo'/> IntelliJ-Idea Plugin to create, edit and delete Issues from Mantis BugTracker!
+    ]]>
+  </description>
+
+  <change-notes>
+    <![CDATA[
+      <h2>0.1</h2>
+      <ul>
+        <li>Add ToolWindow to</li>
+        <ul>
+          <li>add Issues</li>
+          <li>edit Issues</li>
+          <li>delete Issues</li>
+          <li>add notes to Issues</li>
+          <li>add attachments to Issues</li>
+        </ul>
+      </ul>
+    ]]>
+    <![CDATA[
+      <h2>0.2</h2>
+      <ul>
+        <li>Add Settings-Screen to connect to MantisBT-Installation</li>
+      </ul>
+    ]]>
+    <![CDATA[
+      <h2>0.3</h2>
+      <ul>
+        <li>Add Context-Menu-Entry to mark text as Bug and add to new Issue</li>
+        <li>Add Context-Menu-Entry to add document as Attachment to new Issue</li>
+      </ul>
+    ]]>
+  </change-notes>
 
   <idea-version since-build="141.0"/>
 
@@ -15,16 +48,16 @@
             id="ideaMantis -Issues"
             icon="/de/domjos/ideaMantis/images/icon.png"
             anchor="right"
-            factoryClass="de.domjos.ideaMantis.ui.ideaMantisIssues"/>
+            factoryClass="de.domjos.ideaMantis.ui.IdeaMantisIssues"/>
 
     <projectService
             serviceImplementation="de.domjos.ideaMantis.service.ConnectionSettings"/>
 
     <projectConfigurable
-            id="de.domjos.ideaMantis.ui.ideaMantisConfigurable"
+            id="de.domjos.ideaMantis.ui.IdeaMantisConfigurable"
             nonDefaultProject="true"
             groupId="tools"
-            instance="de.domjos.ideaMantis.ui.ideaMantisConfigurable"/>
+            instance="de.domjos.ideaMantis.ui.IdeaMantisConfigurable"/>
 
   </extensions>
 
