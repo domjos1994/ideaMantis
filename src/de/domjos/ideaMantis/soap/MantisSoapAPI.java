@@ -23,6 +23,7 @@ public class MantisSoapAPI {
     private ConnectionSettings settings;
     private SoapSerializationEnvelope structEnvelope;
     private HttpTransportSE structTransport;
+    private MantisUser user;
 
     public MantisSoapAPI(ConnectionSettings settings) {
         this.settings = settings;
@@ -48,6 +49,29 @@ public class MantisSoapAPI {
             user.setName(obj.getProperty(2).toString());
             user.setEmail(obj.getProperty(3).toString());
             user.setPassword(this.settings.getPassword());
+            this.user = user;
+            return user;
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+
+    public MantisUser testConnection(String hostName, String userName, String password) {
+        SoapObject structRequest = new SoapObject(hostName + "/api/soap/mantisconnect.php", "mc_login");
+        try {
+            structRequest.addProperty("username", userName);
+            structRequest.addProperty("password", password);
+            structEnvelope.setOutputSoapObject(structRequest);
+            structTransport.call("SOAPAction", structEnvelope);
+            SoapObject obj = (SoapObject) structEnvelope.bodyIn;
+            obj = (SoapObject) obj.getProperty(0);
+            obj = (SoapObject) obj.getProperty(0);
+            MantisUser user = new MantisUser(obj.getProperty(1).toString());
+            user.setId(Integer.parseInt(obj.getProperty(0).toString()));
+            user.setName(obj.getProperty(2).toString());
+            user.setEmail(obj.getProperty(3).toString());
+            user.setPassword(this.settings.getPassword());
+            this.user = user;
             return user;
         } catch (Exception ex) {
             return null;
@@ -145,6 +169,23 @@ public class MantisSoapAPI {
         }
     }
 
+    public boolean checkInIssue(int sid, String comment, boolean fixed) {
+        SoapObject structRequest = new SoapObject(this.settings.getHostName() + "/api/soap/mantisconnect.php", "mc_issue_checkin");
+        try {
+            structRequest.addProperty("username", this.settings.getUserName());
+            structRequest.addProperty("password", this.settings.getPassword());
+            structRequest.addProperty("issue_id", sid);
+            structRequest.addProperty("comment", comment);
+            structRequest.addProperty("fixed", fixed);
+            structEnvelope.setOutputSoapObject(structRequest);
+            structTransport.call("SOAPAction", structEnvelope);
+            SoapObject obj = (SoapObject) structEnvelope.bodyIn;
+            return checkProperty(obj);
+        } catch (Exception ex) {
+            return false;
+        }
+    }
+
     public boolean addIssue(MantisIssue issue) throws Exception {
         SoapObject structRequest;
         if(issue.getId()!=0) {
@@ -170,7 +211,16 @@ public class MantisSoapAPI {
         issueObject.addProperty("priority", buildObjectRef("priorities", issue.getPriority()));
         issueObject.addProperty("severity", buildObjectRef("severities", issue.getSeverity()));
         issueObject.addProperty("status", buildObjectRef("status", issue.getStatus()));
-        issueObject = buildAccountData(issue.getReporter(), issueObject);
+        if(this.user!=null) {
+            issueObject = buildAccountData(this.user, issueObject, "reporter");
+        } else {
+            this.user = this.testConnection();
+            if(this.user!=null) {
+                issueObject = buildAccountData(this.user, issueObject, "reporter");
+            }
+        }
+        if(issue.getReporter()!=null)
+            issueObject = buildAccountData(issue.getReporter(), issueObject, "handler");
         issueObject.addProperty("summary", issue.getSummary());
         issueObject.addProperty("fixed_in_version", issue.getFixed_in_version());
         issueObject.addProperty("target_version", issue.getTarget_version());
@@ -257,7 +307,8 @@ public class MantisSoapAPI {
     private SoapObject buildNoteRequest(IssueNote note) {
         SoapObject issueNoteData = new SoapObject(NAMESPACE, "IssueNoteData");
         issueNoteData.addProperty("id", 0);
-        issueNoteData = this.buildAccountData(note.getReporter(), issueNoteData);
+        if(note.getReporter()!=null)
+            issueNoteData = this.buildAccountData(note.getReporter(), issueNoteData, "reporter");
         issueNoteData.addProperty("text", note.getText());
         if(!note.getView_state().equals("")) {
             SoapObject objectRef = new SoapObject(NAMESPACE, "ObjectRef");
@@ -279,14 +330,14 @@ public class MantisSoapAPI {
         return objectRef;
     }
 
-    private SoapObject buildAccountData(MantisUser reporter, SoapObject parent) {
+    private SoapObject buildAccountData(MantisUser reporter, SoapObject parent, String item) {
         if(reporter!=null) {
             SoapObject accountData = new SoapObject(NAMESPACE, "AccountData");
             accountData.addProperty("id", reporter.getId());
             accountData.addProperty("name", reporter.getUserName());
             accountData.addProperty("real_name", reporter.getName());
             accountData.addProperty("email", reporter.getEmail());
-            parent.addProperty("reporter", accountData);
+            parent.addProperty(item, accountData);
         }
         return parent;
     }
