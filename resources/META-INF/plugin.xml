@@ -1,7 +1,7 @@
 <idea-plugin version="2">
   <id>de.domjos.ideaMantis</id>
   <name>ideaMantis</name>
-  <version>0.3</version>
+  <version>0.4</version>
   <vendor email="webmaster@domjos.de" url="http://domjos.de">Dominic Joas</vendor>
 
   <description>
