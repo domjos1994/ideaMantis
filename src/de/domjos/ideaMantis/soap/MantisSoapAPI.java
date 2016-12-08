@@ -572,14 +572,12 @@ public class MantisSoapAPI {
     private boolean checkProperty(SoapObject result) {
         try {
             try {
-                if(checkIntProperty(result)!=0) {
+                if (checkIntProperty(result) != 0) {
                     return true;
                 }
-            } catch (Exception ignored) {}
-            if(result.getProperty(0)==null) {
-                return true;
+            } catch (Exception ignored) {
             }
-            return Boolean.parseBoolean(result.getProperty(0).toString());
+            return result.getProperty(0) == null || Boolean.parseBoolean(result.getProperty(0).toString());
         } catch (Exception ex) {
             return false;
         }

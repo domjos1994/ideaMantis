@@ -3,16 +3,10 @@ package de.domjos.ideaMantis.utils;
 import com.intellij.notification.Notification;
 import com.intellij.notification.NotificationType;
 import com.intellij.notification.Notifications;
-import com.intellij.openapi.project.Project;
-import org.jetbrains.annotations.NotNull;
 import org.ksoap2.serialization.SoapObject;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.File;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.util.Enumeration;
 import java.util.Locale;
 import java.util.ResourceBundle;
 

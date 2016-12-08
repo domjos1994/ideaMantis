@@ -29,7 +29,7 @@ public class WholeFileAsBugEditorAction extends AnAction {
 
         //Making the replacement
         WriteCommandAction.runWriteCommandAction(project,()->{
-            String pathToDocument = "";
+            String pathToDocument;
             String pathToDocumentArray[] = document.toString().split("file://");
             if(pathToDocumentArray.length==2) {
                 pathToDocument = pathToDocumentArray[1].replace("]", "").trim();
@@ -37,7 +37,7 @@ public class WholeFileAsBugEditorAction extends AnAction {
                 pathToDocument = document.toString();
             }
 
-            MarkedTextAsBugDialog markedTextAsBugDialog = null;
+            MarkedTextAsBugDialog markedTextAsBugDialog;
             if(new File(pathToDocument).exists()) {
                 markedTextAsBugDialog = new MarkedTextAsBugDialog(project, "", pathToDocument);
             } else {

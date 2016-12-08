@@ -148,7 +148,7 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
         ConnectionSettings connection = ConnectionSettings.getInstance(this.project);
         if(connection!=null) {
 
-            StringBuffer buf = new StringBuffer();
+            StringBuilder buf = new StringBuilder();
             for(char ch : txtPassword.getPassword()) {
                 buf.append(ch);
             }
@@ -168,7 +168,7 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
         if(connection!=null) {
             connection.setHostName(txtHostName.getText());
             connection.setUserName(txtUserName.getText());
-            StringBuffer buf = new StringBuffer();
+            StringBuilder buf = new StringBuilder();
             for(char ch : txtPassword.getPassword()) {
                 buf.append(ch);
             }
