@@ -88,7 +88,11 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
         this.cmdTestConnection = new JButton(bundle.getString("settings.connection.test"));
         this.cmdTestConnection.addActionListener(e -> {
             MantisSoapAPI connection = new MantisSoapAPI(ConnectionSettings.getInstance(this.project));
-            if(this.changeConnectionLabel(connection.testConnection(txtHostName.getText(), txtUserName.getText(), txtPassword.getText()))) {
+            String pwd = "";
+            for(char ch : txtPassword.getPassword()) {
+                pwd += ch;
+            }
+            if(this.changeConnectionLabel(connection.testConnection(txtHostName.getText(), txtUserName.getText(), pwd))) {
                 java.util.List<MantisProject> projects = connection.getProjects();
                 cmbProjects.removeAllItems();
                 for(MantisProject project : projects) {
