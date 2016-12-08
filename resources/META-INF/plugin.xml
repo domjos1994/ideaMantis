@@ -38,6 +38,14 @@
         <li>Add Context-Menu-Entry to add document as Attachment to new Issue</li>
       </ul>
     ]]>
+    <![CDATA[
+      <h2>0.4</h2>
+      <ul>
+        <li>change settings and test connection without pressing apply before</li>
+        <li>solve bug: no settings at the beginning</li>
+        <li>improve View</li>
+      </ul>
+    ]]>
   </change-notes>
 
   <idea-version since-build="141.0"/>
