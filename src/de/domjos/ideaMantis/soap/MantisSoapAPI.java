@@ -78,6 +78,33 @@ public class MantisSoapAPI {
         }
     }
 
+    public boolean addProject(MantisProject project) {
+        SoapObject structRequest;
+        try {
+            if(project.getId()==0) {
+                 structRequest = new SoapObject(this.settings.getHostName() + "/api/soap/mantisconnect.php", "mc_project_add");
+            } else {
+                structRequest = new SoapObject(this.settings.getHostName() + "/api/soap/mantisconnect.php", "mc_project_update");
+                structRequest.addProperty("project_id", project.getId());
+            }
+            structRequest.addProperty("username", this.settings.getUserName());
+            structRequest.addProperty("password", this.settings.getPassword());
+            SoapObject projectObject = new SoapObject(NAMESPACE, "ProjectData");
+            projectObject.addProperty("id", project.getId());
+            projectObject.addProperty("name", project.getName());
+            projectObject.addProperty("enabled", project.isEnabled());
+            projectObject.addProperty("view_state", buildObjectRef("view_states", project.getView_state()));
+            projectObject.addProperty("description", project.getDescription());
+            structRequest.addProperty("project", projectObject);
+            structEnvelope.setOutputSoapObject(structRequest);
+            structTransport.call("SOAPAction", structEnvelope);
+            SoapObject obj = (SoapObject) structEnvelope.bodyIn;
+            return checkProperty(obj);
+        } catch (Exception ex) {
+            return false;
+        }
+    }
+
     public List<MantisProject> getProjects() {
         List<MantisProject> projectList = new LinkedList<>();
         SoapObject structRequest = new SoapObject(this.settings.getHostName() + "/api/soap/mantisconnect.php", "mc_projects_get_user_accessible");

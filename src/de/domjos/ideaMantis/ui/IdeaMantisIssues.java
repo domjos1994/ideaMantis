@@ -4,6 +4,14 @@ import com.intellij.notification.NotificationType;
 import com.intellij.openapi.fileChooser.FileChooser;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Pair;
+import com.intellij.openapi.vcs.AbstractVcs;
+import com.intellij.openapi.vcs.ProjectLevelVcsManager;
+import com.intellij.openapi.vcs.changes.ChangeProvider;
+import com.intellij.openapi.vcs.changes.VcsDirtyScope;
+import com.intellij.openapi.vcs.changes.VcsDirtyScopeManager;
+import com.intellij.openapi.vcs.ex.ProjectLevelVcsManagerEx;
+import com.intellij.openapi.vcs.history.VcsRevisionNumber;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.ui.content.Content;
@@ -116,6 +124,13 @@ public class IdeaMantisIssues implements ToolWindowFactory {
 
         cmdReload.addActionListener(e -> {
             try {
+                ProjectLevelVcsManager manager = ProjectLevelVcsManager.getInstance(project);
+                if(manager.hasActiveVcss()) {
+                    for(AbstractVcs vcs : manager.getAllActiveVcss()) {
+                        Pair<VcsRevisionNumber, List> pair = vcs.getOutgoingChangesProvider().getOutgoingChanges(manager.getAllVersionedRoots()[0], true);
+
+                    }
+                }
                 pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                 if(!settings.validateSettings()) {
                     Helper.printNotification(bundle.getString("message.wrongSettings.header"), bundle.getString("message.wrongSettings.content"),NotificationType.ERROR);
