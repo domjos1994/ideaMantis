@@ -3,12 +3,14 @@ package de.domjos.ideaMantis.utils;
 import com.intellij.notification.Notification;
 import com.intellij.notification.NotificationType;
 import com.intellij.notification.Notifications;
+import com.intellij.openapi.vcs.changes.Change;
+import com.intellij.openapi.vcs.changes.ChangeListManager;
+import com.intellij.openapi.vcs.changes.LocalChangeList;
 import org.ksoap2.serialization.SoapObject;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.Locale;
-import java.util.ResourceBundle;
+import java.util.*;
 
 public abstract class Helper {
 
@@ -90,5 +92,14 @@ public abstract class Helper {
            bundle = null;
         }
         return bundle;
+    }
+
+    public static void commitAllFiles(String comment, ChangeListManager changeListManager) {
+        java.util.List<Change> changeList = new LinkedList<>();
+        changeListManager.getAllChanges().forEach(changeList::add);
+        for(LocalChangeList localChangeList : changeListManager.getChangeLists()) {
+            localChangeList.setComment(comment);
+            changeListManager.commitChanges(localChangeList, changeList);
+        }
     }
 }
