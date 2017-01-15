@@ -1,21 +1,29 @@
 package de.domjos.ideaMantis.ui;
 
+import com.intellij.execution.ui.ConsoleViewContentType;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.fileChooser.FileChooser;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.DialogWrapperPeerFactory;
 import com.intellij.openapi.util.Pair;
-import com.intellij.openapi.vcs.AbstractVcs;
-import com.intellij.openapi.vcs.ProjectLevelVcsManager;
-import com.intellij.openapi.vcs.changes.ChangeProvider;
-import com.intellij.openapi.vcs.changes.VcsDirtyScope;
-import com.intellij.openapi.vcs.changes.VcsDirtyScopeManager;
+import com.intellij.openapi.vcs.*;
+import com.intellij.openapi.vcs.actions.VcsContextFactory;
+import com.intellij.openapi.vcs.changes.*;
+import com.intellij.openapi.vcs.checkin.CheckinEnvironment;
 import com.intellij.openapi.vcs.ex.ProjectLevelVcsManagerEx;
 import com.intellij.openapi.vcs.history.VcsRevisionNumber;
+import com.intellij.openapi.vcs.impl.ProjectLevelVcsManagerImpl;
+import com.intellij.openapi.vcs.rollback.RollbackEnvironment;
+import com.intellij.openapi.vcs.update.UpdateEnvironment;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
+import com.intellij.peer.impl.VcsContextFactoryImpl;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
+import com.intellij.util.Consumer;
+import com.intellij.vcsUtil.VcsFileUtil;
 import de.domjos.ideaMantis.model.IssueAttachment;
 import de.domjos.ideaMantis.model.IssueNote;
 import de.domjos.ideaMantis.model.MantisIssue;
@@ -32,9 +40,8 @@ import java.awt.datatransfer.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.net.URI;
-import java.util.Date;
+import java.util.*;
 import java.util.List;
-import java.util.ResourceBundle;
 
 public class IdeaMantisIssues implements ToolWindowFactory {
     private Project project;
@@ -65,8 +72,12 @@ public class IdeaMantisIssues implements ToolWindowFactory {
 
     private JProgressBar pbMain;
     private JLabel lblValidation;
+    private JCheckBox chkAddVCS;
+    private JTextField txtVCSComment;
     private ResourceBundle bundle;
     private boolean state = false;
+
+    private ChangeListManager changeListManager;
 
 
     public IdeaMantisIssues() {
@@ -80,6 +91,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         controlIssues(false, false);
         cmdIssueNew.setEnabled(false);
         tblIssueAttachments.setDragEnabled(true);
+        txtVCSComment.setEnabled(false);
         tblIssueAttachments = Helper.disableEditingTable(tblIssueAttachments);
         chkBasicsCheckIn.setVisible(false);
 
@@ -124,13 +136,6 @@ public class IdeaMantisIssues implements ToolWindowFactory {
 
         cmdReload.addActionListener(e -> {
             try {
-                ProjectLevelVcsManager manager = ProjectLevelVcsManager.getInstance(project);
-                if(manager.hasActiveVcss()) {
-                    for(AbstractVcs vcs : manager.getAllActiveVcss()) {
-                        Pair<VcsRevisionNumber, List> pair = vcs.getOutgoingChangesProvider().getOutgoingChanges(manager.getAllVersionedRoots()[0], true);
-
-                    }
-                }
                 pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                 if(!settings.validateSettings()) {
                     Helper.printNotification(bundle.getString("message.wrongSettings.header"), bundle.getString("message.wrongSettings.content"),NotificationType.ERROR);
@@ -320,6 +325,13 @@ public class IdeaMantisIssues implements ToolWindowFactory {
 
                    if(!new MantisSoapAPI(this.settings).addIssue(issue)) {
                        Helper.printNotification(bundle.getString("message.error.header"), String.format(bundle.getString("message.cantAdd"), bundle.getString("issue.header")), NotificationType.ERROR);
+                   }
+                   if(chkAddVCS.isSelected()) {
+                       if(txtVCSComment.getText().contains("%s")) {
+                           Helper.commitAllFiles(String.format(txtVCSComment.getText(), txtIssueSummary.getText()), this.changeListManager);
+                       } else {
+                           Helper.commitAllFiles(txtVCSComment.getText(), this.changeListManager);
+                       }
                    }
                    if(chkBasicsCheckIn.isSelected()) {
                        FixDialog dialog = new FixDialog(project, issue.getId());
@@ -609,6 +621,8 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                 Helper.printNotification(bundle.getString("message.error.header"), ex.toString(), NotificationType.ERROR);
             }
         });
+
+        chkAddVCS.addActionListener(e -> txtVCSComment.setEnabled(chkAddVCS.isSelected()));
     }
 
     private String validateIssue() {
@@ -645,6 +659,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         Content content = contentFactory.createContent(this.pnlMain, "", false);
         toolWindow.getContentManager().addContent(content);
         settings = ConnectionSettings.getInstance(project);
+        this.changeListManager = ChangeListManager.getInstance(project);
         cmdReload.doClick();
         if(state)
             this.loadComboBoxes();
@@ -653,6 +668,10 @@ public class IdeaMantisIssues implements ToolWindowFactory {
 
     private void controlIssues(boolean selected, boolean editMode) {
         txtIssueSummary.setEnabled(editMode);
+        chkAddVCS.setEnabled(editMode);
+        if(!editMode) {
+            txtVCSComment.setEnabled(false);
+        }
         cmdIssueNoteNew.setEnabled(editMode);
         cmdIssueAttachmentNew.setEnabled(editMode);
         cmbIssueReporterName.setEnabled(editMode);
@@ -700,6 +719,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
     private void resetIssues() {
         tblIssues.getSelectionModel().clearSelection();
         txtIssueSummary.setText("");
+        txtVCSComment.setText(bundle.getString("settings.connection.VCSComment"));
         cmbIssueReporterName.setSelectedItem(null);
         cmbIssueCategory.setSelectedItem(null);
         cmbIssueTargetVersion.setSelectedItem(null);
