@@ -171,6 +171,9 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                 }
             } catch (Exception ex) {
                 Helper.printNotification(bundle.getString("message.error.header"), ex.toString(), NotificationType.ERROR);
+                for(StackTraceElement element : ex.getStackTrace()) {
+                    System.out.println(String.format("%s:%s:%s: %s", element.getFileName(), element.getClassName(), element.getMethodName(), element.getLineNumber()));
+                }
             } finally {
                 pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
                 pbMain.setValue(pbMain.getMinimum());
