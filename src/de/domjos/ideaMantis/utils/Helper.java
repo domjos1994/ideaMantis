@@ -6,6 +6,8 @@ import com.intellij.notification.Notifications;
 import com.intellij.openapi.vcs.changes.Change;
 import com.intellij.openapi.vcs.changes.ChangeListManager;
 import com.intellij.openapi.vcs.changes.LocalChangeList;
+import de.domjos.ideaMantis.model.MantisIssue;
+import de.domjos.ideaMantis.model.MantisProject;
 import org.ksoap2.serialization.SoapObject;
 
 import javax.swing.*;
@@ -82,6 +84,54 @@ public abstract class Helper {
             }
         }
         return table;
+    }
+
+    public static String replaceCommentByMarker(MantisIssue issue, String comment) {
+        if(comment.contains("{additional_information")) {
+            comment = comment.replace("{summary}", issue.getAdditional_information());
+        }
+        if(comment.contains("{build}")) {
+            comment = comment.replace("{build}", issue.getBuild());
+        }
+        if(comment.contains("{category}")) {
+            comment = comment.replace("{category}", issue.getCategory());
+        }
+        if(comment.contains("{date_submitted}")) {
+            comment = comment.replace("{date_submitted}", issue.getDate_submitted());
+        }
+        if(comment.contains("{description}")) {
+            comment = comment.replace("{description}", issue.getDescription());
+        }
+        if(comment.contains("{fixed_in_version}")) {
+            comment = comment.replace("{fixed_in_version}", issue.getDescription());
+        }
+        if(comment.contains("{priority}")) {
+            comment = comment.replace("{priority}", issue.getPriority());
+        }
+        if(comment.contains("{reproducibility}")) {
+            comment = comment.replace("{reproducibility}", issue.getReproducibility());
+        }
+        if(comment.contains("{severity}")) {
+            comment = comment.replace("{severity}", issue.getSeverity());
+        }
+        if(comment.contains("{steps_to_reproduce}")) {
+            comment = comment.replace("{steps_to_reproduce}", issue.getSteps_to_reproduce());
+        }
+        if(comment.contains("{target_version}")) {
+            comment = comment.replace("{target_version}", issue.getTarget_version());
+        }
+        if(comment.contains("{summary}")) {
+            comment = comment.replace("{summary}", issue.getSummary());
+        }
+        if(comment.contains("{state}")) {
+            comment = comment.replace("{state}", issue.getStatus());
+        }
+        if(issue.getReporter()!=null) {
+            if(comment.contains("{reporter}")) {
+                comment = comment.replace("{reporter}", issue.getReporter().getName());
+            }
+        }
+        return comment;
     }
 
     public static ResourceBundle getBundle() {
