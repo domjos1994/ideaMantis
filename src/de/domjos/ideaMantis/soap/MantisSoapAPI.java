@@ -499,10 +499,10 @@ public class MantisSoapAPI {
             SoapObject obj = (SoapObject) structEnvelope.bodyIn;
             for(Object object : ((Vector) obj.getProperty(0))) {
                 SoapObject soapObject = (SoapObject) object;
-                MantisUser user = new MantisUser(soapObject.getProperty(1).toString());
-                user.setName(soapObject.getProperty(2).toString());
-                user.setId(Integer.parseInt(soapObject.getProperty(0).toString()));
-                user.setEmail(soapObject.getProperty(3).toString());
+                MantisUser user = new MantisUser(checkAndGetProperty("name", soapObject));
+                user.setName(checkAndGetProperty("real_name", soapObject));
+                user.setId(Integer.parseInt(checkAndGetProperty("id", soapObject)));
+                user.setEmail(checkAndGetProperty("email", soapObject));
                 boolean state = true;
                 for(MantisUser tmp : userList) {
                     if(tmp.getName().equals(user.getName())) {
@@ -517,8 +517,51 @@ public class MantisSoapAPI {
         return userList;
     }
 
-    public List<String> getVersions(int pid) {
-        List<String> enumList = new LinkedList<>();
+    public boolean addVersion(MantisVersion version, int pid) {
+        SoapObject structRequest;
+        try {
+            if(version.getId()!=0) {
+                structRequest = new SoapObject(this.settings.getHostName() + "/api/soap/mantisconnect.php", "mc_project_version_update");
+                structRequest.addProperty("version_id", version.getId());
+            } else {
+                structRequest = new SoapObject(this.settings.getHostName() + "/api/soap/mantisconnect.php", "mc_project_version_add");
+            }
+            structRequest.addProperty("username", this.settings.getUserName());
+            structRequest.addProperty("password", this.settings.getPassword());
+            SoapObject versionObject = new SoapObject(NAMESPACE, "ProjectVersionData");
+            versionObject.addProperty("name", version.getName());
+            versionObject.addProperty("project_id", pid);
+            versionObject.addProperty("date_order", version.getDate());
+            versionObject.addProperty("description ", version.getDescription());
+            versionObject.addProperty("obsolete", version.isObsolete());
+            versionObject.addProperty("released", version.isReleased());
+            structRequest.addProperty("version", versionObject);
+            structEnvelope.setOutputSoapObject(structRequest);
+            structTransport.call("SOAPAction", structEnvelope);
+            SoapObject obj = (SoapObject) structEnvelope.bodyIn;
+            return checkProperty(obj);
+        } catch (Exception ex) {
+            return false;
+        }
+    }
+
+    public boolean deleteVersion(int id) {
+        SoapObject structRequest = new SoapObject(this.settings.getHostName() + "/api/soap/mantisconnect.php", "mc_project_version_delete");
+        try {
+            structRequest.addProperty("username", this.settings.getUserName());
+            structRequest.addProperty("password", this.settings.getPassword());
+            structRequest.addProperty("version_id", id);
+            structEnvelope.setOutputSoapObject(structRequest);
+            structTransport.call("SOAPAction", structEnvelope);
+            SoapObject obj = (SoapObject) structEnvelope.bodyIn;
+            return checkProperty(obj);
+        } catch (Exception ex) {
+            return false;
+        }
+    }
+
+    public List<MantisVersion> getVersions(int pid) {
+        List<MantisVersion> enumList = new LinkedList<>();
         SoapObject structRequest = new SoapObject(this.settings.getHostName() + "/api/soap/mantisconnect.php", "mc_project_get_versions");
         try {
             structRequest.addProperty("username", this.settings.getUserName());
@@ -528,7 +571,14 @@ public class MantisSoapAPI {
             structTransport.call("SOAPAction", structEnvelope);
             SoapObject obj = (SoapObject) structEnvelope.bodyIn;
             for(Object object : ((Vector) obj.getProperty(0))) {
-                enumList.add(((SoapObject)object).getProperty("name").toString());
+                MantisVersion version = new MantisVersion();
+                version.setId(Integer.parseInt(checkAndGetProperty("id", ((SoapObject)object))));
+                version.setName(checkAndGetProperty("name", ((SoapObject)object)));
+                version.setDate(checkAndGetProperty("date_order", ((SoapObject)object)));
+                version.setDescription(checkAndGetProperty("description", ((SoapObject)object)));
+                version.setReleased(Boolean.parseBoolean(checkAndGetProperty("released", ((SoapObject)object))));
+                version.setObsolete(Boolean.parseBoolean(checkAndGetProperty("obsolete", ((SoapObject)object))));
+                enumList.add(version);
             }
         } catch (Exception ex) {
             return null;
@@ -615,6 +665,17 @@ public class MantisSoapAPI {
             return Integer.parseInt(result.getProperty(0).toString());
         } catch (Exception ex) {
             return 0;
+        }
+    }
+
+    private String checkAndGetProperty(String name, SoapObject object) {
+        try {
+            if(object.getProperty(name)!=null) {
+                return object.getProperty(name).toString();
+            }
+            return "";
+        } catch (Exception ex) {
+            return "";
         }
     }
 }

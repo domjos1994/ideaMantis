@@ -151,8 +151,8 @@ class MarkedTextAsBugDialog extends DialogWrapper {
         cmbTargetVersion = new ComboBox<>();
         cmbFixedInVersion = new ComboBox<>();
         api.getVersions(settings.getProjectID()).forEach(version -> {
-            cmbFixedInVersion.addItem(version);
-            cmbTargetVersion.addItem(version);
+            cmbFixedInVersion.addItem(version.getName());
+            cmbTargetVersion.addItem(version.getName());
         });
 
         java.awt.Label lblFixedInVersion = new java.awt.Label(bundle.getString("basics.fixedInVersion"));
