@@ -4,15 +4,13 @@ import com.intellij.notification.NotificationType;
 import com.intellij.openapi.fileChooser.FileChooser;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.AsyncResult;
 import com.intellij.openapi.vcs.changes.*;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
-import de.domjos.ideaMantis.model.IssueAttachment;
-import de.domjos.ideaMantis.model.IssueNote;
-import de.domjos.ideaMantis.model.MantisIssue;
-import de.domjos.ideaMantis.model.MantisUser;
+import de.domjos.ideaMantis.model.*;
 import de.domjos.ideaMantis.service.ConnectionSettings;
 import de.domjos.ideaMantis.soap.MantisSoapAPI;
 import de.domjos.ideaMantis.utils.Helper;
@@ -59,6 +57,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
     private JLabel lblValidation;
     private JCheckBox chkAddVCS;
     private JTextField txtVCSComment;
+    private JButton cmdVersionAdd;
     private ResourceBundle bundle;
     private boolean state = false;
 
@@ -80,6 +79,11 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         tblIssueAttachments = Helper.disableEditingTable(tblIssueAttachments);
         chkBasicsCheckIn.setVisible(false);
 
+        cmdVersionAdd.addActionListener(e -> {
+            VersionDialog dialog = new VersionDialog(project, settings.getProjectID(), bundle);
+            if(dialog.showAndGet())
+                this.loadVersions(new MantisSoapAPI(ConnectionSettings.getInstance(project)));
+        });
 
         tblIssueAttachments.addMouseListener(new MouseListener() {
             @Override
@@ -194,8 +198,18 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                             txtIssueReporterEMail.setText(issue.getReporter().getEmail());
                         }
                         cmbIssueCategory.setSelectedItem(issue.getCategory());
-                        cmbIssueTargetVersion.setSelectedItem(issue.getTarget_version());
-                        cmbIssueFixedInVersion.setSelectedItem(issue.getFixed_in_version());
+                        for(int i = 0; i<=cmbIssueTargetVersion.getItemCount()-1 ;i++) {
+                            if(cmbIssueTargetVersion.getItemAt(i).contains(issue.getTarget_version())) {
+                                cmbIssueTargetVersion.setSelectedIndex(i);
+                                break;
+                            }
+                        }
+                        for(int i = 0; i<=cmbIssueFixedInVersion.getItemCount()-1 ;i++) {
+                            if(cmbIssueFixedInVersion.getItemAt(i).contains(issue.getFixed_in_version())) {
+                                cmbIssueFixedInVersion.setSelectedIndex(i);
+                                break;
+                            }
+                        }
                         cmbIssuePriority.setSelectedItem(issue.getPriority());
                         cmbIssueSeverity.setSelectedItem(issue.getSeverity());
                         cmbIssueStatus.setSelectedItem(issue.getStatus());
@@ -233,6 +247,80 @@ public class IdeaMantisIssues implements ToolWindowFactory {
 
             @Override
             public void mouseExited(MouseEvent e) {}
+        });
+
+        cmbIssueTargetVersion.addMouseListener(new MouseListener() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if(e.getClickCount()==2) {
+                    MantisSoapAPI api = new MantisSoapAPI(ConnectionSettings.getInstance(project));
+                    for(MantisVersion version : api.getVersions(ConnectionSettings.getInstance(project).getProjectID())) {
+                        if(version.getId()==Integer.parseInt(cmbIssueTargetVersion.getSelectedItem().toString().split(":")[0])) {
+                            VersionDialog dialog = new VersionDialog(project, settings.getProjectID(), bundle, version);
+                            if(dialog.showAndGet())
+                                loadVersions(api);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+
+            }
+        });
+
+        cmbIssueFixedInVersion.addMouseListener(new MouseListener() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if(e.getClickCount()==2) {
+                    MantisSoapAPI api = new MantisSoapAPI(ConnectionSettings.getInstance(project));
+                    for(MantisVersion version : api.getVersions(ConnectionSettings.getInstance(project).getProjectID())) {
+                        if(version.getId()==Integer.parseInt(cmbIssueFixedInVersion.getSelectedItem().toString().split(":")[0])) {
+                            VersionDialog dialog = new VersionDialog(project, settings.getProjectID(), bundle, version);
+                            if(dialog.showAndGet())
+                                loadVersions(api);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+
+            }
         });
 
         cmdIssueNew.addActionListener(e -> {
@@ -292,9 +380,9 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                        issue.setStatus(cmbIssueStatus.getSelectedItem().toString());
 
                    if(cmbIssueFixedInVersion.getSelectedItem()!=null)
-                       issue.setFixed_in_version(cmbIssueFixedInVersion.getSelectedItem().toString());
+                       issue.setFixed_in_version(cmbIssueFixedInVersion.getSelectedItem().toString().split(": ")[1]);
                    if(cmbIssueTargetVersion.getSelectedItem()!=null)
-                       issue.setTarget_version(cmbIssueTargetVersion.getSelectedItem().toString());
+                       issue.setTarget_version(cmbIssueTargetVersion.getSelectedItem().toString().split(": ")[1]);
 
                    if(!txtIssueReporterName.getText().equals("")) {
                        for(MantisUser user : new MantisSoapAPI(this.settings).getUsers(this.settings.getProjectID())) {
@@ -315,11 +403,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                        Helper.printNotification(bundle.getString("message.error.header"), String.format(bundle.getString("message.cantAdd"), bundle.getString("issue.header")), NotificationType.ERROR);
                    }
                    if(chkAddVCS.isSelected()) {
-                       if(txtVCSComment.getText().contains("%s")) {
-                           Helper.commitAllFiles(String.format(txtVCSComment.getText(), txtIssueSummary.getText()), this.changeListManager);
-                       } else {
-                           Helper.commitAllFiles(txtVCSComment.getText(), this.changeListManager);
-                       }
+                       Helper.commitAllFiles(Helper.replaceCommentByMarker(issue, txtVCSComment.getText()), this.changeListManager);
                    }
                    if(chkBasicsCheckIn.isSelected()) {
                        FixDialog dialog = new FixDialog(project, issue.getId());
@@ -669,6 +753,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         cmbIssuePriority.setEnabled(editMode);
         cmbIssueSeverity.setEnabled(editMode);
         cmbIssueStatus.setEnabled(editMode);
+        cmdVersionAdd.setEnabled(editMode);
         tblIssues.setEnabled(!editMode);
         chkBasicsCheckIn.setEnabled(editMode);
         if(!editMode) {
@@ -802,19 +887,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
             }
         }
 
-        List<String> versions = api.getVersions(this.settings.getProjectID());
-
-        if(versions!=null) {
-            cmbIssueTargetVersion.removeAllItems();
-            for (String version : versions) {
-                cmbIssueTargetVersion.addItem(version);
-            }
-
-            cmbIssueFixedInVersion.removeAllItems();
-            for (String version : versions) {
-                cmbIssueFixedInVersion.addItem(version);
-            }
-        }
+        this.loadVersions(api);
 
         try {
             List<MantisUser> user = api.getUsers(this.settings.getProjectID());
@@ -868,6 +941,22 @@ public class IdeaMantisIssues implements ToolWindowFactory {
             cmbIssueNoteViewState.removeAllItems();
             for(String viewState : viewStates) {
                 cmbIssueNoteViewState.addItem(viewState);
+            }
+        }
+    }
+
+    private void loadVersions(MantisSoapAPI api) {
+        List<MantisVersion> versions = api.getVersions(this.settings.getProjectID());
+
+        if(versions!=null) {
+            cmbIssueTargetVersion.removeAllItems();
+            for (MantisVersion version : versions) {
+                cmbIssueTargetVersion.addItem(version.getId() + ": " + version.getName());
+            }
+
+            cmbIssueFixedInVersion.removeAllItems();
+            for (MantisVersion version : versions) {
+                cmbIssueFixedInVersion.addItem(version.getId() + ": " + version.getName());
             }
         }
     }
