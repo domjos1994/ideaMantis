@@ -33,7 +33,7 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
     private java.awt.Label lblConnectionState;
     private JButton cmdTestConnection;
     private JPanel newProjectPanel;
-    private ComboBox<String> cmbProjects, cmbProjectViewState;
+    private ComboBox<String> cmbProjects, cmbNewProjectProjects, cmbProjectViewState;
     private int projectID = 0;
     private Project project;
     private ResourceBundle bundle;
@@ -108,12 +108,12 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
             if(this.changeConnectionLabel(connection.testConnection(txtHostName.getText(), txtUserName.getText(), pwd))) {
                 java.util.List<MantisProject> projects = connection.getProjects();
                 cmbProjects.removeAllItems();
+                cmbNewProjectProjects.removeAllItems();
                 for(MantisProject project : projects) {
-                    cmbProjects.addItem(project.getId() + ": " + project.getName());
-                    for(MantisProject subProject : project.getSubProjects()) {
-                        cmbProjects.addItem(subProject.getId() + ": -> " + subProject.getName());
-                    }
+                    this.addProjectToComboBox(project, ": ");
                 }
+                cmbNewProjectProjects.addItem("");
+                cmbNewProjectProjects.setSelectedItem("");
 
                 cmbProjectViewState.removeAllItems();
                 for(String item : connection.getEnum("view_states")) {
@@ -157,10 +157,15 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
         this.cmbProjectViewState = new ComboBox<>();
         this.chkProjectEnabled = new JBCheckBox(bundle.getString("settings.connection.project.enabled"));
 
+        this.cmbNewProjectProjects = new ComboBox<>();
+        this.cmbNewProjectProjects.setVisible(false);
+
         newProjectPanel = new JPanel(new GridBagLayout());
         newProjectPanel.setVisible(false);
         newProjectPanel.add(lblProjectName, labelConstraint);
         newProjectPanel.add(txtProjectName, txtConstraint);
+        newProjectPanel.add(lblProjects, labelConstraint);
+        newProjectPanel.add(cmbNewProjectProjects, txtConstraint);
         newProjectPanel.add(lblProjectDescription, labelConstraint);
         newProjectPanel.add(txtProjectDescription, txtConstraint);
         newProjectPanel.add(lblProjectViewState, labelConstraint);
@@ -175,6 +180,18 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
                 project.setView_state(cmbProjectViewState.getSelectedItem().toString());
             project.setEnabled(chkProjectEnabled.isSelected());
             MantisSoapAPI connection = new MantisSoapAPI(ConnectionSettings.getInstance(this.project));
+            int id = 0;
+            if(!cmbNewProjectProjects.getSelectedItem().toString().equals("")) {
+                if(cmbNewProjectProjects.getSelectedItem()!=null)
+                    id = Integer.parseInt(cmbNewProjectProjects.getSelectedItem().toString().split(": ")[0].trim());
+
+                MantisProject parent = getProject(id, connection.getProjects());
+                if(parent!=null) {
+                    parent.addSubProject(project);
+                    project = parent;
+                }
+            }
+
             if(!connection.addProject(project)) {
                 Helper.printNotification(bundle.getString("message.error.header"), String.format(bundle.getString("message.cantAdd"), project.getName()), NotificationType.ERROR);
             } else {
@@ -209,6 +226,14 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
         constraints.weighty = 2.0;
         root.add(newProjectPanel,constraints);
         return root;
+    }
+
+    private void addProjectToComboBox(MantisProject project, String splitter) {
+        cmbProjects.addItem(project.getId() + splitter + project.getName());
+        cmbNewProjectProjects.addItem(project.getId() + splitter + project.getName());
+        for(MantisProject subProject : project.getSubProjects()) {
+            this.addProjectToComboBox(subProject, splitter + "-> ");
+        }
     }
 
     @Override
@@ -278,6 +303,16 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
             this.lblConnectionState.setForeground(JBColor.GREEN);
             return true;
         }
+    }
+
+    private MantisProject getProject(int id, java.util.List<MantisProject> projects) {
+        for(MantisProject tmp : projects) {
+            if(tmp.getId()==id) {
+                return tmp;
+            }
+            return getProject(id, tmp.getSubProjects());
+        }
+        return null;
     }
 }
 

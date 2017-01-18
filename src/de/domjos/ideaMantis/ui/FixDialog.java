@@ -2,6 +2,7 @@ package de.domjos.ideaMantis.ui;
 
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.ComboBox;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.ui.components.JBTextField;
 import com.intellij.util.ui.JBUI;
@@ -16,11 +17,14 @@ import java.util.ResourceBundle;
 
 public class FixDialog extends DialogWrapper {
     private JBTextField txtFixed;
+    private ComboBox<String> cmbState;
     private ResourceBundle bundle;
     private MantisSoapAPI api;
+    private Project project;
 
     protected FixDialog(@Nullable Project project, int id) {
         super(project);
+        this.project = project;
         try {
             this.api = new MantisSoapAPI(ConnectionSettings.getInstance(project));
             this.bundle = Helper.getBundle();
@@ -30,7 +34,7 @@ public class FixDialog extends DialogWrapper {
             if(this.getButton(this.getOKAction())!=null) {
                 this.getButton(this.getOKAction()).addActionListener((event) -> {
                     try {
-                        api.checkInIssue(id, txtFixed.getText(), true);
+                        api.checkInIssue(id, txtFixed.getText(), cmbState.getSelectedItem().toString());
                     } catch (Exception ex) {
                         Helper.printNotification(bundle.getString("message.error.header"), ex.toString(), NotificationType.ERROR);
                     }
@@ -62,13 +66,22 @@ public class FixDialog extends DialogWrapper {
 
         txtFixed = new JBTextField();
         txtFixed.setName("txtSummary");
-        txtFixed.setPreferredSize(new Dimension(100, 25));
+        txtFixed.setPreferredSize(new Dimension(150, 200));
+
+        cmbState = new ComboBox<>();
+        cmbState.setName("cmbState");
+        for(String item : new MantisSoapAPI(ConnectionSettings.getInstance(project)).getEnum("view_states")) {
+            cmbState.addItem(item);
+        }
 
         java.awt.Label lblFixed = new java.awt.Label(bundle.getString("basics.checkIn"));
+        java.awt.Label lblState = new java.awt.Label(bundle.getString("basics.status"));
 
         JPanel basicsPanel = new JPanel(new GridBagLayout());
         basicsPanel.add(lblFixed, labelConstraint);
         basicsPanel.add(txtFixed, txtConstraint);
+        basicsPanel.add(lblState, labelConstraint);
+        basicsPanel.add(cmbState, txtConstraint);
 
         root.add(basicsPanel);
         return root;
