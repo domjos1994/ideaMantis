@@ -1,8 +1,12 @@
 package de.domjos.ideaMantis.model;
 
+import java.util.AbstractMap;
+import java.util.Map;
+
 public class MantisUser {
     private int id;
     private String userName, name, email, password;
+    private Map.Entry<Integer, String> accessLevel;
 
     public MantisUser(String userName) {
         this.id = 0;
@@ -10,6 +14,7 @@ public class MantisUser {
         this.name = "";
         this.email = "";
         this.password = "";
+        this.accessLevel = new AbstractMap.SimpleEntry<>(0, "");
     }
 
     public int getId() {
@@ -51,4 +56,8 @@ public class MantisUser {
     public void setPassword(String password) {
         this.password = password;
     }
+
+    public Map.Entry<Integer, String> getAccessLevel() {return this.accessLevel;}
+
+    public void setAccessLevel(int id, String name) {this.accessLevel = new AbstractMap.SimpleEntry<>(id, name);}
 }

@@ -12,11 +12,8 @@ public class MantisIssue {
     private String summary;
     private String build;
     private String reproducibility;
-    private String fixed_in_version;
-    private String target_version;
-    private String description;
-    private String steps_to_reproduce;
-    private String additional_information;
+    private String tags;
+    private String fixed_in_version, target_version, description, steps_to_reproduce, additional_information;
     private MantisUser reporter;
     private String date_submitted;
     private List<IssueAttachment> issueAttachmentList;
@@ -27,6 +24,7 @@ public class MantisIssue {
         this.date_submitted = null;
         this.issueAttachmentList = new LinkedList<>();
         this.issueNoteList = new LinkedList<>();
+        this.tags = "";
     }
 
     public int getId() {
@@ -171,5 +169,13 @@ public class MantisIssue {
 
     public void setIssueNoteList(List<IssueNote> issueNoteList) {
         this.issueNoteList = issueNoteList;
+    }
+
+    public String getTags() {
+        return tags;
+    }
+
+    public void setTags(String tags) {
+        this.tags = tags;
     }
 }
