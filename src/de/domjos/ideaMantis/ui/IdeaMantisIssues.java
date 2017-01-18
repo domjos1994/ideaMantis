@@ -58,6 +58,8 @@ public class IdeaMantisIssues implements ToolWindowFactory {
     private JButton cmdVersionAdd;
     private JComboBox<String> cmbBasicsTags;
     private JTextField txtBasicsTags;
+    private JLabel lblIssueFixedInVersion;
+    private JLabel lblIssueStatus;
     private ResourceBundle bundle;
     private boolean state = false;
 
@@ -77,6 +79,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         tblIssueAttachments.setDragEnabled(true);
         txtVCSComment.setEnabled(false);
         tblIssueAttachments = Helper.disableEditingTable(tblIssueAttachments);
+
 
         cmdVersionAdd.addActionListener(e -> {
             VersionDialog dialog = new VersionDialog(project, settings.getProjectID(), bundle);
@@ -905,6 +908,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
     }
 
     private void loadComboBoxes() {
+        this.checkRights();
         MantisSoapAPI api = new MantisSoapAPI(this.settings);
 
         List<String> categories = api.getCategories(this.settings.getProjectID());
@@ -993,6 +997,117 @@ public class IdeaMantisIssues implements ToolWindowFactory {
             for (MantisVersion version : versions) {
                 cmbIssueFixedInVersion.addItem(version.getId() + ": " + version.getName());
             }
+        }
+    }
+
+    private void checkRights() {
+        MantisUser user = new MantisSoapAPI(ConnectionSettings.getInstance(project)).testConnection();
+        switch (user.getAccessLevel().getValue().toLowerCase()) {
+            case "viewer":
+                cmdIssueDelete.setVisible(false);
+                cmdIssueEdit.setVisible(false);
+                cmdIssueNew.setVisible(false);
+                cmdIssueSave.setVisible(false);
+                cmdIssueAbort.setVisible(false);
+                cmdIssueNoteEdit.setVisible(false);
+                cmdIssueNoteDelete.setVisible(false);
+                cmdIssueNoteNew.setVisible(false);
+                cmdIssueNoteSave.setVisible(false);
+                cmdIssueNoteAbort.setVisible(false);
+                cmdIssueAttachmentEdit.setVisible(false);
+                cmdIssueAttachmentDelete.setVisible(false);
+                cmdIssueAttachmentNew.setVisible(false);
+                cmdIssueAttachmentSave.setVisible(false);
+                cmdIssueAttachmentAbort.setVisible(false);
+                cmbIssueStatus.setVisible(true);
+                lblIssueStatus.setVisible(true);
+                lblIssueFixedInVersion.setVisible(true);
+                cmbIssueFixedInVersion.setVisible(true);
+                break;
+            case "reporter":
+                cmdIssueDelete.setVisible(false);
+                cmdIssueEdit.setVisible(false);
+                cmdIssueNew.setVisible(true);
+                cmdIssueSave.setVisible(true);
+                cmdIssueAbort.setVisible(true);
+                cmdIssueNoteEdit.setVisible(false);
+                cmdIssueNoteDelete.setVisible(false);
+                cmdIssueNoteNew.setVisible(true);
+                cmdIssueNoteSave.setVisible(true);
+                cmdIssueNoteAbort.setVisible(true);
+                cmdIssueAttachmentEdit.setVisible(false);
+                cmdIssueAttachmentDelete.setVisible(false);
+                cmdIssueAttachmentNew.setVisible(true);
+                cmdIssueAttachmentSave.setVisible(true);
+                cmdIssueAttachmentAbort.setVisible(true);
+                cmbIssueStatus.setVisible(false);
+                lblIssueStatus.setVisible(false);
+                lblIssueFixedInVersion.setVisible(false);
+                cmbIssueFixedInVersion.setVisible(false);
+                break;
+            case "updater":
+                cmdIssueDelete.setVisible(false);
+                cmdIssueEdit.setVisible(true);
+                cmdIssueNew.setVisible(true);
+                cmdIssueSave.setVisible(true);
+                cmdIssueAbort.setVisible(true);
+                cmdIssueNoteEdit.setVisible(false);
+                cmdIssueNoteDelete.setVisible(false);
+                cmdIssueNoteNew.setVisible(true);
+                cmdIssueNoteSave.setVisible(true);
+                cmdIssueNoteAbort.setVisible(true);
+                cmdIssueAttachmentEdit.setVisible(false);
+                cmdIssueAttachmentDelete.setVisible(false);
+                cmdIssueAttachmentNew.setVisible(true);
+                cmdIssueAttachmentSave.setVisible(true);
+                cmdIssueAttachmentAbort.setVisible(true);
+                cmbIssueStatus.setVisible(false);
+                lblIssueStatus.setVisible(false);
+                lblIssueFixedInVersion.setVisible(false);
+                cmbIssueFixedInVersion.setVisible(false);
+                break;
+            case "developer":
+                cmdIssueDelete.setVisible(true);
+                cmdIssueEdit.setVisible(true);
+                cmdIssueNew.setVisible(true);
+                cmdIssueSave.setVisible(true);
+                cmdIssueAbort.setVisible(true);
+                cmdIssueNoteEdit.setVisible(false);
+                cmdIssueNoteDelete.setVisible(false);
+                cmdIssueNoteNew.setVisible(true);
+                cmdIssueNoteSave.setVisible(true);
+                cmdIssueNoteAbort.setVisible(true);
+                cmdIssueAttachmentEdit.setVisible(false);
+                cmdIssueAttachmentDelete.setVisible(false);
+                cmdIssueAttachmentNew.setVisible(true);
+                cmdIssueAttachmentSave.setVisible(true);
+                cmdIssueAttachmentAbort.setVisible(true);
+                cmbIssueStatus.setVisible(false);
+                lblIssueStatus.setVisible(false);
+                lblIssueFixedInVersion.setVisible(false);
+                cmbIssueFixedInVersion.setVisible(false);
+                break;
+            default:
+                cmdIssueDelete.setVisible(true);
+                cmdIssueEdit.setVisible(true);
+                cmdIssueNew.setVisible(true);
+                cmdIssueSave.setVisible(true);
+                cmdIssueAbort.setVisible(true);
+                cmdIssueNoteEdit.setVisible(true);
+                cmdIssueNoteDelete.setVisible(true);
+                cmdIssueNoteNew.setVisible(true);
+                cmdIssueNoteSave.setVisible(true);
+                cmdIssueNoteAbort.setVisible(true);
+                cmdIssueAttachmentEdit.setVisible(true);
+                cmdIssueAttachmentDelete.setVisible(true);
+                cmdIssueAttachmentNew.setVisible(true);
+                cmdIssueAttachmentSave.setVisible(true);
+                cmdIssueAttachmentAbort.setVisible(true);
+                cmbIssueStatus.setVisible(true);
+                lblIssueStatus.setVisible(true);
+                lblIssueFixedInVersion.setVisible(true);
+                cmbIssueFixedInVersion.setVisible(true);
+                break;
         }
     }
 
