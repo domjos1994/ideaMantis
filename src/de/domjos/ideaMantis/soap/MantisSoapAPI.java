@@ -13,9 +13,8 @@ import org.ksoap2.transport.HttpTransportSE;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Vector;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 import static org.ksoap2.serialization.MarshalHashtable.NAMESPACE;
 
@@ -43,13 +42,20 @@ public class MantisSoapAPI {
             structTransport.call("SOAPAction", structEnvelope);
             SoapObject obj = (SoapObject) structEnvelope.bodyIn;
             obj = (SoapObject) obj.getProperty(0);
-            obj = (SoapObject) obj.getProperty(0);
-            MantisUser user = new MantisUser(obj.getProperty(1).toString());
-            user.setId(Integer.parseInt(obj.getProperty(0).toString()));
-            user.setName(obj.getProperty(2).toString());
-            user.setEmail(obj.getProperty(3).toString());
+            SoapObject userData = (SoapObject) obj.getProperty(0);
+            MantisUser user = new MantisUser(checkAndGetProperty("name", userData));
+            user.setId(Integer.parseInt(checkAndGetProperty("id", userData)));
+            user.setName(checkAndGetProperty("real_name", userData));
+            user.setEmail(checkAndGetProperty("email", userData));
             user.setPassword(this.settings.getPassword());
+            int access = Integer.parseInt(obj.getProperty(1).toString());
+            for(Map.Entry<Integer, String> entry : this.getAccessLevels().entrySet()) {
+                if(access==entry.getKey()) {
+                    user.setAccessLevel(entry.getKey(), entry.getValue());
+                }
+            }
             this.user = user;
+            System.out.println(user.getAccessLevel().getValue());
             return user;
         } catch (Exception ex) {
             return null;
@@ -65,17 +71,44 @@ public class MantisSoapAPI {
             structTransport.call("SOAPAction", structEnvelope);
             SoapObject obj = (SoapObject) structEnvelope.bodyIn;
             obj = (SoapObject) obj.getProperty(0);
-            obj = (SoapObject) obj.getProperty(0);
-            MantisUser user = new MantisUser(obj.getProperty(1).toString());
-            user.setId(Integer.parseInt(obj.getProperty(0).toString()));
-            user.setName(obj.getProperty(2).toString());
-            user.setEmail(obj.getProperty(3).toString());
+            SoapObject userData = (SoapObject) obj.getProperty(0);
+            MantisUser user = new MantisUser(checkAndGetProperty("name", userData));
+            user.setId(Integer.parseInt(checkAndGetProperty("id", userData)));
+            user.setName(checkAndGetProperty("real_name", userData));
+            user.setEmail(checkAndGetProperty("email", userData));
             user.setPassword(this.settings.getPassword());
+            int access = Integer.parseInt(obj.getProperty(1).toString());
+            for(Map.Entry<Integer, String> entry : this.getAccessLevels().entrySet()) {
+                if(access==entry.getKey()) {
+                    user.setAccessLevel(entry.getKey(), entry.getValue());
+                }
+            }
             this.user = user;
+            System.out.println(user.getAccessLevel().getValue());
             return user;
         } catch (Exception ex) {
             return null;
         }
+    }
+
+    public Map<Integer, String> getAccessLevels() {
+        Map<Integer, String> accessLevelMap = new LinkedHashMap<>();
+        SoapObject structRequest = new SoapObject(this.settings.getHostName() + "/api/soap/mantisconnect.php", "mc_enum_access_levels");
+        try {
+            structRequest.addProperty("username", this.settings.getUserName());
+            structRequest.addProperty("password", this.settings.getPassword());
+            structEnvelope.setOutputSoapObject(structRequest);
+            structTransport.call("SOAPAction", structEnvelope);
+            SoapObject soapObject = (SoapObject) structEnvelope.bodyIn;
+            Vector access = (Vector) soapObject.getProperty("return");
+            for(Object obj : access) {
+                SoapObject level = ((SoapObject)obj);
+                accessLevelMap.put(Integer.parseInt(level.getProperty("id").toString()), level.getProperty("name").toString());
+            }
+        } catch (Exception ex) {
+            return accessLevelMap;
+        }
+        return  accessLevelMap;
     }
 
     public boolean addProject(MantisProject project) {
@@ -95,6 +128,26 @@ public class MantisSoapAPI {
             projectObject.addProperty("enabled", project.isEnabled());
             projectObject.addProperty("view_state", buildObjectRef("view_states", project.getView_state()));
             projectObject.addProperty("description", project.getDescription());
+            if(!project.getSubProjects().isEmpty()) {
+                for(int i = 0; i<= project.getSubProjects().size()-1; i++) {
+                    SoapObject subObject = new SoapObject(NAMESPACE, "ProjectDataArray");
+                    if(project.getSubProjects().get(i).getId()==0) {
+                        if(this.addProject(project.getSubProjects().get(i))) {
+                            for(MantisProject mantisProject : this.getProjects()) {
+                                if(mantisProject.getName().equals(project.getSubProjects().get(i).getName())) {
+                                    subObject.addProperty("id", mantisProject.getId());
+                                    subObject.addProperty("name", project.getSubProjects().get(i).getName());
+                                    subObject.addProperty("enabled", project.getSubProjects().get(i).isEnabled());
+                                    subObject.addProperty("view_state", buildObjectRef("view_states", project.getSubProjects().get(i).getView_state()));
+                                    subObject.addProperty("description", project.getSubProjects().get(i).getDescription());
+                                    projectObject.addProperty("subprojects", subObject);
+                                }
+                            }
+                        }
+                    }
+                }
+
+            }
             structRequest.addProperty("project", projectObject);
             structEnvelope.setOutputSoapObject(structRequest);
             structTransport.call("SOAPAction", structEnvelope);
@@ -117,24 +170,27 @@ public class MantisSoapAPI {
             Vector objects = (Vector) obj.getProperty(0);
             for(Object object : objects) {
                 SoapObject soapObject = (SoapObject) object;
-                MantisProject mantisProject = new MantisProject(soapObject.getProperty(1).toString());
-                mantisProject.setId(Integer.parseInt(soapObject.getProperty(0).toString()));
-                mantisProject.setEnabled(Boolean.parseBoolean(soapObject.getProperty(3).toString()));
-                mantisProject.setDescription(soapObject.getProperty(7).toString());
-                for(Object sub : ((Vector) soapObject.getProperty(8))) {
-                    SoapObject subObj = (SoapObject) sub;
-                    MantisProject subProject = new MantisProject(subObj.getProperty(1).toString());
-                    subProject.setId(Integer.parseInt(subObj.getProperty(0).toString()));
-                    subProject.setEnabled(Boolean.parseBoolean(subObj.getProperty(3).toString()));
-                    subProject.setDescription(subObj.getProperty(7).toString());
-                    mantisProject.addSubProject(subProject);
-                }
-                projectList.add(mantisProject);
+                projectList.add(getProject(soapObject));
             }
         } catch (Exception ex) {
             return null;
         }
         return projectList;
+    }
+
+    private MantisProject getProject(SoapObject object) {
+        MantisProject project = new MantisProject(object.getProperty(1).toString());
+        try {
+            project.setId(Integer.parseInt(object.getProperty(0).toString()));
+            project.setEnabled(Boolean.parseBoolean(object.getProperty(3).toString()));
+            project.setDescription(object.getProperty(7).toString());
+            for(Object sub : ((Vector) object.getProperty(8))) {
+                project.addSubProject(getProject((SoapObject) sub));
+            }
+        } catch (Exception ex) {
+            return null;
+        }
+        return project;
     }
 
     public MantisIssue getIssue(int sid) {
@@ -196,18 +252,14 @@ public class MantisSoapAPI {
         }
     }
 
-    public boolean checkInIssue(int sid, String comment, boolean fixed) {
-        SoapObject structRequest = new SoapObject(this.settings.getHostName() + "/api/soap/mantisconnect.php", "mc_issue_checkin");
+    public boolean checkInIssue(int sid, String comment, String state) {
         try {
-            structRequest.addProperty("username", this.settings.getUserName());
-            structRequest.addProperty("password", this.settings.getPassword());
-            structRequest.addProperty("issue_id", sid);
-            structRequest.addProperty("comment", comment);
-            structRequest.addProperty("fixed", fixed);
-            structEnvelope.setOutputSoapObject(structRequest);
-            structTransport.call("SOAPAction", structEnvelope);
-            SoapObject obj = (SoapObject) structEnvelope.bodyIn;
-            return checkProperty(obj);
+            IssueNote note = new IssueNote();
+            note.setReporter(user);
+            note.setText(comment);
+            note.setView_state(state);
+            note.setDate(new SimpleDateFormat("dd.MM.yyyy HH:mm").format(new Date()));
+            return this.addNote(sid, note);
         } catch (Exception ex) {
             return false;
         }
@@ -586,6 +638,144 @@ public class MantisSoapAPI {
         return enumList;
     }
 
+    public boolean addTagToIssue(int issue_id, String tags) {
+        try {
+            SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy HH:mm");
+            String[] strTags = tags.split(", ");
+            SoapObject structRequest = new SoapObject(this.settings.getHostName() + "/api/soap/mantisconnect.php", "mc_issue_set_tags");
+            structRequest.addProperty("username", this.settings.getUserName());
+            structRequest.addProperty("password", this.settings.getPassword());
+            structRequest.addProperty("issue_id", issue_id);
+            Vector<SoapObject> tagObjectArray = new Vector<>();
+            for(String strTag : strTags) {
+                SoapObject tagObject = new SoapObject(NAMESPACE, "TagDataArray");
+                MantisTag tag = getTag(strTag);
+                if(tag==null) {
+                    MantisTag mantisTag = new MantisTag();
+                    mantisTag.setName(strTag);
+                    if(this.user!=null)
+                        mantisTag.setReporter(user);
+                    this.addTag(mantisTag);
+                    tag = getTag(strTag);
+                }
+
+                tagObject.addProperty("id", tag.getId());
+                if(tag.getReporter()!=null) {
+                    SoapObject userObject = new SoapObject(NAMESPACE, "AccountData");
+                    userObject.addProperty("name", tag.getReporter().getUserName());
+                    userObject.addProperty("id", tag.getReporter().getId());
+                    userObject.addProperty("real_name", tag.getReporter().getName());
+                    userObject.addProperty("email", tag.getReporter().getEmail());
+                    tagObject.addProperty("user_id", userObject);
+                }
+                tagObject.addProperty("name", tag.getName());
+                tagObject.addProperty("description", tag.getDescription());
+                if(tag.getCreationDate()!=null)
+                    tagObject.addProperty("date_created", format.format(tag.getCreationDate()));
+                if(tag.getUpdatedDate()!=null)
+                    tagObject.addProperty("date_updated", format.format(tag.getUpdatedDate()));
+                tagObjectArray.add(tagObject);
+            }
+            structRequest.addProperty("tags", tagObjectArray);
+            structEnvelope.setOutputSoapObject(structRequest);
+            System.out.println(structEnvelope.bodyOut);
+            structTransport.call("SOAPAction", structEnvelope);
+            SoapObject obj = (SoapObject) structEnvelope.bodyIn;
+            return checkProperty(obj);
+        } catch (Exception ex) {
+            return false;
+        }
+    }
+
+    public boolean addTag(MantisTag tag) {
+        SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy HH:mm");
+        SoapObject structRequest = new SoapObject(this.settings.getHostName() + "/api/soap/mantisconnect.php", "mc_tag_add");
+        try {
+            structRequest.addProperty("username", this.settings.getUserName());
+            structRequest.addProperty("password", this.settings.getPassword());
+            SoapObject tagObject = new SoapObject(NAMESPACE, "TagData");
+            tagObject.addProperty("id", tag.getId());
+            if(tag.getReporter()!=null) {
+                SoapObject userObject = new SoapObject(NAMESPACE, "AccountData");
+                userObject.addProperty("id", tag.getReporter().getId());
+                userObject.addProperty("name", tag.getReporter().getUserName());
+                userObject.addProperty("real_name", tag.getReporter().getName());
+                userObject.addProperty("email", tag.getReporter().getEmail());
+                tagObject.addProperty("user_id", userObject);
+            }
+            tagObject.addProperty("name", tag.getName());
+            tagObject.addProperty("description", tag.getDescription());
+            if(tag.getCreationDate()!=null)
+                tagObject.addProperty("date_created", format.format(tag.getCreationDate()));
+            if(tag.getUpdatedDate()!=null)
+                tagObject.addProperty("date_updated", format.format(tag.getUpdatedDate()));
+            structRequest.addProperty("tag", tagObject);
+            structEnvelope.setOutputSoapObject(structRequest);
+            structTransport.call("SOAPAction", structEnvelope);
+            SoapObject obj = (SoapObject) structEnvelope.bodyIn;
+            return checkProperty(obj);
+        } catch (Exception ex) {
+            return false;
+        }
+    }
+
+    public List<MantisTag> getTags() {
+        SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy HH:mm");
+        List<MantisTag> tagList = new LinkedList<>();
+        SoapObject structRequest = new SoapObject(this.settings.getHostName() + "/api/soap/mantisconnect.php", "mc_tag_get_all");
+        try {
+            int counter = 0, pageNumber = 0;
+            do {
+                counter--;
+                pageNumber++;
+                structRequest.addProperty("username", this.settings.getUserName());
+                structRequest.addProperty("password", this.settings.getPassword());
+                structRequest.addProperty("page_number", pageNumber);
+                structRequest.addProperty("per_page", 100);
+                structEnvelope.setOutputSoapObject(structRequest);
+                structTransport.call("SOAPAction", structEnvelope);
+                SoapObject obj = (SoapObject) structEnvelope.bodyIn;
+                SoapObject returnObject = (SoapObject) obj.getProperty("return");
+                if(counter==-1) {
+                    counter = Integer.parseInt(returnObject.getProperty("total_results").toString()) / 100;
+                }
+                for (Object object : ((Vector) returnObject.getProperty("results"))) {
+                    MantisTag tag = new MantisTag();
+                    tag.setId(Integer.parseInt(checkAndGetProperty("id", ((SoapObject) object))));
+                    if (!checkAndGetProperty("user_id", ((SoapObject) object)).isEmpty()) {
+                        SoapObject user = (SoapObject) ((SoapObject) object).getProperty("user_id");
+                        MantisUser sUser = new MantisUser(Helper.getParam(user, "name", false, 0));
+                        sUser.setName(Helper.getParam(user, "real_name", false, 0));
+                        sUser.setId(Integer.parseInt(Helper.getParam(user, "id", false, 0)));
+                        sUser.setEmail(Helper.getParam(user, "email", false, 0));
+                        tag.setReporter(sUser);
+                    }
+                    tag.setName(checkAndGetProperty("name", ((SoapObject) object)));
+                    tag.setDescription(checkAndGetProperty("description", ((SoapObject) object)));
+                    try {
+                        tag.setCreationDate(format.parse(checkAndGetProperty("date_created", ((SoapObject) object))));
+                        tag.setUpdatedDate(format.parse(checkAndGetProperty("date_updated", ((SoapObject) object))));
+                    } catch (Exception ex) {
+                        tag.setCreationDate(null);
+                        tag.setUpdatedDate(null);
+                    }
+                    tagList.add(tag);
+                }
+            } while (counter!=0);
+        } catch (Exception ex) {
+            return tagList;
+        }
+        return tagList;
+    }
+
+    public MantisTag getTag(String name) {
+        for(MantisTag tag : this.getTags()) {
+            if(tag.getName().equals(name))
+                return tag;
+        }
+        return null;
+    }
+
     private MantisIssue getIssueFromSoap(SoapObject soapObjIssue) {
         MantisIssue issue = new MantisIssue();
         issue.setId(Integer.parseInt(soapObjIssue.getProperty("id").toString()));
@@ -638,6 +828,20 @@ public class MantisSoapAPI {
                     note.setReporter(sReporter);
                     note.setView_state(Helper.getParam(soapObject, "view_state", true, 1));
                     issue.addNote(note);
+                }
+            }
+        } catch (RuntimeException ignored) {} catch (Exception ex) {
+            Helper.printNotification("Problem", ex.toString(), NotificationType.ERROR);
+        }
+        try {
+            if(soapObjIssue.getProperty("tags")!=null) {
+                for(Object object : (Vector) soapObjIssue.getProperty("tags")) {
+                    SoapObject soapObject = (SoapObject) object;
+                    if(issue.getTags().equals("")) {
+                        issue.setTags(checkAndGetProperty("name", soapObject));
+                    } else {
+                        issue.setTags(issue.getTags() + ", " + checkAndGetProperty("name", soapObject));
+                    }
                 }
             }
         } catch (RuntimeException ignored) {} catch (Exception ex) {
