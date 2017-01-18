@@ -301,8 +301,10 @@ public class MantisSoapAPI {
         if(issue.getReporter()!=null)
             issueObject = buildAccountData(issue.getReporter(), issueObject, "handler");
         issueObject.addProperty("summary", issue.getSummary());
-        issueObject.addProperty("fixed_in_version", issue.getFixed_in_version());
-        issueObject.addProperty("target_version", issue.getTarget_version());
+        if(issue.getFixed_in_version()!=null)
+            issueObject.addProperty("fixed_in_version", issue.getFixed_in_version().getName());
+        if(issue.getTarget_version()!=null)
+            issueObject.addProperty("target_version", issue.getTarget_version().getName());
         issueObject.addProperty("description", issue.getDescription());
         issueObject.addProperty("steps_to_reproduce", issue.getSteps_to_reproduce());
         issueObject.addProperty("additional_information", issue.getAdditional_information());
@@ -613,8 +615,12 @@ public class MantisSoapAPI {
     }
 
     public List<MantisVersion> getVersions(int pid) {
+        return getVersions(pid, "mc_project_get_versions");
+    }
+
+    private List<MantisVersion> getVersions(int pid, String function) {
         List<MantisVersion> enumList = new LinkedList<>();
-        SoapObject structRequest = new SoapObject(this.settings.getHostName() + "/api/soap/mantisconnect.php", "mc_project_get_versions");
+        SoapObject structRequest = new SoapObject(this.settings.getHostName() + "/api/soap/mantisconnect.php", function);
         try {
             structRequest.addProperty("username", this.settings.getUserName());
             structRequest.addProperty("password", this.settings.getPassword());
@@ -792,8 +798,19 @@ public class MantisSoapAPI {
         issue.setSummary(Helper.getParam(soapObjIssue, "summary", false, 0));
         issue.setReproducibility(Helper.getParam(soapObjIssue, "reproducibility", true, 1));
         issue.setDate_submitted(Helper.getParam(soapObjIssue, "date_submitted", false, 0));
-        issue.setFixed_in_version(Helper.getParam(soapObjIssue, "fixed_in_version", false, 0));
-        issue.setTarget_version(Helper.getParam(soapObjIssue, "target_version", false, 0));
+        List<MantisVersion> versions = this.getVersions(settings.getProjectID());
+        for(MantisVersion version :  versions) {
+            if(version.getName().equals(checkAndGetProperty("version", soapObjIssue))) {
+                issue.setFixed_in_version(version);
+                break;
+            }
+        }
+        for(MantisVersion version :  versions) {
+            if(version.getName().equals(checkAndGetProperty("target_version", soapObjIssue))) {
+                issue.setTarget_version(version);
+                break;
+            }
+        }
         issue.setDescription(Helper.getParam(soapObjIssue, "description", false, 0));
         issue.setSteps_to_reproduce(Helper.getParam(soapObjIssue, "steps_to_reproduce", false, 0));
         issue.setAdditional_information(Helper.getParam(soapObjIssue, "additional_information", false, 0));
@@ -848,6 +865,32 @@ public class MantisSoapAPI {
             Helper.printNotification("Problem", ex.toString(), NotificationType.ERROR);
         }
         return issue;
+    }
+
+    public Map<MantisIssue, MantisVersion> createChangeLog(MantisVersion mantisVersion) {
+        Map<MantisIssue, MantisVersion> changeLogMap = new LinkedHashMap<>();
+        List<MantisVersion> versions = new LinkedList<>();
+        if(mantisVersion==null) {
+            List<MantisVersion> tmp = getVersions(settings.getProjectID(), "mc_project_get_unreleased_versions");
+            if(tmp==null)
+                return changeLogMap;
+            versions = tmp;
+        } else {
+            versions.add(mantisVersion);
+        }
+
+        List<MantisIssue> issues = this.getIssues(settings.getProjectID());
+        for(MantisVersion version : versions) {
+            for(MantisIssue issue : issues) {
+                issue = this.getIssue(issue.getId());
+                if(issue.getTarget_version()!=null) {
+                    if(issue.getTarget_version().equals(version)) {
+                        changeLogMap.put(issue, version);
+                    }
+                }
+            }
+        }
+        return changeLogMap;
     }
 
     private boolean checkProperty(SoapObject result) {

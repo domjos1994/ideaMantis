@@ -13,7 +13,8 @@ public class MantisIssue {
     private String build;
     private String reproducibility;
     private String tags;
-    private String fixed_in_version, target_version, description, steps_to_reproduce, additional_information;
+    private String description, steps_to_reproduce, additional_information;
+    private MantisVersion fixed_in_version, target_version;
     private MantisUser reporter;
     private String date_submitted;
     private List<IssueAttachment> issueAttachmentList;
@@ -25,6 +26,8 @@ public class MantisIssue {
         this.issueAttachmentList = new LinkedList<>();
         this.issueNoteList = new LinkedList<>();
         this.tags = "";
+        this.fixed_in_version = null;
+        this.target_version = null;
     }
 
     public int getId() {
@@ -91,19 +94,19 @@ public class MantisIssue {
         this.reproducibility = reproducibility;
     }
 
-    public String getFixed_in_version() {
+    public MantisVersion getFixed_in_version() {
         return fixed_in_version;
     }
 
-    public void setFixed_in_version(String fixed_in_version) {
+    public void setFixed_in_version(MantisVersion fixed_in_version) {
         this.fixed_in_version = fixed_in_version;
     }
 
-    public String getTarget_version() {
+    public MantisVersion getTarget_version() {
         return target_version;
     }
 
-    public void setTarget_version(String target_version) {
+    public void setTarget_version(MantisVersion target_version) {
         this.target_version = target_version;
     }
 

@@ -102,5 +102,18 @@
               anchor="last"/>
 
     </action>
+
+    <action
+            id="CreateChangeLog"
+            icon="/de/domjos/ideaMantis/images/icon.png"
+            class="de.domjos.ideaMantis.editor.CreateChangeLogAction"
+            text="Create ChangeLog"
+            description="Create an ChangeLog from MantisBT">
+
+      <add-to-group
+              group-id="EditorPopupMenu"
+              anchor="last"/>
+
+    </action>
   </actions>
 </idea-plugin>
