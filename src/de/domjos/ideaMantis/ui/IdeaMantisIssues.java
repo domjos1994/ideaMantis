@@ -4,7 +4,6 @@ import com.intellij.notification.NotificationType;
 import com.intellij.openapi.fileChooser.FileChooser;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.AsyncResult;
 import com.intellij.openapi.vcs.changes.*;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
@@ -49,7 +48,6 @@ public class IdeaMantisIssues implements ToolWindowFactory {
 
     private JTextField txtIssueNoteReporterName, txtIssueNoteReporterEMail, txtIssueNoteDate, txtIssueAttachmentFileName;
     private JTextField txtIssueAttachmentSize;
-    private JCheckBox chkBasicsCheckIn;
 
     private JTable tblIssues, tblIssueAttachments, tblIssueNotes;
 
@@ -58,6 +56,8 @@ public class IdeaMantisIssues implements ToolWindowFactory {
     private JCheckBox chkAddVCS;
     private JTextField txtVCSComment;
     private JButton cmdVersionAdd;
+    private JComboBox<String> cmbBasicsTags;
+    private JTextField txtBasicsTags;
     private ResourceBundle bundle;
     private boolean state = false;
 
@@ -77,12 +77,23 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         tblIssueAttachments.setDragEnabled(true);
         txtVCSComment.setEnabled(false);
         tblIssueAttachments = Helper.disableEditingTable(tblIssueAttachments);
-        chkBasicsCheckIn.setVisible(false);
 
         cmdVersionAdd.addActionListener(e -> {
             VersionDialog dialog = new VersionDialog(project, settings.getProjectID(), bundle);
             if(dialog.showAndGet())
                 this.loadVersions(new MantisSoapAPI(ConnectionSettings.getInstance(project)));
+        });
+
+        cmbBasicsTags.addActionListener(e -> {
+            try {
+                if(txtBasicsTags.getText().equals("")) {
+                    txtBasicsTags.setText(cmbBasicsTags.getSelectedItem().toString());
+                } else {
+                    txtBasicsTags.setText(txtBasicsTags.getText() + ", " + cmbBasicsTags.getSelectedItem().toString());
+                }
+            } catch (Exception ex) {
+                txtBasicsTags.setText("");
+            }
         });
 
         tblIssueAttachments.addMouseListener(new MouseListener() {
@@ -192,6 +203,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                         txtIssueAdditionalInformation.setText(issue.getAdditional_information());
                         txtIssueDescription.setText(issue.getDescription());
                         txtIssueStepsToReproduce.setText(issue.getSteps_to_reproduce());
+                        txtBasicsTags.setText(issue.getTags());
                         if(issue.getReporter()!=null) {
                             cmbIssueReporterName.setSelectedItem(issue.getReporter().getUserName());
                             txtIssueReporterName.setText(issue.getReporter().getName());
@@ -369,6 +381,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                    issue.setAdditional_information(txtIssueAdditionalInformation.getText());
                    issue.setDescription(txtIssueDescription.getText());
                    issue.setSteps_to_reproduce(txtIssueStepsToReproduce.getText());
+                   issue.setTags(txtBasicsTags.getText());
 
                    if(cmbIssueCategory.getSelectedItem()!=null)
                        issue.setCategory(cmbIssueCategory.getSelectedItem().toString());
@@ -399,16 +412,32 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                        issue.setId(Integer.parseInt(tblIssues.getValueAt(tblIssues.getSelectedRow(), 0).toString()));
                    }
 
-                   if(!new MantisSoapAPI(this.settings).addIssue(issue)) {
+                   MantisSoapAPI api = new MantisSoapAPI(this.settings);
+
+                   if(issue.getId()!=0) {
+                       MantisIssue mantisIssue = api.getIssue(issue.getId());
+                       if(!mantisIssue.getStatus().equals(issue.getStatus())) {
+                           FixDialog dialog = new FixDialog(project, issue.getId());
+                           dialog.show();
+                       }
+                   }
+
+                   if(!api.addIssue(issue)) {
                        Helper.printNotification(bundle.getString("message.error.header"), String.format(bundle.getString("message.cantAdd"), bundle.getString("issue.header")), NotificationType.ERROR);
                    }
                    if(chkAddVCS.isSelected()) {
                        Helper.commitAllFiles(Helper.replaceCommentByMarker(issue, txtVCSComment.getText()), this.changeListManager);
                    }
-                   if(chkBasicsCheckIn.isSelected()) {
-                       FixDialog dialog = new FixDialog(project, issue.getId());
-                       dialog.show();
-                   }
+
+                  if(!issue.getTags().equals("")) {
+                      for(MantisIssue mantisIssue : api.getIssues(this.settings.getProjectID())) {
+                          if(issue.getSummary().equals(mantisIssue.getSummary()) && issue.getStatus().equals(mantisIssue.getStatus())) {
+                              api.addTagToIssue(mantisIssue.getId(), issue.getTags());
+                              break;
+                          }
+                      }
+                  }
+
                    controlIssues(false, false);
                    cmdReload.doClick();
                }
@@ -754,11 +783,9 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         cmbIssueSeverity.setEnabled(editMode);
         cmbIssueStatus.setEnabled(editMode);
         cmdVersionAdd.setEnabled(editMode);
+        cmbBasicsTags.setEnabled(editMode);
+        txtBasicsTags.setEnabled(editMode);
         tblIssues.setEnabled(!editMode);
-        chkBasicsCheckIn.setEnabled(editMode);
-        if(!editMode) {
-            chkBasicsCheckIn.setSelected(false);
-        }
         Helper.disableControlsInAPanel(pnlIssueDescriptions, editMode);
 
         if(editMode) {
@@ -800,6 +827,8 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         cmbIssuePriority.setSelectedItem(null);
         cmbIssueSeverity.setSelectedItem(null);
         cmbIssueStatus.setSelectedItem(null);
+        cmbBasicsTags.setSelectedItem(null);
+        txtBasicsTags.setText("");
         tblIssueNotes.removeAll();
         tblIssueAttachments.removeAll();
         txtIssueReporterEMail.setText("");
@@ -879,6 +908,12 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         MantisSoapAPI api = new MantisSoapAPI(this.settings);
 
         List<String> categories = api.getCategories(this.settings.getProjectID());
+
+        cmbBasicsTags.removeAllItems();
+        api.getTags().forEach(tag -> cmbBasicsTags.addItem(tag.getName()));
+        cmbBasicsTags.addItem("");
+        txtBasicsTags.setText("");
+        cmbBasicsTags.setSelectedItem("");
 
         cmbIssueCategory.removeAllItems();
         if(categories!=null) {
