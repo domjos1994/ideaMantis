@@ -10,6 +10,7 @@ import com.intellij.ui.components.JBTextField;
 import com.intellij.util.ui.JBUI;
 import de.domjos.ideaMantis.model.IssueAttachment;
 import de.domjos.ideaMantis.model.MantisIssue;
+import de.domjos.ideaMantis.model.MantisVersion;
 import de.domjos.ideaMantis.service.ConnectionSettings;
 import de.domjos.ideaMantis.soap.MantisSoapAPI;
 import de.domjos.ideaMantis.utils.Helper;
@@ -18,8 +19,7 @@ import org.jetbrains.annotations.Nullable;
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
-import java.util.Date;
-import java.util.ResourceBundle;
+import java.util.*;
 
 class MarkedTextAsBugDialog extends DialogWrapper {
     private JBTextField txtSummary, txtDocumentPath, txtDate;
@@ -58,8 +58,24 @@ class MarkedTextAsBugDialog extends DialogWrapper {
                         issue.setSeverity(cmbSeverity.getSelectedItem().toString());
                         issue.setPriority(cmbPriority.getSelectedItem().toString());
                         issue.setStatus(cmbStatus.getSelectedItem().toString());
-                        issue.setTarget_version(cmbTargetVersion.getSelectedItem().toString());
-                        issue.setFixed_in_version(cmbFixedInVersion.getSelectedItem().toString());
+                        MantisSoapAPI api = new MantisSoapAPI(settings);
+                        java.util.List<MantisVersion> versions = api.getVersions(settings.getProjectID());
+                        if(cmbFixedInVersion.getSelectedItem()!=null) {
+                            for(MantisVersion version : versions) {
+                                if(version.getName().equals(cmbFixedInVersion.getSelectedItem())) {
+                                    issue.setFixed_in_version(version);
+                                    break;
+                                }
+                            }
+                        }
+                        if(cmbTargetVersion.getSelectedItem()!=null) {
+                            for(MantisVersion version : versions) {
+                                if(version.getName().equals(cmbTargetVersion.getSelectedItem().toString())) {
+                                    issue.setTarget_version(version);
+                                    break;
+                                }
+                            }
+                        }
                         IssueAttachment attachment = new IssueAttachment();
                         attachment.setFilename(txtDocumentPath.getText());
                         attachment.setSize((int) new File(txtDocumentPath.getText()).getTotalSpace());

@@ -213,16 +213,20 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                             txtIssueReporterEMail.setText(issue.getReporter().getEmail());
                         }
                         cmbIssueCategory.setSelectedItem(issue.getCategory());
-                        for(int i = 0; i<=cmbIssueTargetVersion.getItemCount()-1 ;i++) {
-                            if(cmbIssueTargetVersion.getItemAt(i).contains(issue.getTarget_version())) {
-                                cmbIssueTargetVersion.setSelectedIndex(i);
-                                break;
+                        if(issue.getTarget_version()!=null) {
+                            for(int i = 0; i<=cmbIssueTargetVersion.getItemCount()-1 ;i++) {
+                                if(cmbIssueTargetVersion.getItemAt(i).contains(issue.getTarget_version().getName())) {
+                                    cmbIssueTargetVersion.setSelectedIndex(i);
+                                    break;
+                                }
                             }
                         }
-                        for(int i = 0; i<=cmbIssueFixedInVersion.getItemCount()-1 ;i++) {
-                            if(cmbIssueFixedInVersion.getItemAt(i).contains(issue.getFixed_in_version())) {
-                                cmbIssueFixedInVersion.setSelectedIndex(i);
-                                break;
+                        if(issue.getFixed_in_version()!=null) {
+                            for(int i = 0; i<=cmbIssueFixedInVersion.getItemCount()-1 ;i++) {
+                                if(cmbIssueFixedInVersion.getItemAt(i).contains(issue.getFixed_in_version().getName())) {
+                                    cmbIssueFixedInVersion.setSelectedIndex(i);
+                                    break;
+                                }
                             }
                         }
                         cmbIssuePriority.setSelectedItem(issue.getPriority());
@@ -395,10 +399,24 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                    if(cmbIssueStatus.getSelectedItem()!=null)
                        issue.setStatus(cmbIssueStatus.getSelectedItem().toString());
 
-                   if(cmbIssueFixedInVersion.getSelectedItem()!=null)
-                       issue.setFixed_in_version(cmbIssueFixedInVersion.getSelectedItem().toString().split(": ")[1]);
-                   if(cmbIssueTargetVersion.getSelectedItem()!=null)
-                       issue.setTarget_version(cmbIssueTargetVersion.getSelectedItem().toString().split(": ")[1]);
+                   MantisSoapAPI api = new MantisSoapAPI(settings);
+                   List<MantisVersion> versions = api.getVersions(settings.getProjectID());
+                   if(cmbIssueFixedInVersion.getSelectedItem()!=null) {
+                       for(MantisVersion version : versions) {
+                           if(version.getName().equals(cmbIssueFixedInVersion.getSelectedItem().toString().split(": ")[1])) {
+                               issue.setFixed_in_version(version);
+                               break;
+                           }
+                       }
+                   }
+                   if(cmbIssueTargetVersion.getSelectedItem()!=null) {
+                       for(MantisVersion version : versions) {
+                           if(version.getName().equals(cmbIssueTargetVersion.getSelectedItem().toString().split(": ")[1])) {
+                               issue.setTarget_version(version);
+                               break;
+                           }
+                       }
+                   }
 
                    if(!txtIssueReporterName.getText().equals("")) {
                        for(MantisUser user : new MantisSoapAPI(this.settings).getUsers(this.settings.getProjectID())) {
@@ -414,8 +432,6 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                    if(!tblIssues.getSelectionModel().isSelectionEmpty()) {
                        issue.setId(Integer.parseInt(tblIssues.getValueAt(tblIssues.getSelectedRow(), 0).toString()));
                    }
-
-                   MantisSoapAPI api = new MantisSoapAPI(this.settings);
 
                    if(issue.getId()!=0) {
                        MantisIssue mantisIssue = api.getIssue(issue.getId());

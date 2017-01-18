@@ -118,7 +118,7 @@ public abstract class Helper {
             comment = comment.replace("{steps_to_reproduce}", issue.getSteps_to_reproduce());
         }
         if(comment.contains("{target_version}")) {
-            comment = comment.replace("{target_version}", issue.getTarget_version());
+            comment = comment.replace("{target_version}", issue.getTarget_version().getName());
         }
         if(comment.contains("{summary}")) {
             comment = comment.replace("{summary}", issue.getSummary());
