@@ -62,6 +62,8 @@ public class ChooseVersionDialog extends DialogWrapper {
         for(MantisVersion version : new MantisSoapAPI(ConnectionSettings.getInstance(project)).getVersions(ConnectionSettings.getInstance(project).getProjectID())) {
             cmbVersions.addItem(version.getName());
         }
+        cmbVersions.addItem("");
+        cmbVersions.setSelectedItem("");
 
         JPanel basicsPanel = new JPanel(new GridBagLayout());
         basicsPanel.add(lblVersion, labelConstraint);

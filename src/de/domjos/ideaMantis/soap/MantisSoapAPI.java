@@ -115,7 +115,7 @@ public class MantisSoapAPI {
         SoapObject structRequest;
         try {
             if(project.getId()==0) {
-                 structRequest = new SoapObject(this.settings.getHostName() + "/api/soap/mantisconnect.php", "mc_project_add");
+                structRequest = new SoapObject(this.settings.getHostName() + "/api/soap/mantisconnect.php", "mc_project_add");
             } else {
                 structRequest = new SoapObject(this.settings.getHostName() + "/api/soap/mantisconnect.php", "mc_project_update");
                 structRequest.addProperty("project_id", project.getId());
@@ -884,7 +884,7 @@ public class MantisSoapAPI {
             for(MantisIssue issue : issues) {
                 issue = this.getIssue(issue.getId());
                 if(issue.getTarget_version()!=null) {
-                    if(issue.getTarget_version().equals(version)) {
+                    if(issue.getTarget_version().getName().equals(version.getName())) {
                         changeLogMap.put(issue, version);
                     }
                 }
