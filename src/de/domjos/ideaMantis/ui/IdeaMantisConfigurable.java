@@ -36,11 +36,9 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
     private ComboBox<String> cmbProjects, cmbNewProjectProjects, cmbProjectViewState;
     private int projectID = 0;
     private Project project;
-    private ResourceBundle bundle;
 
     public IdeaMantisConfigurable(@NotNull Project project) {
         this.project = project;
-        this.bundle = Helper.getBundle();
     }
 
     @NotNull
@@ -58,7 +56,7 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
     @Nls
     @Override
     public String getDisplayName() {
-        return bundle.getString("settings.header");
+        return "IdeaMantis-Settings";
     }
 
     @Nullable
@@ -88,17 +86,17 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
         this.txtProjectDescription.setName("txtProjectDescription");
 
 
-        java.awt.Label lblHostName = new java.awt.Label(bundle.getString("settings.hostName"));
-        java.awt.Label lblUserName = new java.awt.Label(bundle.getString("settings.userName"));
-        java.awt.Label lblPassword = new java.awt.Label(bundle.getString("settings.password"));
-        java.awt.Label lblProjects = new java.awt.Label(bundle.getString("settings.chooseProject"));
-        java.awt.Label lblProjectName = new java.awt.Label(bundle.getString("person.name") + "*");
-        java.awt.Label lblProjectDescription = new java.awt.Label(bundle.getString("descriptions.description"));
-        java.awt.Label lblProjectViewState = new java.awt.Label(bundle.getString("settings.connection.project.viewState"));
-        this.lblConnectionState = new Label(bundle.getString("settings.connection.notConnected"));
+        java.awt.Label lblHostName = new java.awt.Label("Host-Name");
+        java.awt.Label lblUserName = new java.awt.Label("User-Name");
+        java.awt.Label lblPassword = new java.awt.Label("Password");
+        java.awt.Label lblProjects = new java.awt.Label("Choose Project");
+        java.awt.Label lblProjectName = new java.awt.Label("Name" + "*");
+        java.awt.Label lblProjectDescription = new java.awt.Label("Description");
+        java.awt.Label lblProjectViewState = new java.awt.Label("State");
+        this.lblConnectionState = new Label("Not Connected");
         this.changeConnectionLabel(null);
 
-        this.cmdTestConnection = new JButton(bundle.getString("settings.connection.test"));
+        this.cmdTestConnection = new JButton("Test Connection");
         this.cmdTestConnection.addActionListener(e -> {
             MantisSoapAPI connection = new MantisSoapAPI(ConnectionSettings.getInstance(this.project));
             String pwd = "";
@@ -140,22 +138,22 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
         connPanel.add(txtPassword, txtConstraint);
         connPanel.add(lblConnectionState, txtConstraint);
         connPanel.add(cmdTestConnection, txtConstraint);
-        connPanel.setBorder(IdeBorderFactory.createTitledBorder(bundle.getString("settings.connection.header")));
+        connPanel.setBorder(IdeBorderFactory.createTitledBorder("Connection"));
 
-        JButton cmdCreateNewProject = new JButton(bundle.getString("settings.connection.project.new"));
+        JButton cmdCreateNewProject = new JButton("New Project");
         cmdCreateNewProject.setName("cmdCreateNewProject");
 
         JPanel projectPanel = new JPanel(new GridBagLayout());
         projectPanel.add(lblProjects, labelConstraint);
         projectPanel.add(cmbProjects, txtConstraint);
         projectPanel.add(cmdCreateNewProject, txtConstraint);
-        projectPanel.setBorder(IdeBorderFactory.createTitledBorder(bundle.getString("settings.connection.project")));
+        projectPanel.setBorder(IdeBorderFactory.createTitledBorder("Project"));
 
-        JButton cmdProjectAdd = new JButton((bundle.getString("buttons.addIssue")));
+        JButton cmdProjectAdd = new JButton(("Add Issue"));
         cmdProjectAdd.setName("cmdProjectAdd");
 
         this.cmbProjectViewState = new ComboBox<>();
-        this.chkProjectEnabled = new JBCheckBox(bundle.getString("settings.connection.project.enabled"));
+        this.chkProjectEnabled = new JBCheckBox("enabled");
 
         this.cmbNewProjectProjects = new ComboBox<>();
         this.cmbNewProjectProjects.setVisible(false);
@@ -193,7 +191,7 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
             }
 
             if(!connection.addProject(project)) {
-                Helper.printNotification(bundle.getString("message.error.header"), String.format(bundle.getString("message.cantAdd"), project.getName()), NotificationType.ERROR);
+                Helper.printNotification("Exception", String.format("Can't add %s", project.getName()), NotificationType.ERROR);
             } else {
                 txtProjectDescription.setText("");
                 txtProjectName.setText("");
@@ -208,7 +206,7 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
                 }
             }
         });
-        newProjectPanel.setBorder(IdeBorderFactory.createTitledBorder(bundle.getString("settings.connection.project.new")));
+        newProjectPanel.setBorder(IdeBorderFactory.createTitledBorder("New Project"));
 
         cmdCreateNewProject.addActionListener(e -> newProjectPanel.setVisible(true));
 
@@ -295,11 +293,11 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
 
     private boolean changeConnectionLabel(MantisUser user) {
         if(user==null) {
-            this.lblConnectionState.setText(bundle.getString("settings.connection.notConnected"));
+            this.lblConnectionState.setText("Not connected!");
             this.lblConnectionState.setForeground(JBColor.RED);
             return false;
         } else {
-            this.lblConnectionState.setText(String.format(bundle.getString("settings.connection.connected"), user.getName()));
+            this.lblConnectionState.setText(String.format("Connected as %s!", user.getName()));
             this.lblConnectionState.setForeground(JBColor.GREEN);
             return true;
         }

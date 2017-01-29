@@ -21,16 +21,14 @@ public class VersionDialog extends DialogWrapper {
     private JTextArea txtDescription;
     private JCheckBox chkObsolete, chkReleased;
     private JButton cmdDelete;
-    private ResourceBundle bundle;
     private MantisVersion version = new MantisVersion();
 
-    protected VersionDialog(@Nullable Project project, int project_id, ResourceBundle bundle) {
+    protected VersionDialog(@Nullable Project project, int project_id) {
         super(project);
         this.api = new MantisSoapAPI(ConnectionSettings.getInstance(project));
-        this.bundle = bundle;
         this.init();
         cmdDelete.setVisible(version.getId()!=0);
-        this.setTitle(bundle.getString("version.name"));
+        this.setTitle("Version-Name");
         if(this.getButton(this.getOKAction())!=null) {
             this.getButton(this.getOKAction()).addActionListener((event) -> {
                 version.setName(txtName.getText());
@@ -43,8 +41,8 @@ public class VersionDialog extends DialogWrapper {
         }
     }
 
-    protected VersionDialog(@Nullable Project project, int project_id, ResourceBundle bundle, MantisVersion version) {
-        this(project, project_id, bundle);
+    protected VersionDialog(@Nullable Project project, int project_id, MantisVersion version) {
+        this(project, project_id);
         this.version = version;
         txtName.setText(version.getName());
         txtDateOrder.setText(version.getDate());
@@ -86,13 +84,13 @@ public class VersionDialog extends DialogWrapper {
         txtDescription.setName("txtDescription");
         txtDescription.setPreferredSize(new Dimension(150, 100));
 
-        chkReleased = new JCheckBox(bundle.getString("version.released"));
+        chkReleased = new JCheckBox("Released");
         chkReleased.setName("chkReleased");
 
-        chkObsolete = new JCheckBox(bundle.getString("version.obsolete"));
+        chkObsolete = new JCheckBox("Obsolete");
         chkObsolete.setName("chkObsolete");
 
-        cmdDelete = new JButton(bundle.getString("buttons.delete"));
+        cmdDelete = new JButton("Delete");
         cmdDelete.setName("cmdDelete");
         cmdDelete.addActionListener(e -> {
             api.deleteVersion(version.getId());
@@ -100,9 +98,9 @@ public class VersionDialog extends DialogWrapper {
                 this.getButton(this.getOKAction()).doClick();
         });
 
-        java.awt.Label lblName = new java.awt.Label(bundle.getString("version.name"));
-        java.awt.Label lblDateOrder = new java.awt.Label(bundle.getString("version.date"));
-        java.awt.Label lblDescription = new java.awt.Label(bundle.getString("version.description"));
+        java.awt.Label lblName = new java.awt.Label("Name");
+        java.awt.Label lblDateOrder = new java.awt.Label("Date");
+        java.awt.Label lblDescription = new java.awt.Label("Description");
 
         JPanel basicsPanel = new JPanel(new GridBagLayout());
         basicsPanel.add(lblName, labelConstraint);

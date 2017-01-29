@@ -11,20 +11,17 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.ResourceBundle;
 
 public class ChooseVersionDialog extends DialogWrapper {
     private Project project;
     private ComboBox<String> cmbVersions;
-    private ResourceBundle bundle;
     public static MantisVersion currentVersion = null;
 
-    public ChooseVersionDialog(@Nullable Project project, ResourceBundle bundle) {
+    public ChooseVersionDialog(@Nullable Project project) {
         super(project);
         this.project = project;
-        this.bundle = bundle;
         this.init();
-        this.setTitle(bundle.getString("version.name"));
+        this.setTitle("Version-Name");
         if(this.getButton(this.getOKAction())!=null) {
             this.getButton(this.getOKAction()).addActionListener((event) -> {
                 for(MantisVersion version : new MantisSoapAPI(ConnectionSettings.getInstance(project)).getVersions(ConnectionSettings.getInstance(project).getProjectID())) {
@@ -56,7 +53,7 @@ public class ChooseVersionDialog extends DialogWrapper {
         txtConstraint.fill = GridBagConstraints.HORIZONTAL;
         txtConstraint.gridwidth = GridBagConstraints.REMAINDER;
 
-        Label lblVersion = new Label(bundle.getString("basics.fixedInVersion"));
+        Label lblVersion = new Label("Fixed in Version");
 
         cmbVersions = new ComboBox<>();
         for(MantisVersion version : new MantisSoapAPI(ConnectionSettings.getInstance(project)).getVersions(ConnectionSettings.getInstance(project).getProjectID())) {

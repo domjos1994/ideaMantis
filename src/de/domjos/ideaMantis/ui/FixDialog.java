@@ -18,7 +18,6 @@ import java.util.ResourceBundle;
 public class FixDialog extends DialogWrapper {
     private JBTextField txtFixed;
     private ComboBox<String> cmbState;
-    private ResourceBundle bundle;
     private MantisSoapAPI api;
     private Project project;
 
@@ -27,21 +26,20 @@ public class FixDialog extends DialogWrapper {
         this.project = project;
         try {
             this.api = new MantisSoapAPI(ConnectionSettings.getInstance(project));
-            this.bundle = Helper.getBundle();
-            this.setTitle(bundle.getString("editor.dialog.header"));
-            this.setOKButtonText(bundle.getString("buttons.addIssue"));
+            this.setTitle("Fix Bug");
+            this.setOKButtonText("Add Issue");
             this.init();
             if(this.getButton(this.getOKAction())!=null) {
                 this.getButton(this.getOKAction()).addActionListener((event) -> {
                     try {
                         api.checkInIssue(id, txtFixed.getText(), cmbState.getSelectedItem().toString());
                     } catch (Exception ex) {
-                        Helper.printNotification(bundle.getString("message.error.header"), ex.toString(), NotificationType.ERROR);
+                        Helper.printNotification("Exception", ex.toString(), NotificationType.ERROR);
                     }
                 });
             }
         }catch (Exception ex) {
-            Helper.printNotification(bundle.getString("message.error.header"), ex.toString(), NotificationType.ERROR);
+            Helper.printNotification("Exception", ex.toString(), NotificationType.ERROR);
         }
     }
 
@@ -74,8 +72,8 @@ public class FixDialog extends DialogWrapper {
             cmbState.addItem(item);
         }
 
-        java.awt.Label lblFixed = new java.awt.Label(bundle.getString("basics.checkIn"));
-        java.awt.Label lblState = new java.awt.Label(bundle.getString("basics.status"));
+        java.awt.Label lblFixed = new java.awt.Label("Check In");
+        java.awt.Label lblState = new java.awt.Label("Status");
 
         JPanel basicsPanel = new JPanel(new GridBagLayout());
         basicsPanel.add(lblFixed, labelConstraint);

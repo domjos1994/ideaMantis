@@ -60,14 +60,12 @@ public class IdeaMantisIssues implements ToolWindowFactory {
     private JTextField txtBasicsTags;
     private JLabel lblIssueFixedInVersion;
     private JLabel lblIssueStatus;
-    private ResourceBundle bundle;
     private boolean state = false;
 
     private ChangeListManager changeListManager;
 
 
     public IdeaMantisIssues() {
-        bundle = Helper.getBundle();
         tblIssues.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tblIssueAttachments.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tblIssueNotes.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -82,7 +80,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
 
 
         cmdVersionAdd.addActionListener(e -> {
-            VersionDialog dialog = new VersionDialog(project, settings.getProjectID(), bundle);
+            VersionDialog dialog = new VersionDialog(project, settings.getProjectID());
             if(dialog.showAndGet())
                 this.loadVersions(new MantisSoapAPI(ConnectionSettings.getInstance(project)));
         });
@@ -120,7 +118,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                         }
                     }
                 } catch (Exception ex) {
-                    Helper.printNotification(bundle.getString("message.error.header"), ex.toString(), NotificationType.ERROR);
+                    Helper.printNotification("Exception", ex.toString(), NotificationType.ERROR);
                 }
             }
 
@@ -141,7 +139,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
             try {
                 pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                 if(!settings.validateSettings()) {
-                    Helper.printNotification(bundle.getString("message.wrongSettings.header"), bundle.getString("message.wrongSettings.content"),NotificationType.ERROR);
+                    Helper.printNotification("Wrong settings!", "The connection-settings are incorrect!",NotificationType.ERROR);
                     this.state = false;
                     tblIssues.removeAll();
                     for (int i = tblIssueModel.getRowCount() - 1; i >= 0; i--) {
@@ -173,7 +171,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                     tblIssues.getColumnModel().getColumn(0).setMaxWidth(100);
                 }
             } catch (Exception ex) {
-                Helper.printNotification(bundle.getString("message.error.header"), ex.toString(), NotificationType.ERROR);
+                Helper.printNotification("Exception", ex.toString(), NotificationType.ERROR);
                 for(StackTraceElement element : ex.getStackTrace()) {
                     System.out.println(String.format("%s:%s:%s: %s", element.getFileName(), element.getClassName(), element.getMethodName(), element.getLineNumber()));
                 }
@@ -255,7 +253,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                         controlAttachments(false, false);
                     }
                 } catch (Exception ex) {
-                    Helper.printNotification(bundle.getString("message.error.header"), ex.toString(), NotificationType.ERROR);
+                    Helper.printNotification("Exception", ex.toString(), NotificationType.ERROR);
                 } finally {
                     pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
                 }
@@ -275,7 +273,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                     MantisSoapAPI api = new MantisSoapAPI(ConnectionSettings.getInstance(project));
                     for(MantisVersion version : api.getVersions(ConnectionSettings.getInstance(project).getProjectID())) {
                         if(version.getId()==Integer.parseInt(cmbIssueTargetVersion.getSelectedItem().toString().split(":")[0])) {
-                            VersionDialog dialog = new VersionDialog(project, settings.getProjectID(), bundle, version);
+                            VersionDialog dialog = new VersionDialog(project, settings.getProjectID(), version);
                             if(dialog.showAndGet())
                                 loadVersions(api);
                             break;
@@ -312,7 +310,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                     MantisSoapAPI api = new MantisSoapAPI(ConnectionSettings.getInstance(project));
                     for(MantisVersion version : api.getVersions(ConnectionSettings.getInstance(project).getProjectID())) {
                         if(version.getId()==Integer.parseInt(cmbIssueFixedInVersion.getSelectedItem().toString().split(":")[0])) {
-                            VersionDialog dialog = new VersionDialog(project, settings.getProjectID(), bundle, version);
+                            VersionDialog dialog = new VersionDialog(project, settings.getProjectID(), version);
                             if(dialog.showAndGet())
                                 loadVersions(api);
                             break;
@@ -364,13 +362,13 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                 if(tblIssues.getSelectedRow()!=-1) {
                     int id = Integer.parseInt(tblIssueModel.getValueAt(tblIssues.getSelectedRow(), 0).toString());
                     if(!new MantisSoapAPI(this.settings).removeIssue(id)) {
-                        Helper.printNotification(bundle.getString("message.error.header"), String.format(bundle.getString("message.cantDelete"), bundle.getString("issue.header")), NotificationType.ERROR);
+                        Helper.printNotification("Exception", String.format("Can't delete %s!", "Issue"), NotificationType.ERROR);
                     }
                     controlIssues(false, false);
                     cmdReload.doClick();
                 }
             } catch (Exception ex) {
-                Helper.printNotification(bundle.getString("message.error.header"), ex.toString(), NotificationType.ERROR);
+                Helper.printNotification("Exception", ex.toString(), NotificationType.ERROR);
             } finally {
                 pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
             }
@@ -442,7 +440,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                    }
 
                    if(!api.addIssue(issue)) {
-                       Helper.printNotification(bundle.getString("message.error.header"), String.format(bundle.getString("message.cantAdd"), bundle.getString("issue.header")), NotificationType.ERROR);
+                       Helper.printNotification("Exception", "Can't delete Issue!", NotificationType.ERROR);
                    }
                    if(chkAddVCS.isSelected()) {
                        Helper.commitAllFiles(Helper.replaceCommentByMarker(issue, txtVCSComment.getText()), this.changeListManager);
@@ -461,7 +459,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                    cmdReload.doClick();
                }
            } catch (Exception ex) {
-               Helper.printNotification(bundle.getString("message.error.header"), ex.toString(), NotificationType.ERROR);
+               Helper.printNotification("Exception", ex.toString(), NotificationType.ERROR);
            } finally {
                pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
            }
@@ -495,7 +493,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                     controlNotes(true, false);
                 }
             } catch (Exception ex) {
-                Helper.printNotification(bundle.getString("message.error.header"), ex.toString(), NotificationType.ERROR);
+                Helper.printNotification("Exception", ex.toString(), NotificationType.ERROR);
             } finally {
                 pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
             }
@@ -513,7 +511,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                 if(tblIssueNotes.getSelectedRow()!=-1) {
                     int id = Integer.parseInt(tblIssueNoteModel.getValueAt(tblIssueNotes.getSelectedRow(), 0).toString());
                     if(!new MantisSoapAPI(this.settings).removeNote(id)) {
-                        Helper.printNotification(bundle.getString("message.error.header"), String.format(bundle.getString("message.cantDelete"), bundle.getString("notes.header")), NotificationType.ERROR);
+                        Helper.printNotification("Exception", "Can't delete Note!", NotificationType.ERROR);
                     }
                     int nid = tblIssueNotes.getSelectedRow();
                     tblIssueAttachments.getSelectionModel().clearSelection();
@@ -522,7 +520,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                 }
                 controlNotes(false, false);
             } catch (Exception ex) {
-                Helper.printNotification(bundle.getString("message.error.header"), ex.toString(), NotificationType.ERROR);
+                Helper.printNotification("Exception", ex.toString(), NotificationType.ERROR);
             } finally {
                 pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
             }
@@ -557,7 +555,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
 
                     if(currentIssue.getId()!=0) {
                         if(!new MantisSoapAPI(this.settings).addNote(currentIssue.getId(), note)) {
-                            Helper.printNotification(bundle.getString("message.error.header"), String.format(bundle.getString("message.cantAdd"), bundle.getString("notes.header")), NotificationType.ERROR);
+                            Helper.printNotification("Exception", "Can't delete Note!", NotificationType.ERROR);
                             return;
                         }
                         int id = tblIssues.getSelectedRow();
@@ -584,7 +582,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                     controlNotes(false, false);
                 }
             } catch (Exception ex) {
-                Helper.printNotification(bundle.getString("message.error.header"), ex.toString(), NotificationType.ERROR);
+                Helper.printNotification("Exception", ex.toString(), NotificationType.ERROR);
             } finally {
                 pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
             }
@@ -612,7 +610,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                     controlAttachments(true, false);
                 }
             } catch (Exception ex) {
-                Helper.printNotification(bundle.getString("message.error.header"), ex.toString(), NotificationType.ERROR);
+                Helper.printNotification("Exception", ex.toString(), NotificationType.ERROR);
             } finally {
                 pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
             }
@@ -627,7 +625,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                 if(tblIssueAttachments.getSelectedRow()!=-1) {
                     int id = Integer.parseInt(tblIssueAttachmentModel.getValueAt(tblIssueAttachments.getSelectedRow(), 0).toString());
                     if(!new MantisSoapAPI(this.settings).removeAttachment(id)) {
-                        Helper.printNotification(bundle.getString("message.error.header"), String.format(bundle.getString("message.cantDelete"), bundle.getString("attachments.header")), NotificationType.ERROR);
+                        Helper.printNotification("Exception", "Can't delete Attachment!", NotificationType.ERROR);
                     }
                     int aid = tblIssueAttachments.getSelectedRow();
                     tblIssueAttachments.getSelectionModel().clearSelection();
@@ -636,7 +634,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                     controlAttachments(false, false);
                 }
             } catch (Exception ex) {
-                Helper.printNotification(bundle.getString("message.error.header"), ex.toString(), NotificationType.ERROR);
+                Helper.printNotification("Exception", ex.toString(), NotificationType.ERROR);
             } finally {
                 pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
             }
@@ -657,7 +655,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
 
                     if(currentIssue.getId()!=0) {
                         if(!new MantisSoapAPI(this.settings).addAttachment(currentIssue.getId(), attachment)) {
-                            Helper.printNotification(bundle.getString("message.error.header"), String.format(bundle.getString("message.cantAdd"), bundle.getString("attachments.header")), NotificationType.ERROR);
+                            Helper.printNotification("Exception", "Can't delete Attachment!", NotificationType.ERROR);
                             return;
                         }
                         int id = tblIssues.getSelectedRow();
@@ -683,7 +681,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                     controlAttachments(false, false);
                 }
             } catch (Exception ex) {
-                Helper.printNotification(bundle.getString("message.error.header"), ex.toString(), NotificationType.ERROR);
+                Helper.printNotification("Exception", ex.toString(), NotificationType.ERROR);
             } finally {
                 pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
             }
@@ -719,7 +717,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                     }
                 }
             } catch (Exception ex) {
-                Helper.printNotification(bundle.getString("message.error.header"), ex.toString(), NotificationType.ERROR);
+                Helper.printNotification("Exception", ex.toString(), NotificationType.ERROR);
             }
         });
 
@@ -738,7 +736,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                     }
                 }
             } catch (Exception ex) {
-                Helper.printNotification(bundle.getString("message.error.header"), ex.toString(), NotificationType.ERROR);
+                Helper.printNotification("Exception", ex.toString(), NotificationType.ERROR);
             }
         });
 
@@ -747,27 +745,27 @@ public class IdeaMantisIssues implements ToolWindowFactory {
 
     private String validateIssue() {
         if(txtIssueDescription.getText().equals("")) {
-            return String.format(bundle.getString("messages.mandatory"), bundle.getString("descriptions.description").replace("*", ""));
+            return String.format("%s is a mandatory field!", "Description");
         }
         if(txtIssueSummary.getText().equals("")) {
-            return String.format(bundle.getString("messages.mandatory"), bundle.getString("basics.summary").replace("*", ""));
+            return String.format("%s is a mandatory field!", "Summary");
         }
         if(cmbIssueCategory.getSelectedItem()==null) {
-            return String.format(bundle.getString("messages.mandatory"), bundle.getString("basics.category").replace("*", ""));
+            return String.format("%s is a mandatory field!", "Category");
         }
         return "";
     }
 
     private String validateAttachment() {
         if(txtIssueAttachmentFileName.getText().equals("")) {
-            return String.format(bundle.getString("messages.mandatory"), bundle.getString("attachments.fileName").replace("*", ""));
+            return String.format("%s is a mandatory field!", "Attachment-Content");
         }
         return "";
     }
 
     private String validateNote() {
         if(txtIssueNoteText.getText().equals("")) {
-            return String.format(bundle.getString("messages.mandatory"), bundle.getString("notes.text").replace("*", ""));
+            return String.format("%s is a mandatory field!", "Note-Text");
         }
         return "";
     }
@@ -838,7 +836,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
     private void resetIssues() {
         tblIssues.getSelectionModel().clearSelection();
         txtIssueSummary.setText("");
-        txtVCSComment.setText(bundle.getString("settings.connection.VCSComment"));
+        txtVCSComment.setText("VCS-Comment");
         cmbIssueReporterName.setSelectedItem(null);
         cmbIssueCategory.setSelectedItem(null);
         cmbIssueTargetVersion.setSelectedItem(null);
@@ -960,7 +958,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                 cmbIssueNoteReporterUser.addItem("");
             }
         } catch (Exception ex) {
-            Helper.printNotification(bundle.getString("message.error.header"), ex.toString(), NotificationType.ERROR);
+            Helper.printNotification("Exception", ex.toString(), NotificationType.ERROR);
         }
 
         List<String> priorities = api.getEnum("priorities");
@@ -1134,9 +1132,9 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                 return false;
             }
         };
-        model.addColumn(bundle.getString("id"));
-        model.addColumn(bundle.getString("basics.summary").replace("*", ""));
-        model.addColumn(bundle.getString("basics.status").replace("*", ""));
+        model.addColumn("ID");
+        model.addColumn("Summary");
+        model.addColumn("Status");
         return model;
     }
 
@@ -1147,9 +1145,9 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                 return false;
             }
         };
-        model.addColumn(bundle.getString("id"));
-        model.addColumn(bundle.getString("notes.text").replace("*", ""));
-        model.addColumn(bundle.getString("notes.view").replace("*", ""));
+        model.addColumn("ID");
+        model.addColumn("Text");
+        model.addColumn("View");
         return model;
     }
 
@@ -1160,8 +1158,8 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                 return false;
             }
         };
-        model.addColumn(bundle.getString("id"));
-        model.addColumn(bundle.getString("attachments.fileName").replace("*", ""));
+        model.addColumn("ID");
+        model.addColumn("File-Name");
         return model;
     }
 }
