@@ -155,7 +155,7 @@
                                   <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                                 </constraints>
                                 <properties>
-                                  <text value="Summaty"/>
+                                  <text value="Summary"/>
                                 </properties>
                               </component>
                               <component id="ea328" class="javax.swing.JTextField" binding="txtIssueSummary">
@@ -495,19 +495,19 @@
                                           <component id="4d234" class="javax.swing.JButton" binding="cmdIssueNoteNew">
                                             <constraints/>
                                             <properties>
-                                              <text resource-bundle="de/domjos/ideaMantis/messages/lang" key="buttons.new"/>
+                                              <text value="New"/>
                                             </properties>
                                           </component>
                                           <component id="f45ee" class="javax.swing.JButton" binding="cmdIssueNoteEdit">
                                             <constraints/>
                                             <properties>
-                                              <text resource-bundle="de/domjos/ideaMantis/messages/lang" key="buttons.edit"/>
+                                              <text value="Edit"/>
                                             </properties>
                                           </component>
                                           <component id="811ee" class="javax.swing.JButton" binding="cmdIssueNoteDelete">
                                             <constraints/>
                                             <properties>
-                                              <text resource-bundle="de/domjos/ideaMantis/messages/lang" key="buttons.delete"/>
+                                              <text value="Delete"/>
                                             </properties>
                                           </component>
                                           <hspacer id="9fdae">
@@ -516,13 +516,13 @@
                                           <component id="9fe26" class="javax.swing.JButton" binding="cmdIssueNoteSave">
                                             <constraints/>
                                             <properties>
-                                              <text resource-bundle="de/domjos/ideaMantis/messages/lang" key="buttons.save"/>
+                                              <text value="Save"/>
                                             </properties>
                                           </component>
                                           <component id="e22f1" class="javax.swing.JButton" binding="cmdIssueNoteAbort">
                                             <constraints/>
                                             <properties>
-                                              <text resource-bundle="de/domjos/ideaMantis/messages/lang" key="buttons.abort"/>
+                                              <text value="Abort"/>
                                             </properties>
                                           </component>
                                         </children>
@@ -702,19 +702,19 @@
                                           <component id="f08fa" class="javax.swing.JButton" binding="cmdIssueAttachmentNew">
                                             <constraints/>
                                             <properties>
-                                              <text resource-bundle="de/domjos/ideaMantis/messages/lang" key="buttons.new"/>
+                                              <text value="New"/>
                                             </properties>
                                           </component>
                                           <component id="88d8c" class="javax.swing.JButton" binding="cmdIssueAttachmentEdit">
                                             <constraints/>
                                             <properties>
-                                              <text resource-bundle="de/domjos/ideaMantis/messages/lang" key="buttons.edit"/>
+                                              <text value="Edit"/>
                                             </properties>
                                           </component>
                                           <component id="de68" class="javax.swing.JButton" binding="cmdIssueAttachmentDelete">
                                             <constraints/>
                                             <properties>
-                                              <text resource-bundle="de/domjos/ideaMantis/messages/lang" key="buttons.delete"/>
+                                              <text value="Delete"/>
                                             </properties>
                                           </component>
                                           <hspacer id="f38d2">
@@ -723,13 +723,13 @@
                                           <component id="18208" class="javax.swing.JButton" binding="cmdIssueAttachmentSave">
                                             <constraints/>
                                             <properties>
-                                              <text resource-bundle="de/domjos/ideaMantis/messages/lang" key="buttons.save"/>
+                                              <text value="Save"/>
                                             </properties>
                                           </component>
                                           <component id="57fc7" class="javax.swing.JButton" binding="cmdIssueAttachmentAbort">
                                             <constraints/>
                                             <properties>
-                                              <text resource-bundle="de/domjos/ideaMantis/messages/lang" key="buttons.abort"/>
+                                              <text value="Abort"/>
                                             </properties>
                                           </component>
                                         </children>
