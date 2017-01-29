@@ -1,7 +1,7 @@
 <idea-plugin version="2">
   <id>de.domjos.ideaMantis</id>
   <name>ideaMantis</name>
-  <version>0.5</version>
+  <version>0.5.1</version>
   <vendor email="webmaster@domjos.de" url="http://domjos.de">Dominic Joas</vendor>
 
   <description>
@@ -57,8 +57,6 @@
   </change-notes>
 
   <idea-version since-build="141.0"/>
-
-  <resource-bundle>de.domjos.ideaMantis.messages.lang</resource-bundle>
 
   <extensions defaultExtensionNs="com.intellij">
     <toolWindow
