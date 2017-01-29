@@ -28,7 +28,7 @@ public class CreateChangeLogAction extends AnAction {
         final Document document = editor.getDocument();
 
 
-        ChooseVersionDialog dialog = new ChooseVersionDialog(project, Helper.getBundle());
+        ChooseVersionDialog dialog = new ChooseVersionDialog(project);
         if(dialog.showAndGet()) {
             Map<MantisIssue, MantisVersion> changeLog = new MantisSoapAPI(ConnectionSettings.getInstance(project)).createChangeLog(dialog.currentVersion);
             Map<MantisVersion, List<MantisIssue>> resortedMap = new LinkedHashMap<>();

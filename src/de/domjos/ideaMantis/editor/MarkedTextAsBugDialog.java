@@ -29,7 +29,6 @@ class MarkedTextAsBugDialog extends DialogWrapper {
 
     private MantisSoapAPI api;
     private ConnectionSettings settings;
-    private ResourceBundle bundle;
 
     MarkedTextAsBugDialog(@Nullable Project project, String description) {
         this(project, description, "");
@@ -43,9 +42,8 @@ class MarkedTextAsBugDialog extends DialogWrapper {
             this.documentPath = documentPath;
             this.settings = ConnectionSettings.getInstance(project);
             this.api = new MantisSoapAPI(settings);
-            bundle = Helper.getBundle();
-            this.setTitle(bundle.getString("editor.dialog.header"));
-            this.setOKButtonText(bundle.getString("buttons.addIssue"));
+            this.setTitle("Mark text as bug");
+            this.setOKButtonText("Add Issue");
             this.init();
             if(this.getButton(this.getOKAction())!=null) {
                 this.getButton(this.getOKAction()).addActionListener((event) -> {
@@ -82,12 +80,12 @@ class MarkedTextAsBugDialog extends DialogWrapper {
                         issue.addAttachment(attachment);
                         api.addIssue(issue);
                     } catch (Exception ex) {
-                        Helper.printNotification(bundle.getString("message.error.header"), ex.toString(), NotificationType.ERROR);
+                        Helper.printNotification("Exception", ex.toString(), NotificationType.ERROR);
                     }
                 });
             }
         }catch (Exception ex) {
-            Helper.printNotification(bundle.getString("message.error.header"), ex.toString(), NotificationType.ERROR);
+            Helper.printNotification("Exception", ex.toString(), NotificationType.ERROR);
         }
     }
 
@@ -95,10 +93,10 @@ class MarkedTextAsBugDialog extends DialogWrapper {
     protected ValidationInfo doValidate() {
         ValidationInfo  info = null;
         if(txtSummary.getText().equals("")) {
-            info = new ValidationInfo(String.format(bundle.getString("messages.mandatory"), bundle.getString("basics.summary").replace("*", "")));
+            info = new ValidationInfo(String.format("%s is a mandatory field!", "Summary"));
         }
         if(txtDescription.getText().equals("")) {
-            info = new ValidationInfo(String.format(bundle.getString("messages.mandatory"), bundle.getString("descriptions.description").replace("*", "")));
+            info = new ValidationInfo(String.format("%s is a mandatory field!", "Description"));
         }
 
         return info;
@@ -144,10 +142,10 @@ class MarkedTextAsBugDialog extends DialogWrapper {
         api.getCategories(settings.getProjectID()).forEach(cmbCategory::addItem);
 
 
-        java.awt.Label lblSummary = new java.awt.Label(bundle.getString("basics.summary"));
-        java.awt.Label lblDate = new java.awt.Label(bundle.getString("basics.date"));
-        java.awt.Label lblDescription = new java.awt.Label(bundle.getString("descriptions.description"));
-        java.awt.Label lblCategory = new java.awt.Label(bundle.getString("basics.category"));
+        java.awt.Label lblSummary = new java.awt.Label("Summary");
+        java.awt.Label lblDate = new java.awt.Label("Date");
+        java.awt.Label lblDescription = new java.awt.Label("Description");
+        java.awt.Label lblCategory = new java.awt.Label("Category");
 
 
         JPanel basicsPanel = new JPanel(new GridBagLayout());
@@ -160,7 +158,7 @@ class MarkedTextAsBugDialog extends DialogWrapper {
         basicsPanel.add(lblCategory, labelConstraint);
         basicsPanel.add(cmbCategory, txtConstraint);
 
-        basicsPanel.setBorder(IdeBorderFactory.createTitledBorder(bundle.getString("basics.header")));
+        basicsPanel.setBorder(IdeBorderFactory.createTitledBorder("Basics"));
         root.add(basicsPanel, constraints);
 
 
@@ -171,8 +169,8 @@ class MarkedTextAsBugDialog extends DialogWrapper {
             cmbTargetVersion.addItem(version.getName());
         });
 
-        java.awt.Label lblFixedInVersion = new java.awt.Label(bundle.getString("basics.fixedInVersion"));
-        java.awt.Label lblTargetVersion = new java.awt.Label(bundle.getString("basics.targetVersion"));
+        java.awt.Label lblFixedInVersion = new java.awt.Label("Fixed in Version");
+        java.awt.Label lblTargetVersion = new java.awt.Label("Target Version");
 
         JPanel versionPanel = new JPanel(new GridBagLayout());
         versionPanel.add(lblTargetVersion, labelConstraint);
@@ -180,7 +178,7 @@ class MarkedTextAsBugDialog extends DialogWrapper {
         versionPanel.add(lblFixedInVersion, labelConstraint);
         versionPanel.add(cmbFixedInVersion, txtConstraint);
 
-        versionPanel.setBorder(IdeBorderFactory.createTitledBorder(bundle.getString("basics.version")));
+        versionPanel.setBorder(IdeBorderFactory.createTitledBorder("Version"));
         root.add(versionPanel, constraints);
 
 
@@ -191,9 +189,9 @@ class MarkedTextAsBugDialog extends DialogWrapper {
         api.getEnum("severities").forEach(cmbSeverity::addItem);
         api.getEnum("status").forEach(cmbStatus::addItem);
 
-        java.awt.Label lblPriority = new java.awt.Label(bundle.getString("basics.priority"));
-        java.awt.Label lblSeverity = new java.awt.Label(bundle.getString("basics.severity"));
-        java.awt.Label lblStatus = new java.awt.Label(bundle.getString("basics.status"));
+        java.awt.Label lblPriority = new java.awt.Label("Priority");
+        java.awt.Label lblSeverity = new java.awt.Label("Severity");
+        java.awt.Label lblStatus = new java.awt.Label("Status");
 
         JPanel statePanel = new JPanel(new GridBagLayout());
         statePanel.add(lblPriority, labelConstraint);
@@ -203,7 +201,7 @@ class MarkedTextAsBugDialog extends DialogWrapper {
         statePanel.add(lblStatus, labelConstraint);
         statePanel.add(cmbStatus, txtConstraint);
 
-        statePanel.setBorder(IdeBorderFactory.createTitledBorder(bundle.getString("basics.states")));
+        statePanel.setBorder(IdeBorderFactory.createTitledBorder("View-State"));
         root.add(statePanel, constraints);
 
 
@@ -212,11 +210,11 @@ class MarkedTextAsBugDialog extends DialogWrapper {
             txtDocumentPath = new JBTextField();
             txtDocumentPath.setEnabled(false);
             txtDocumentPath.setText(this.documentPath);
-            java.awt.Label lblDocumentPath = new java.awt.Label(bundle.getString("attachments.fileName"));
+            java.awt.Label lblDocumentPath = new java.awt.Label("File-Name");
             attachmentPanel.add(lblDocumentPath, labelConstraint);
             attachmentPanel.add(txtDocumentPath, txtConstraint);
 
-            attachmentPanel.setBorder(IdeBorderFactory.createTitledBorder(bundle.getString("attachments.header")));
+            attachmentPanel.setBorder(IdeBorderFactory.createTitledBorder("Attachment"));
             root.add(attachmentPanel, constraints);
         }
         return root;
