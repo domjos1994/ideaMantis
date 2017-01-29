@@ -134,16 +134,6 @@ public abstract class Helper {
         return comment;
     }
 
-    public static ResourceBundle getBundle() {
-        ResourceBundle bundle;
-        try{
-            bundle = ResourceBundle.getBundle("de.domjos.ideaMantis.messages.lang", Locale.getDefault());
-        } catch (Exception ex) {
-           bundle = null;
-        }
-        return bundle;
-    }
-
     public static void commitAllFiles(String comment, ChangeListManager changeListManager) {
         java.util.List<Change> changeList = new LinkedList<>();
         changeListManager.getAllChanges().forEach(changeList::add);
