@@ -770,7 +770,6 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         return "";
     }
 
-    @Override
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
         this.project = project;
         ContentFactory contentFactory = ContentFactory.SERVICE.getInstance();

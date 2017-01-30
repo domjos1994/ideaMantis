@@ -23,7 +23,6 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.ResourceBundle;
 
 public class IdeaMantisConfigurable implements SearchableConfigurable {
     private JBTextField txtHostName, txtUserName, txtProjectName;

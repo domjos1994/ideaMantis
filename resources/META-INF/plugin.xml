@@ -1,15 +1,9 @@
-<idea-plugin version="2">
+<idea-plugin>
   <id>de.domjos.ideaMantis</id>
   <name>ideaMantis</name>
-  <version>0.5.1</version>
+  <description>IntelliJ-Idea Plugin to create, edit and delete Issues from Mantis BugTracker!</description>
+  <version>0.6</version>
   <vendor email="webmaster@domjos.de" url="http://domjos.de">Dominic Joas</vendor>
-
-  <description>
-    <![CDATA[
-      <img src='https://raw.githubusercontent.com/domjos1994/ideaMantis/master/resources/de/domjos/ideaMantis/images/icon.png' alt='Logo' title='Logo'/> IntelliJ-Idea Plugin to create, edit and delete Issues from Mantis BugTracker!<br/>
-      This project is OpenSource. With the following link you can get the <a href="https://github.com/domjos1994/ideaMantis" title="To Github">SourceCode</a>.
-    ]]>
-  </description>
 
   <change-notes>
     <![CDATA[
@@ -59,8 +53,10 @@
   <idea-version since-build="141.0"/>
 
   <extensions defaultExtensionNs="com.intellij">
+
     <toolWindow
-            id="ideaMantis -Issues"
+            id="Show MantisBT-Issues"
+            secondary="true"
             icon="/de/domjos/ideaMantis/images/icon.png"
             anchor="right"
             factoryClass="de.domjos.ideaMantis.ui.IdeaMantisIssues"/>

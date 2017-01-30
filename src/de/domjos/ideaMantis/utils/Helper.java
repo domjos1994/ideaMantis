@@ -7,7 +7,6 @@ import com.intellij.openapi.vcs.changes.Change;
 import com.intellij.openapi.vcs.changes.ChangeListManager;
 import com.intellij.openapi.vcs.changes.LocalChangeList;
 import de.domjos.ideaMantis.model.MantisIssue;
-import de.domjos.ideaMantis.model.MantisProject;
 import org.ksoap2.serialization.SoapObject;
 
 import javax.swing.*;
