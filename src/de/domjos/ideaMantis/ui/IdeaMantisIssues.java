@@ -3,6 +3,9 @@ package de.domjos.ideaMantis.ui;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.fileChooser.FileChooser;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
+import com.intellij.openapi.progress.ProgressIndicator;
+import com.intellij.openapi.progress.ProgressManager;
+import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vcs.changes.*;
 import com.intellij.openapi.wm.ToolWindow;
@@ -51,7 +54,6 @@ public class IdeaMantisIssues implements ToolWindowFactory {
 
     private JTable tblIssues, tblIssueAttachments, tblIssueNotes;
 
-    private JProgressBar pbMain;
     private JLabel lblValidation;
     private JCheckBox chkAddVCS;
     private JTextField txtVCSComment;
@@ -138,32 +140,44 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         cmdReload.addActionListener(e -> {
             try {
                 pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-                if(!settings.validateSettings()) {
-                    Helper.printNotification("Wrong settings!", "The connection-settings are incorrect!",NotificationType.ERROR);
-                    this.state = false;
-                    tblIssues.removeAll();
-                    for (int i = tblIssueModel.getRowCount() - 1; i >= 0; i--) {
-                        tblIssueModel.removeRow(i);
+                ProgressManager manager = ProgressManager.getInstance();
+                Task.WithResult<Boolean, Exception> task =
+                    new Task.WithResult<Boolean, Exception>(project, "Load Issues...", true) {
+                    @Override
+                    protected Boolean compute(@NotNull ProgressIndicator progressIndicator) throws Exception {
+                        if(!settings.validateSettings()) {
+                            Helper.printNotification("Wrong settings!", "The connection-settings are incorrect!", NotificationType.WARNING);
+                            state = false;
+                            tblIssues.removeAll();
+                            for (int i = tblIssueModel.getRowCount() - 1; i >= 0; i--) {
+                                tblIssueModel.removeRow(i);
+                            }
+                        } else {
+                            state = true;
+                            tblIssues.removeAll();
+                            for (int i = tblIssueModel.getRowCount() - 1; i >= 0; i--) {
+                                tblIssueModel.removeRow(i);
+                            }
+                            tblIssues.setModel(tblIssueModel);
+                            loadComboBoxes();
+                            List<MantisIssue> mantisIssues = new MantisSoapAPI(settings).getIssues(settings.getProjectID());
+                            progressIndicator.setFraction(0.0);
+                            double factor = 100.0 / mantisIssues.size();
+                            for(MantisIssue issue : mantisIssues) {
+                                tblIssueModel.addRow(new Object[]{issue.getId(), issue.getSummary(), issue.getStatus()});
+                                progressIndicator.setFraction(progressIndicator.getFraction() + factor);
+                            }
+                            tblIssues.setModel(tblIssueModel);
+                            cmdIssueNew.setEnabled(true);
+                        }
+                        return state;
                     }
+                };
+                manager.run(task);
+                if(task.getResult()) {
+                    pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
                 } else {
-                    this.state = true;
-                    tblIssues.removeAll();
-                    for (int i = tblIssueModel.getRowCount() - 1; i >= 0; i--) {
-                        tblIssueModel.removeRow(i);
-                    }
-                    tblIssues.setModel(tblIssueModel);
-                    this.loadComboBoxes();
-                    List<MantisIssue> mantisIssues = new MantisSoapAPI(this.settings).getIssues(this.settings.getProjectID());
-                    pbMain.setMinimum(0);
-                    pbMain.setValue(pbMain.getMinimum());
-                    pbMain.setMaximum(mantisIssues.size());
-                    for(MantisIssue issue : mantisIssues) {
-                        tblIssueModel.addRow(new Object[]{issue.getId(), issue.getSummary(), issue.getStatus()});
-                        pbMain.setValue((pbMain.getValue()+1));
-                        pbMain.updateUI();
-                    }
-                    tblIssues.setModel(tblIssueModel);
-                    cmdIssueNew.setEnabled(true);
+                    pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
                 }
                 resetIssues();
                 if(tblIssues.getColumnCount()>=1) {
@@ -175,9 +189,6 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                 for(StackTraceElement element : ex.getStackTrace()) {
                     System.out.println(String.format("%s:%s:%s: %s", element.getFileName(), element.getClassName(), element.getMethodName(), element.getLineNumber()));
                 }
-            } finally {
-                pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-                pbMain.setValue(pbMain.getMinimum());
             }
         });
 
