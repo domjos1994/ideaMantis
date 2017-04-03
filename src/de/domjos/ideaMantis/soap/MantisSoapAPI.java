@@ -194,6 +194,10 @@ public class MantisSoapAPI {
     }
 
     public MantisIssue getIssue(int sid) {
+        return this.getIssue(sid,false);
+    }
+
+    public MantisIssue getIssue(int sid,boolean small) {
         MantisIssue issue;
         SoapObject structRequest = new SoapObject(this.settings.getHostName() + "/api/soap/mantisconnect.php", "mc_issue_get");
         try {
@@ -204,7 +208,7 @@ public class MantisSoapAPI {
             structTransport.call("SOAPAction", structEnvelope);
             SoapObject obj = (SoapObject) structEnvelope.bodyIn;
             SoapObject soapObjIssue = (SoapObject) obj.getProperty(0);
-            issue = this.getIssueFromSoap(soapObjIssue);
+            issue = this.getIssueFromSoap(soapObjIssue, small);
         } catch (Exception ex) {
             return null;
         }
@@ -782,27 +786,35 @@ public class MantisSoapAPI {
         return null;
     }
 
-    private MantisIssue getIssueFromSoap(SoapObject soapObjIssue) {
+    private MantisIssue getIssueFromSoap(SoapObject soapObjIssue, boolean small) {
         MantisIssue issue = new MantisIssue();
         issue.setId(Integer.parseInt(soapObjIssue.getProperty("id").toString()));
-        issue.setCategory(Helper.getParam(soapObjIssue, "category", false, 0));
-        issue.setPriority(Helper.getParam(soapObjIssue, "priority", true, 1));
-        issue.setSeverity(Helper.getParam(soapObjIssue, "severity", true, 1));
+        if(!small) {
+            issue.setCategory(Helper.getParam(soapObjIssue, "category", false, 0));
+            issue.setPriority(Helper.getParam(soapObjIssue, "priority", true, 1));
+            issue.setSeverity(Helper.getParam(soapObjIssue, "severity", true, 1));
+        }
         issue.setStatus(Helper.getParam(soapObjIssue, "status", true, 1));
-        SoapObject user = (SoapObject) soapObjIssue.getProperty(8);
-        MantisUser sUser = new MantisUser(Helper.getParam(user, "name", false, 0));
-        sUser.setName(Helper.getParam(user, "real_name", false, 0));
-        sUser.setId(Integer.parseInt(Helper.getParam(user, "id", false, 0)));
-        sUser.setEmail(Helper.getParam(user, "email", false, 0));
-        issue.setReporter(sUser);
+        if(!small) {
+            SoapObject user = (SoapObject) soapObjIssue.getProperty(8);
+            MantisUser sUser = new MantisUser(Helper.getParam(user, "name", false, 0));
+            sUser.setName(Helper.getParam(user, "real_name", false, 0));
+            sUser.setId(Integer.parseInt(Helper.getParam(user, "id", false, 0)));
+            sUser.setEmail(Helper.getParam(user, "email", false, 0));
+            issue.setReporter(sUser);
+        }
         issue.setSummary(Helper.getParam(soapObjIssue, "summary", false, 0));
-        issue.setReproducibility(Helper.getParam(soapObjIssue, "reproducibility", true, 1));
-        issue.setDate_submitted(Helper.getParam(soapObjIssue, "date_submitted", false, 0));
+        if(!small) {
+            issue.setReproducibility(Helper.getParam(soapObjIssue, "reproducibility", true, 1));
+            issue.setDate_submitted(Helper.getParam(soapObjIssue, "date_submitted", false, 0));
+        }
         List<MantisVersion> versions = this.getVersions(settings.getProjectID());
-        for(MantisVersion version :  versions) {
-            if(version.getName().equals(checkAndGetProperty("version", soapObjIssue))) {
-                issue.setFixed_in_version(version);
-                break;
+        if(!small) {
+            for (MantisVersion version : versions) {
+                if (version.getName().equals(checkAndGetProperty("version", soapObjIssue))) {
+                    issue.setFixed_in_version(version);
+                    break;
+                }
             }
         }
         for(MantisVersion version :  versions) {
@@ -811,58 +823,62 @@ public class MantisSoapAPI {
                 break;
             }
         }
-        issue.setDescription(Helper.getParam(soapObjIssue, "description", false, 0));
-        issue.setSteps_to_reproduce(Helper.getParam(soapObjIssue, "steps_to_reproduce", false, 0));
-        issue.setAdditional_information(Helper.getParam(soapObjIssue, "additional_information", false, 0));
-        try {
-            if(soapObjIssue.getProperty("attachments")!=null) {
-                for(Object object : (Vector) soapObjIssue.getProperty("attachments")) {
-                    SoapObject soapObject = (SoapObject) object;
-                    IssueAttachment attachment = new IssueAttachment();
-                    attachment.setId(Integer.parseInt(Helper.getParam(soapObject, "id", false, 0)));
-                    attachment.setFilename(Helper.getParam(soapObject, "filename", false, 0));
-                    attachment.setSize(Integer.parseInt(Helper.getParam(soapObject, "size", false, 0)));
-                    attachment.setDownload_url(Helper.getParam(soapObject, "download_url", false, 0));
-                    issue.addAttachment(attachment);
-                }
-            }
-        } catch (Exception ex) {
-            Helper.printNotification("Problem", ex.getMessage(), NotificationType.ERROR);
-        }
-        try {
-            if(soapObjIssue.getProperty("notes")!=null) {
-                for(Object object : (Vector) soapObjIssue.getProperty("notes")) {
-                    SoapObject soapObject = (SoapObject) object;
-                    IssueNote note = new IssueNote();
-                    note.setId(Integer.parseInt(Helper.getParam(soapObject, "id", false, 0)));
-                    note.setText(Helper.getParam(soapObject, "text", false, 0));
-                    note.setDate(Helper.getParam(soapObject, "date_submitted", false, 0));
-                    SoapObject reporter = (SoapObject) soapObjIssue.getProperty("reporter");
-                    MantisUser sReporter = new MantisUser(Helper.getParam(reporter, "real_name", false, 0));
-                    sReporter.setName(Helper.getParam(reporter, "name", false, 0));
-                    sReporter.setId(Integer.parseInt(Helper.getParam(reporter, "id", false, 0)));
-                    sReporter.setEmail(Helper.getParam(reporter, "email", false, 0));
-                    note.setReporter(sReporter);
-                    note.setView_state(Helper.getParam(soapObject, "view_state", true, 1));
-                    issue.addNote(note);
-                }
-            }
-        } catch (RuntimeException ignored) {} catch (Exception ex) {
-            Helper.printNotification("Problem", ex.toString(), NotificationType.ERROR);
-        }
-        try {
-            if(soapObjIssue.getProperty("tags")!=null) {
-                for(Object object : (Vector) soapObjIssue.getProperty("tags")) {
-                    SoapObject soapObject = (SoapObject) object;
-                    if(issue.getTags().equals("")) {
-                        issue.setTags(checkAndGetProperty("name", soapObject));
-                    } else {
-                        issue.setTags(issue.getTags() + ", " + checkAndGetProperty("name", soapObject));
+        if(!small) {
+            issue.setDescription(Helper.getParam(soapObjIssue, "description", false, 0));
+            issue.setSteps_to_reproduce(Helper.getParam(soapObjIssue, "steps_to_reproduce", false, 0));
+            issue.setAdditional_information(Helper.getParam(soapObjIssue, "additional_information", false, 0));
+            try {
+                if (soapObjIssue.getProperty("attachments") != null) {
+                    for (Object object : (Vector) soapObjIssue.getProperty("attachments")) {
+                        SoapObject soapObject = (SoapObject) object;
+                        IssueAttachment attachment = new IssueAttachment();
+                        attachment.setId(Integer.parseInt(Helper.getParam(soapObject, "id", false, 0)));
+                        attachment.setFilename(Helper.getParam(soapObject, "filename", false, 0));
+                        attachment.setSize(Integer.parseInt(Helper.getParam(soapObject, "size", false, 0)));
+                        attachment.setDownload_url(Helper.getParam(soapObject, "download_url", false, 0));
+                        issue.addAttachment(attachment);
                     }
                 }
+            } catch (Exception ex) {
+                Helper.printNotification("Problem", ex.getMessage(), NotificationType.ERROR);
             }
-        } catch (RuntimeException ignored) {} catch (Exception ex) {
-            Helper.printNotification("Problem", ex.toString(), NotificationType.ERROR);
+            try {
+                if (soapObjIssue.getProperty("notes") != null) {
+                    for (Object object : (Vector) soapObjIssue.getProperty("notes")) {
+                        SoapObject soapObject = (SoapObject) object;
+                        IssueNote note = new IssueNote();
+                        note.setId(Integer.parseInt(Helper.getParam(soapObject, "id", false, 0)));
+                        note.setText(Helper.getParam(soapObject, "text", false, 0));
+                        note.setDate(Helper.getParam(soapObject, "date_submitted", false, 0));
+                        SoapObject reporter = (SoapObject) soapObjIssue.getProperty("reporter");
+                        MantisUser sReporter = new MantisUser(Helper.getParam(reporter, "real_name", false, 0));
+                        sReporter.setName(Helper.getParam(reporter, "name", false, 0));
+                        sReporter.setId(Integer.parseInt(Helper.getParam(reporter, "id", false, 0)));
+                        sReporter.setEmail(Helper.getParam(reporter, "email", false, 0));
+                        note.setReporter(sReporter);
+                        note.setView_state(Helper.getParam(soapObject, "view_state", true, 1));
+                        issue.addNote(note);
+                    }
+                }
+            } catch (RuntimeException ignored) {
+            } catch (Exception ex) {
+                Helper.printNotification("Problem", ex.toString(), NotificationType.ERROR);
+            }
+            try {
+                if (soapObjIssue.getProperty("tags") != null) {
+                    for (Object object : (Vector) soapObjIssue.getProperty("tags")) {
+                        SoapObject soapObject = (SoapObject) object;
+                        if (issue.getTags().equals("")) {
+                            issue.setTags(checkAndGetProperty("name", soapObject));
+                        } else {
+                            issue.setTags(issue.getTags() + ", " + checkAndGetProperty("name", soapObject));
+                        }
+                    }
+                }
+            } catch (RuntimeException ignored) {
+            } catch (Exception ex) {
+                Helper.printNotification("Problem", ex.toString(), NotificationType.ERROR);
+            }
         }
         return issue;
     }
@@ -882,7 +898,7 @@ public class MantisSoapAPI {
         List<MantisIssue> issues = this.getIssues(settings.getProjectID());
         for(MantisVersion version : versions) {
             for(MantisIssue issue : issues) {
-                issue = this.getIssue(issue.getId());
+                issue = this.getIssue(issue.getId(), true);
                 if(issue.getTarget_version()!=null) {
                     if(issue.getTarget_version().getName().equals(version.getName())) {
                         changeLogMap.put(issue, version);
