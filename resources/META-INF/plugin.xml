@@ -52,6 +52,8 @@
 
   <idea-version since-build="141.0"/>
 
+  <depends>com.intellij.modules.lang</depends>
+  
   <extensions defaultExtensionNs="com.intellij">
 
     <toolWindow
