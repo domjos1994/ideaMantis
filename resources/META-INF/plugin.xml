@@ -2,7 +2,7 @@
   <id>de.domjos.ideaMantis</id>
   <name>ideaMantis</name>
   <description>IntelliJ-Idea Plugin to create, edit and delete Issues from Mantis BugTracker!</description>
-  <version>0.6</version>
+  <version>0.7</version>
   <vendor email="webmaster@domjos.de" url="http://domjos.de">Dominic Joas</vendor>
 
   <change-notes>
@@ -46,6 +46,12 @@
         <li>add new projects</li>
         <li>create changeLogs</li>
         <li>add tags</li>
+      </ul>
+    ]]>
+    <![CDATA[
+      <h2>0.7</h2>
+      <ul>
+        <li>add support for every intellij-platform</li>
       </ul>
     ]]>
   </change-notes>
