@@ -5,6 +5,7 @@ import com.intellij.openapi.project.Project;
 import com.sun.istack.internal.NotNull;
 import de.domjos.ideaMantis.model.MantisUser;
 import de.domjos.ideaMantis.soap.MantisSoapAPI;
+import de.domjos.ideaMantis.utils.Helper;
 import org.jdom.Element;
 import org.jetbrains.annotations.Nullable;
 
@@ -12,13 +13,14 @@ import org.jetbrains.annotations.Nullable;
         name = "ideaMantisSettings",
         storages = {
                 @Storage(id = "default", file = "$PROJECT_FILE$"),
-                @Storage(id = "ideaMantisSettings", file = "$PROJECT_CONFIG_DIR$/jMantis.xml", scheme = StorageScheme.DIRECTORY_BASED)
+                @Storage(id = "ideaMantisSettings", file = "$PROJECT_CONFIG_DIR$/ideaMantis.xml", scheme = StorageScheme.DIRECTORY_BASED)
         }
 )
 public class ConnectionSettings implements PersistentStateComponent<Element> {
     private String hostName = "";
     private String userName = "";
     private String password = "";
+    private int itemsPerPage = 0;
     private int projectID = 0;
 
     @NotNull
@@ -33,7 +35,8 @@ public class ConnectionSettings implements PersistentStateComponent<Element> {
         Element connection = new Element("connection");
         connection.setAttribute("hostName", this.hostName);
         connection.setAttribute("userName", this.userName);
-        connection.setAttribute("password", this.password);
+        Helper.setPassword(this.getPassword());
+        connection.setAttribute("itemsPerPage", String.valueOf(this.itemsPerPage));
         connection.setAttribute("projectID", String.valueOf(this.getProjectID()));
         return connection;
     }
@@ -42,12 +45,14 @@ public class ConnectionSettings implements PersistentStateComponent<Element> {
     public void loadState(Element element) {
         this.hostName = element.getAttributeValue("hostName");
         this.userName = element.getAttributeValue("userName");
-        this.password = element.getAttributeValue("password");
+        this.password = Helper.getPassword();
+        this.itemsPerPage = Integer.parseInt(element.getAttributeValue("itemsPerPage", "-1"));
         if(element.getAttributeValue("projectID")!=null) {
-            if(element.getAttributeValue("projectID").equals("")) {
+            String content = element.getAttributeValue("projectID");
+            if(content.equals("")) {
                 this.setProjectID(0);
             } else {
-                this.setProjectID(Integer.parseInt(element.getAttributeValue("projectID")));
+                this.setProjectID(Integer.parseInt(content));
             }
         }
     }
@@ -69,7 +74,11 @@ public class ConnectionSettings implements PersistentStateComponent<Element> {
     }
 
     public String getPassword() {
-        return password;
+        if(password==null) {
+            return "";
+        } else {
+            return password;
+        }
     }
 
     public void setPassword(String password) {
@@ -78,6 +87,14 @@ public class ConnectionSettings implements PersistentStateComponent<Element> {
 
     public int getProjectID() {
         return projectID;
+    }
+
+    public void setItemsPerPage(int itemsPerPage) {
+        this.itemsPerPage = itemsPerPage;
+    }
+
+    public int getItemsPerPage() {
+        return this.itemsPerPage;
     }
 
     public void setProjectID(int projectID) {
