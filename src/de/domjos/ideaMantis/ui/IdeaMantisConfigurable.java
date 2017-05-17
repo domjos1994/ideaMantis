@@ -25,7 +25,8 @@ import javax.swing.*;
 import java.awt.*;
 
 public class IdeaMantisConfigurable implements SearchableConfigurable {
-    private JBTextField txtHostName, txtUserName, txtProjectName;
+    private ConnectionSettings settings;
+    private JBTextField txtHostName, txtUserName, txtProjectName, txtIssuesPerPage;
     private JTextArea txtProjectDescription;
     private JBPasswordField txtPassword;
     private JBCheckBox chkProjectEnabled;
@@ -34,10 +35,9 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
     private JPanel newProjectPanel;
     private ComboBox<String> cmbProjects, cmbNewProjectProjects, cmbProjectViewState;
     private int projectID = 0;
-    private Project project;
 
     public IdeaMantisConfigurable(@NotNull Project project) {
-        this.project = project;
+        this.settings = ConnectionSettings.getInstance(project);
     }
 
     @NotNull
@@ -84,25 +84,30 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
         this.txtProjectDescription = new JTextArea();
         this.txtProjectDescription.setName("txtProjectDescription");
 
+        this.txtIssuesPerPage = new JBTextField();
+        this.txtIssuesPerPage.setName("txtIssuesPerPage");
+        this.txtIssuesPerPage.setText("-1");
 
         java.awt.Label lblHostName = new java.awt.Label("Host-Name");
         java.awt.Label lblUserName = new java.awt.Label("User-Name");
         java.awt.Label lblPassword = new java.awt.Label("Password");
         java.awt.Label lblProjects = new java.awt.Label("Choose Project");
+        java.awt.Label lblIssuesPerPage = new java.awt.Label("Issues per page (-1 for all)");
         java.awt.Label lblProjectName = new java.awt.Label("Name" + "*");
         java.awt.Label lblProjectDescription = new java.awt.Label("Description");
         java.awt.Label lblProjectViewState = new java.awt.Label("State");
         this.lblConnectionState = new Label("Not Connected");
         this.changeConnectionLabel(null);
 
+
         this.cmdTestConnection = new JButton("Test Connection");
         this.cmdTestConnection.addActionListener(e -> {
-            MantisSoapAPI connection = new MantisSoapAPI(ConnectionSettings.getInstance(this.project));
-            String pwd = "";
+            MantisSoapAPI connection = new MantisSoapAPI(this.settings);
+            StringBuilder pwd = new StringBuilder();
             for(char ch : txtPassword.getPassword()) {
-                pwd += ch;
+                pwd.append(ch);
             }
-            if(this.changeConnectionLabel(connection.testConnection(txtHostName.getText(), txtUserName.getText(), pwd))) {
+            if(this.changeConnectionLabel(connection.testConnection(txtHostName.getText(), txtUserName.getText(), pwd.toString()))) {
                 java.util.List<MantisProject> projects = connection.getProjects();
                 cmbProjects.removeAllItems();
                 cmbNewProjectProjects.removeAllItems();
@@ -145,6 +150,8 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
         JPanel projectPanel = new JPanel(new GridBagLayout());
         projectPanel.add(lblProjects, labelConstraint);
         projectPanel.add(cmbProjects, txtConstraint);
+        projectPanel.add(lblIssuesPerPage, labelConstraint);
+        projectPanel.add(txtIssuesPerPage, txtConstraint);
         projectPanel.add(cmdCreateNewProject, txtConstraint);
         projectPanel.setBorder(IdeBorderFactory.createTitledBorder("Project"));
 
@@ -176,7 +183,7 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
             if(cmbProjectViewState.getSelectedItem()!=null)
                 project.setView_state(cmbProjectViewState.getSelectedItem().toString());
             project.setEnabled(chkProjectEnabled.isSelected());
-            MantisSoapAPI connection = new MantisSoapAPI(ConnectionSettings.getInstance(this.project));
+            MantisSoapAPI connection = new MantisSoapAPI(this.settings);
             int id = 0;
             if(!cmbNewProjectProjects.getSelectedItem().toString().equals("")) {
                 if(cmbNewProjectProjects.getSelectedItem()!=null)
@@ -235,18 +242,21 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
 
     @Override
     public boolean isModified() {
-        ConnectionSettings connection = ConnectionSettings.getInstance(this.project);
-        if(connection!=null) {
+        if(this.settings!=null) {
 
-            StringBuilder buf = new StringBuilder();
+            StringBuilder buf = new StringBuilder("");
             for(char ch : txtPassword.getPassword()) {
                 buf.append(ch);
             }
+
+            String pwd = buf.toString();
+
             return
-                    !connection.getHostName().equals(txtHostName.getText()) ||
-                            !connection.getUserName().equals(txtUserName.getText()) ||
-                            !connection.getPassword().equals(buf.toString()) ||
-                            (connection.getProjectID()!=projectID && projectID!=0);
+                !this.settings.getHostName().equals(txtHostName.getText()) ||
+                !this.settings.getUserName().equals(txtUserName.getText()) ||
+                !this.settings.getPassword().equals(buf.toString()) ||
+                !String.valueOf(this.settings.getItemsPerPage()).equals(txtIssuesPerPage.getText()) ||
+                (this.settings.getProjectID()!=projectID && projectID!=0);
         } else {
             return false;
         }
@@ -254,28 +264,34 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
 
     @Override
     public void apply() throws ConfigurationException {
-        ConnectionSettings connection = ConnectionSettings.getInstance(this.project);
-        if(connection!=null) {
-            connection.setHostName(txtHostName.getText());
-            connection.setUserName(txtUserName.getText());
+        if(this.settings!=null) {
+            this.settings.setHostName(txtHostName.getText());
+            this.settings.setUserName(txtUserName.getText());
             StringBuilder buf = new StringBuilder();
             for(char ch : txtPassword.getPassword()) {
                 buf.append(ch);
             }
-            connection.setPassword(buf.toString());
-            connection.setProjectID(projectID);
+            this.settings.setPassword(buf.toString());
+            int itemsPerPage;
+            try {
+                itemsPerPage = Integer.parseInt(txtIssuesPerPage.getText());
+            } catch (Exception ex) {
+                itemsPerPage = -1;
+            }
+            this.settings.setItemsPerPage(itemsPerPage);
+            this.settings.setProjectID(projectID);
         }
     }
 
     @Override
     public void reset() {
-        ConnectionSettings connection = ConnectionSettings.getInstance(this.project);
-        txtHostName.setText(connection.getHostName());
-        txtUserName.setText(connection.getUserName());
-        txtPassword.setText(connection.getPassword());
+        txtHostName.setText(this.settings.getHostName());
+        txtUserName.setText(this.settings.getUserName());
+        txtPassword.setText(this.settings.getPassword());
+        txtIssuesPerPage.setText(String.valueOf(this.settings.getItemsPerPage()));
         cmdTestConnection.doClick();
         for(int i = 0; i<=cmbProjects.getItemCount()-1; i++) {
-            if(Integer.parseInt(cmbProjects.getItemAt(i).split(":")[0])==connection.getProjectID()) {
+            if(Integer.parseInt(cmbProjects.getItemAt(i).split(":")[0])==this.settings.getProjectID()) {
                 cmbProjects.setSelectedIndex(i);
             }
         }
@@ -286,6 +302,7 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
         UIUtil.dispose(txtHostName);
         UIUtil.dispose(txtUserName);
         UIUtil.dispose(txtPassword);
+        UIUtil.dispose(txtIssuesPerPage);
         UIUtil.dispose(cmbProjects);
         UIUtil.dispose(cmdTestConnection);
     }
@@ -296,20 +313,21 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
             this.lblConnectionState.setForeground(JBColor.RED);
             return false;
         } else {
-            this.lblConnectionState.setText(String.format("Connected as %s!", user.getName()));
+            this.lblConnectionState.setText(String.format("Connected as %s!", user.getUserName()));
             this.lblConnectionState.setForeground(JBColor.GREEN);
             return true;
         }
     }
 
     private MantisProject getProject(int id, java.util.List<MantisProject> projects) {
-        for(MantisProject tmp : projects) {
-            if(tmp.getId()==id) {
-                return tmp;
+        if(projects.isEmpty()) {
+            return null;
+        } else {
+            if(projects.get(0).getId()==id) {
+                return projects.get(0);
             }
-            return getProject(id, tmp.getSubProjects());
+            return getProject(id, projects.get(0).getSubProjects());
         }
-        return null;
     }
 }
 
