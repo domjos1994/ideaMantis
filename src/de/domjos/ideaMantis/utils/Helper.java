@@ -1,16 +1,23 @@
 package de.domjos.ideaMantis.utils;
 
+import com.intellij.credentialStore.CredentialAttributes;
+import com.intellij.credentialStore.OneTimeString;
+import com.intellij.ide.passwordSafe.PasswordSafe;
+import com.intellij.ide.passwordSafe.PasswordStorage;
+import com.intellij.ide.passwordSafe.impl.providers.EncryptionUtil;
 import com.intellij.notification.Notification;
 import com.intellij.notification.NotificationType;
 import com.intellij.notification.Notifications;
 import com.intellij.openapi.vcs.changes.Change;
 import com.intellij.openapi.vcs.changes.ChangeListManager;
 import com.intellij.openapi.vcs.changes.LocalChangeList;
+import com.intellij.util.EncryptionSupport;
 import de.domjos.ideaMantis.model.MantisIssue;
 import org.ksoap2.serialization.SoapObject;
 
 import javax.swing.*;
 import java.awt.*;
+import java.nio.charset.Charset;
 import java.util.*;
 
 public abstract class Helper {
@@ -76,15 +83,6 @@ public abstract class Helper {
         }
     }
 
-    public static JTable disableEditingTable(JTable table) {
-        for(int row = 0; row<=table.getRowCount()-1; row++) {
-            for(int column = 0; column<=table.getRowCount()-1; column++) {
-                table.setCellEditor(null);
-            }
-        }
-        return table;
-    }
-
     public static String replaceCommentByMarker(MantisIssue issue, String comment) {
         if(comment.contains("{additional_information")) {
             comment = comment.replace("{summary}", issue.getAdditional_information());
@@ -135,10 +133,22 @@ public abstract class Helper {
 
     public static void commitAllFiles(String comment, ChangeListManager changeListManager) {
         java.util.List<Change> changeList = new LinkedList<>();
-        changeListManager.getAllChanges().forEach(changeList::add);
+        changeList.addAll(changeListManager.getAllChanges());
         for(LocalChangeList localChangeList : changeListManager.getChangeLists()) {
             localChangeList.setComment(comment);
             changeListManager.commitChanges(localChangeList, changeList);
         }
+    }
+
+    public static void setPassword(String password) {
+        CredentialAttributes attributes = new CredentialAttributes(de.domjos.ideaMantis.service.ConnectionSettings.class.getName());
+        PasswordSafe safe = PasswordSafe.getInstance();
+        safe.setPassword(attributes, password);
+    }
+
+    public static String getPassword() {
+        CredentialAttributes attributes = new CredentialAttributes(de.domjos.ideaMantis.service.ConnectionSettings.class.getName());
+        PasswordSafe safe = PasswordSafe.getInstance();
+        return safe.getPassword(attributes);
     }
 }
