@@ -2,7 +2,7 @@
   <id>de.domjos.ideaMantis</id>
   <name>ideaMantis</name>
   <description>IntelliJ-Idea Plugin to create, edit and delete Issues from Mantis BugTracker!</description>
-  <version>0.7</version>
+  <version>0.8</version>
   <vendor email="webmaster@domjos.de" url="http://domjos.de">Dominic Joas</vendor>
 
   <change-notes>
@@ -53,6 +53,14 @@
       <ul>
         <li>add support for every intellij-platform</li>
       </ul>
+    ]]>
+    <![CDATA[
+      <h2>0.8</h2>
+      <ul>
+        <li>solve the issue with access-levels</li>
+        <li>enables showing only several issues (loads a bit faster)</li>
+      </ul>
+      <b>Notice: If you update to this version, you will have to retype your credentials!</b>
     ]]>
   </change-notes>
 
