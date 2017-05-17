@@ -1,10 +1,12 @@
 package de.domjos.ideaMantis.soap;
 
 import com.intellij.notification.NotificationType;
+import com.intellij.openapi.diagnostic.Logger;
 import de.domjos.ideaMantis.model.*;
 import de.domjos.ideaMantis.service.ConnectionSettings;
 import de.domjos.ideaMantis.utils.Helper;
 import org.ksoap2.SoapEnvelope;
+import org.ksoap2.SoapFault;
 import org.ksoap2.serialization.MarshalBase64;
 import org.ksoap2.serialization.SoapObject;
 import org.ksoap2.serialization.SoapSerializationEnvelope;
@@ -55,7 +57,6 @@ public class MantisSoapAPI {
                 }
             }
             this.user = user;
-            System.out.println(user.getAccessLevel().getValue());
             return user;
         } catch (Exception ex) {
             return null;
@@ -63,6 +64,7 @@ public class MantisSoapAPI {
     }
 
     public MantisUser testConnection(String hostName, String userName, String password) {
+        this.structTransport.setUrl(hostName + "/api/soap/mantisconnect.php");
         SoapObject structRequest = new SoapObject(hostName + "/api/soap/mantisconnect.php", "mc_login");
         try {
             structRequest.addProperty("username", userName);
@@ -84,14 +86,13 @@ public class MantisSoapAPI {
                 }
             }
             this.user = user;
-            System.out.println(user.getAccessLevel().getValue());
             return user;
         } catch (Exception ex) {
             return null;
         }
     }
 
-    public Map<Integer, String> getAccessLevels() {
+    private Map<Integer, String> getAccessLevels() {
         Map<Integer, String> accessLevelMap = new LinkedHashMap<>();
         SoapObject structRequest = new SoapObject(this.settings.getHostName() + "/api/soap/mantisconnect.php", "mc_enum_access_levels");
         try {
@@ -106,9 +107,43 @@ public class MantisSoapAPI {
                 accessLevelMap.put(Integer.parseInt(level.getProperty("id").toString()), level.getProperty("name").toString());
             }
         } catch (Exception ex) {
+            Logger.getInstance(this.getClass()).error(ex.toString());
             return accessLevelMap;
         }
         return  accessLevelMap;
+    }
+
+    public Map.Entry<Integer, String> getRightsFromProject(int pid) {
+        Map.Entry<Integer, String> right = null;
+        MantisUser current = this.testConnection();
+        for(Map.Entry<Integer, String> entry : this.getAccessLevels().entrySet()) {
+            SoapObject structRequest = new SoapObject(this.settings.getHostName() + "/api/soap/mantisconnect.php", "mc_project_get_users");
+            try {
+                structRequest.addProperty("username", this.settings.getUserName());
+                structRequest.addProperty("password", this.settings.getPassword());
+                structRequest.addProperty("project_id", pid);
+                structRequest.addProperty("access", entry.getKey());
+                structEnvelope.setOutputSoapObject(structRequest);
+                structTransport.call("SOAPAction", structEnvelope);
+                SoapObject obj = (SoapObject) structEnvelope.bodyIn;
+                Vector objects = (Vector) obj.getProperty(0);
+                for(Object object : objects) {
+                    SoapObject userData = (SoapObject) object;
+                    MantisUser user = new MantisUser(checkAndGetProperty("name", userData));
+                    user.setId(Integer.parseInt(checkAndGetProperty("id", userData)));
+                    user.setName(checkAndGetProperty("real_name", userData));
+                    user.setEmail(checkAndGetProperty("email", userData));
+                    user.setPassword(this.settings.getPassword());
+                    if(user.getUserName().equals(current.getUserName())) {
+                        right = new AbstractMap.SimpleEntry<>(entry);
+                    }
+                }
+            } catch (Exception ex) {
+                Logger.getInstance(this.getClass()).error(ex.toString());
+                return null;
+            }
+        }
+        return right;
     }
 
     public boolean addProject(MantisProject project) {
@@ -154,6 +189,7 @@ public class MantisSoapAPI {
             SoapObject obj = (SoapObject) structEnvelope.bodyIn;
             return checkProperty(obj);
         } catch (Exception ex) {
+            Logger.getInstance(this.getClass()).error(ex.toString());
             return false;
         }
     }
@@ -173,6 +209,7 @@ public class MantisSoapAPI {
                 projectList.add(getProject(soapObject));
             }
         } catch (Exception ex) {
+            Logger.getInstance(this.getClass()).error(ex.toString());
             return null;
         }
         return projectList;
@@ -188,6 +225,7 @@ public class MantisSoapAPI {
                 project.addSubProject(getProject((SoapObject) sub));
             }
         } catch (Exception ex) {
+            Logger.getInstance(this.getClass()).error(ex.toString());
             return null;
         }
         return project;
@@ -197,7 +235,7 @@ public class MantisSoapAPI {
         return this.getIssue(sid,false);
     }
 
-    public MantisIssue getIssue(int sid,boolean small) {
+    private MantisIssue getIssue(int sid,boolean small) {
         MantisIssue issue;
         SoapObject structRequest = new SoapObject(this.settings.getHostName() + "/api/soap/mantisconnect.php", "mc_issue_get");
         try {
@@ -210,20 +248,25 @@ public class MantisSoapAPI {
             SoapObject soapObjIssue = (SoapObject) obj.getProperty(0);
             issue = this.getIssueFromSoap(soapObjIssue, small);
         } catch (Exception ex) {
+            Logger.getInstance(this.getClass()).error(ex.toString());
             return null;
         }
         return issue;
     }
 
     public List<MantisIssue> getIssues(int pid) {
+        return this.getIssues(pid, 1);
+    }
+
+    public List<MantisIssue> getIssues(int pid, int page) {
         List<MantisIssue> issueList = new LinkedList<>();
         SoapObject structRequest = new SoapObject(this.settings.getHostName() + "/api/soap/mantisconnect.php", "mc_project_get_issues");
         try {
             structRequest.addProperty("username", this.settings.getUserName());
             structRequest.addProperty("password", this.settings.getPassword());
             structRequest.addProperty("project_id", pid);
-            structRequest.addProperty("page_number", 1);
-            structRequest.addProperty("per_page", -1);
+            structRequest.addProperty("page_number", page);
+            structRequest.addProperty("per_page", settings.getItemsPerPage());
             structEnvelope.setOutputSoapObject(structRequest);
             structTransport.call("SOAPAction", structEnvelope);
             SoapObject obj = (SoapObject) structEnvelope.bodyIn;
@@ -236,6 +279,7 @@ public class MantisSoapAPI {
                 issueList.add(issue);
             }
         } catch (Exception ex) {
+            Logger.getInstance(this.getClass()).error(ex.toString());
             return null;
         }
         return issueList;
@@ -252,20 +296,21 @@ public class MantisSoapAPI {
             SoapObject obj = (SoapObject) structEnvelope.bodyIn;
             return checkProperty(obj);
         } catch (Exception ex) {
+            Logger.getInstance(this.getClass()).error(ex.toString());
             return false;
         }
     }
 
-    public boolean checkInIssue(int sid, String comment, String state) {
+    public void checkInIssue(int sid, String comment, String state) {
         try {
             IssueNote note = new IssueNote();
             note.setReporter(user);
             note.setText(comment);
             note.setView_state(state);
             note.setDate(new SimpleDateFormat("dd.MM.yyyy HH:mm").format(new Date()));
-            return this.addNote(sid, note);
+            this.addNote(sid, note);
         } catch (Exception ex) {
-            return false;
+            Logger.getInstance(this.getClass()).error(ex.toString());
         }
     }
 
@@ -320,34 +365,47 @@ public class MantisSoapAPI {
         structRequest.addProperty("issue", issueObject);
         structEnvelope.setOutputSoapObject(structRequest);
         System.out.println(structEnvelope.bodyOut);
-        structTransport.call("SOAPAction", structEnvelope);
-        SoapObject obj = (SoapObject) structEnvelope.bodyIn;
-
-        int id;
-        if(issue.getId()!=0) {
-            if(!checkProperty(obj)) {
-                return false;
-            } else {
-                id = issue.getId();
-            }
-        } else {
-            id = checkIntProperty(obj);
+        try {
+            structTransport.call("SOAPAction", structEnvelope);
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
         }
 
-        if(id!=0) {
-            for(IssueAttachment attachment : issue.getIssueAttachmentList()) {
-                boolean state = addAttachment(id, attachment);
-                if(!state) {
-                    Helper.printNotification("Problem", "Can't add Attachment!", NotificationType.ERROR);
+        if(structEnvelope.bodyIn instanceof SoapObject) {
+            SoapObject obj = (SoapObject) structEnvelope.bodyIn;
+
+            int id;
+            if(issue.getId()!=0) {
+                if(!checkProperty(obj)) {
+                    return false;
+                } else {
+                    id = issue.getId();
                 }
+            } else {
+                id = checkIntProperty(obj);
             }
-            for(IssueNote note : issue.getIssueNoteList()) {
-                boolean state = addNote(id, note);
-                if(!state) {
-                    Helper.printNotification("Problem", "Can't add Note!", NotificationType.ERROR);
+
+            if(id!=0) {
+                for(IssueAttachment attachment : issue.getIssueAttachmentList()) {
+                    boolean state = addAttachment(id, attachment);
+                    if(!state) {
+                        Helper.printNotification("Problem", "Can't add Attachment!", NotificationType.ERROR);
+                    }
                 }
+                for(IssueNote note : issue.getIssueNoteList()) {
+                    boolean state = addNote(id, note);
+                    if(!state) {
+                        Helper.printNotification("Problem", "Can't add Note!", NotificationType.ERROR);
+                    }
+                }
+                return true;
+            } else {
+                return false;
             }
-            return true;
+        } else if(structEnvelope.bodyIn instanceof SoapFault) {
+            SoapFault fault = (SoapFault) structEnvelope.bodyIn;
+            Helper.printNotification(String.valueOf(fault.faultcode), fault.faultstring, NotificationType.ERROR);
+            return false;
         } else {
             return false;
         }
@@ -575,7 +633,7 @@ public class MantisSoapAPI {
         return userList;
     }
 
-    public boolean addVersion(MantisVersion version, int pid) {
+    public void addVersion(MantisVersion version, int pid) {
         SoapObject structRequest;
         try {
             if(version.getId()!=0) {
@@ -597,13 +655,13 @@ public class MantisSoapAPI {
             structEnvelope.setOutputSoapObject(structRequest);
             structTransport.call("SOAPAction", structEnvelope);
             SoapObject obj = (SoapObject) structEnvelope.bodyIn;
-            return checkProperty(obj);
+            checkProperty(obj);
         } catch (Exception ex) {
-            return false;
+            Logger.getInstance(this.getClass()).error(ex.toString());
         }
     }
 
-    public boolean deleteVersion(int id) {
+    public void deleteVersion(int id) {
         SoapObject structRequest = new SoapObject(this.settings.getHostName() + "/api/soap/mantisconnect.php", "mc_project_version_delete");
         try {
             structRequest.addProperty("username", this.settings.getUserName());
@@ -612,9 +670,9 @@ public class MantisSoapAPI {
             structEnvelope.setOutputSoapObject(structRequest);
             structTransport.call("SOAPAction", structEnvelope);
             SoapObject obj = (SoapObject) structEnvelope.bodyIn;
-            return checkProperty(obj);
+            checkProperty(obj);
         } catch (Exception ex) {
-            return false;
+            Logger.getInstance(this.getClass()).error(ex.toString());
         }
     }
 
@@ -643,12 +701,13 @@ public class MantisSoapAPI {
                 enumList.add(version);
             }
         } catch (Exception ex) {
+            Logger.getInstance(this.getClass()).error(ex.toString());
             return null;
         }
         return enumList;
     }
 
-    public boolean addTagToIssue(int issue_id, String tags) {
+    public void addTagToIssue(int issue_id, String tags) {
         try {
             SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy HH:mm");
             String[] strTags = tags.split(", ");
@@ -669,35 +728,35 @@ public class MantisSoapAPI {
                     tag = getTag(strTag);
                 }
 
-                tagObject.addProperty("id", tag.getId());
-                if(tag.getReporter()!=null) {
+                if (tag != null) {
+                    tagObject.addProperty("id", tag.getId());
                     SoapObject userObject = new SoapObject(NAMESPACE, "AccountData");
                     userObject.addProperty("name", tag.getReporter().getUserName());
                     userObject.addProperty("id", tag.getReporter().getId());
                     userObject.addProperty("real_name", tag.getReporter().getName());
                     userObject.addProperty("email", tag.getReporter().getEmail());
                     tagObject.addProperty("user_id", userObject);
+                    tagObject.addProperty("name", tag.getName());
+                    tagObject.addProperty("description", tag.getDescription());
+                    if (tag.getCreationDate() != null)
+                        tagObject.addProperty("date_created", format.format(tag.getCreationDate()));
+                    if (tag.getUpdatedDate() != null)
+                        tagObject.addProperty("date_updated", format.format(tag.getUpdatedDate()));
+                    tagObjectArray.add(tagObject);
                 }
-                tagObject.addProperty("name", tag.getName());
-                tagObject.addProperty("description", tag.getDescription());
-                if(tag.getCreationDate()!=null)
-                    tagObject.addProperty("date_created", format.format(tag.getCreationDate()));
-                if(tag.getUpdatedDate()!=null)
-                    tagObject.addProperty("date_updated", format.format(tag.getUpdatedDate()));
-                tagObjectArray.add(tagObject);
             }
             structRequest.addProperty("tags", tagObjectArray);
             structEnvelope.setOutputSoapObject(structRequest);
             System.out.println(structEnvelope.bodyOut);
             structTransport.call("SOAPAction", structEnvelope);
             SoapObject obj = (SoapObject) structEnvelope.bodyIn;
-            return checkProperty(obj);
+            checkProperty(obj);
         } catch (Exception ex) {
-            return false;
+            Logger.getInstance(this.getClass()).error(ex.toString());
         }
     }
 
-    public boolean addTag(MantisTag tag) {
+    private void addTag(MantisTag tag) {
         SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy HH:mm");
         SoapObject structRequest = new SoapObject(this.settings.getHostName() + "/api/soap/mantisconnect.php", "mc_tag_add");
         try {
@@ -723,9 +782,9 @@ public class MantisSoapAPI {
             structEnvelope.setOutputSoapObject(structRequest);
             structTransport.call("SOAPAction", structEnvelope);
             SoapObject obj = (SoapObject) structEnvelope.bodyIn;
-            return checkProperty(obj);
+            checkProperty(obj);
         } catch (Exception ex) {
-            return false;
+            Logger.getInstance(this.getClass()).error(ex.toString());
         }
     }
 
@@ -773,12 +832,13 @@ public class MantisSoapAPI {
                 }
             } while (counter!=0);
         } catch (Exception ex) {
+            Logger.getInstance(this.getClass()).error(ex.toString());
             return tagList;
         }
         return tagList;
     }
 
-    public MantisTag getTag(String name) {
+    private MantisTag getTag(String name) {
         for(MantisTag tag : this.getTags()) {
             if(tag.getName().equals(name))
                 return tag;
@@ -877,6 +937,7 @@ public class MantisSoapAPI {
                 }
             } catch (RuntimeException ignored) {
             } catch (Exception ex) {
+                Logger.getInstance(this.getClass()).error(ex.toString());
                 Helper.printNotification("Problem", ex.toString(), NotificationType.ERROR);
             }
         }
@@ -899,8 +960,8 @@ public class MantisSoapAPI {
         for(MantisVersion version : versions) {
             for(MantisIssue issue : issues) {
                 issue = this.getIssue(issue.getId(), true);
-                if(issue.getTarget_version()!=null) {
-                    if(issue.getTarget_version().getName().equals(version.getName())) {
+                if (issue != null && issue.getTarget_version() != null) {
+                    if (issue.getTarget_version().getName().equals(version.getName())) {
                         changeLogMap.put(issue, version);
                     }
                 }
