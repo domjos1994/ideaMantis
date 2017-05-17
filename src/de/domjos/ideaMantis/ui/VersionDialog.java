@@ -22,7 +22,7 @@ public class VersionDialog extends DialogWrapper {
     private JButton cmdDelete;
     private MantisVersion version = new MantisVersion();
 
-    protected VersionDialog(@Nullable Project project, int project_id) {
+    VersionDialog(@Nullable Project project, int project_id) {
         super(project);
         this.api = new MantisSoapAPI(ConnectionSettings.getInstance(project));
         this.init();
@@ -40,7 +40,7 @@ public class VersionDialog extends DialogWrapper {
         }
     }
 
-    protected VersionDialog(@Nullable Project project, int project_id, MantisVersion version) {
+    VersionDialog(@Nullable Project project, int project_id, MantisVersion version) {
         this(project, project_id);
         this.version = version;
         txtName.setText(version.getName());

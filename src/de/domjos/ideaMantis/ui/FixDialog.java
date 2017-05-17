@@ -20,7 +20,7 @@ public class FixDialog extends DialogWrapper {
     private MantisSoapAPI api;
     private Project project;
 
-    protected FixDialog(@Nullable Project project, int id) {
+    FixDialog(@Nullable Project project, int id) {
         super(project);
         this.project = project;
         try {
