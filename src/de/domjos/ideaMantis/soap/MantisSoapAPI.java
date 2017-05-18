@@ -63,35 +63,6 @@ public class MantisSoapAPI {
         }
     }
 
-    public MantisUser testConnection(String hostName, String userName, String password) {
-        this.structTransport.setUrl(hostName + "/api/soap/mantisconnect.php");
-        SoapObject structRequest = new SoapObject(hostName + "/api/soap/mantisconnect.php", "mc_login");
-        try {
-            structRequest.addProperty("username", userName);
-            structRequest.addProperty("password", password);
-            structEnvelope.setOutputSoapObject(structRequest);
-            structTransport.call("SOAPAction", structEnvelope);
-            SoapObject obj = (SoapObject) structEnvelope.bodyIn;
-            obj = (SoapObject) obj.getProperty(0);
-            SoapObject userData = (SoapObject) obj.getProperty(0);
-            MantisUser user = new MantisUser(checkAndGetProperty("name", userData));
-            user.setId(Integer.parseInt(checkAndGetProperty("id", userData)));
-            user.setName(checkAndGetProperty("real_name", userData));
-            user.setEmail(checkAndGetProperty("email", userData));
-            user.setPassword(this.settings.getPassword());
-            int access = Integer.parseInt(obj.getProperty(1).toString());
-            for(Map.Entry<Integer, String> entry : this.getAccessLevels().entrySet()) {
-                if(access==entry.getKey()) {
-                    user.setAccessLevel(entry.getKey(), entry.getValue());
-                }
-            }
-            this.user = user;
-            return user;
-        } catch (Exception ex) {
-            return null;
-        }
-    }
-
     private Map<Integer, String> getAccessLevels() {
         Map<Integer, String> accessLevelMap = new LinkedHashMap<>();
         SoapObject structRequest = new SoapObject(this.settings.getHostName() + "/api/soap/mantisconnect.php", "mc_enum_access_levels");
@@ -107,7 +78,6 @@ public class MantisSoapAPI {
                 accessLevelMap.put(Integer.parseInt(level.getProperty("id").toString()), level.getProperty("name").toString());
             }
         } catch (Exception ex) {
-            Logger.getInstance(this.getClass()).error(ex.toString());
             return accessLevelMap;
         }
         return  accessLevelMap;
@@ -129,12 +99,7 @@ public class MantisSoapAPI {
                 Vector objects = (Vector) obj.getProperty(0);
                 for(Object object : objects) {
                     SoapObject userData = (SoapObject) object;
-                    MantisUser user = new MantisUser(checkAndGetProperty("name", userData));
-                    user.setId(Integer.parseInt(checkAndGetProperty("id", userData)));
-                    user.setName(checkAndGetProperty("real_name", userData));
-                    user.setEmail(checkAndGetProperty("email", userData));
-                    user.setPassword(this.settings.getPassword());
-                    if(user.getUserName().equals(current.getUserName())) {
+                    if(checkAndGetProperty("name", userData).equals(current.getUserName())) {
                         right = new AbstractMap.SimpleEntry<>(entry);
                     }
                 }
@@ -144,6 +109,66 @@ public class MantisSoapAPI {
             }
         }
         return right;
+    }
+
+    public List<CustomField> getCustomFields(int pid) {
+        List<CustomField> customFields = new LinkedList<>();
+        List<String> custom_types = getEnum("custom_field_types");
+        List<ObjectRef> objectRefList = new LinkedList<>();
+        for(String item : custom_types) {
+            ObjectRef ref = getEnum("custom_field_types", item);
+            objectRefList.add(ref);
+            System.out.println(ref.getId() + ": " + ref.getName());
+        }
+
+        SoapObject structRequest = new SoapObject(this.settings.getHostName() + "/api/soap/mantisconnect.php", "mc_project_get_custom_fields");
+        try {
+            structRequest.addProperty("username", this.settings.getUserName());
+            structRequest.addProperty("password", this.settings.getPassword());
+            structRequest.addProperty("project_id", pid);
+            structEnvelope.setOutputSoapObject(structRequest);
+            structTransport.call("SOAPAction", structEnvelope);
+            SoapObject obj = (SoapObject) structEnvelope.bodyIn;
+            Vector objects = (Vector) obj.getProperty(0);
+            for(Object object : objects) {
+                SoapObject customFieldObject = (SoapObject) object;
+                SoapObject field = (SoapObject) customFieldObject.getProperty("field");
+                int typeID = Integer.parseInt(customFieldObject.getProperty("type").toString());
+                CustomField customField = new CustomField();
+                customField.setId(Integer.parseInt(field.getProperty("id").toString()));
+                customField.setName(field.getProperty("name").toString());
+                for(ObjectRef ref : objectRefList) {
+                    if(ref!=null) {
+                        if(ref.getId()==typeID) {
+                            customField.setTypeId(ref.getId());
+                            customField.setTypeName(ref.getName());
+                            break;
+                        }
+                    }
+                }
+                customField.setPossibleValues(checkAndGetProperty("possible_values", customFieldObject));
+                customField.setDefaultValue(checkAndGetProperty("default_value", customFieldObject));
+                customField.setMin(checkAndGetIntProperty("length_min", customFieldObject));
+                customField.setMax(checkAndGetIntProperty("length_max", customFieldObject));
+                Map<Integer, String> accessLevels = getAccessLevels();
+                customField.setWriteAccessID(checkAndGetIntProperty("access_level_rw", customFieldObject));
+                customField.setReadAccessID(checkAndGetIntProperty("access_level_r", customFieldObject));
+                customField.setWriteAccessName(accessLevels.getOrDefault(customField.getWriteAccessID(), ""));
+                customField.setReadAccessName(accessLevels.getOrDefault(customField.getReadAccessID(), ""));
+                customField.setDisplayUpdate(checkAndGetBooleanProperty("display_update", customFieldObject));
+                customField.setDisplayReport(checkAndGetBooleanProperty("display_report", customFieldObject));
+                customField.setDisplayResolved(checkAndGetBooleanProperty("display_resolved", customFieldObject));
+                customField.setDisplayClosed(checkAndGetBooleanProperty("display_closed", customFieldObject));
+                customField.setRequireUpdate(checkAndGetBooleanProperty("require_update", customFieldObject));
+                customField.setRequireReport(checkAndGetBooleanProperty("require_report", customFieldObject));
+                customField.setRequireResolved(checkAndGetBooleanProperty("require_resolved", customFieldObject));
+                customField.setRequireClosed(checkAndGetBooleanProperty("require_closed", customFieldObject));
+                customFields.add(customField);
+            }
+        } catch (Exception ex) {
+            Logger.getInstance(this.getClass()).error(ex.toString());
+        }
+        return customFields;
     }
 
     public boolean addProject(MantisProject project) {
@@ -221,6 +246,8 @@ public class MantisSoapAPI {
             project.setId(Integer.parseInt(object.getProperty(0).toString()));
             project.setEnabled(Boolean.parseBoolean(object.getProperty(3).toString()));
             project.setDescription(object.getProperty(7).toString());
+            SoapObject access = (SoapObject) object.getProperty("access_min");
+            project.setAccess(Integer.parseInt(access.getProperty("id").toString()), access.getProperty("name").toString());
             for(Object sub : ((Vector) object.getProperty(8))) {
                 project.addSubProject(getProject((SoapObject) sub));
             }
@@ -364,7 +391,6 @@ public class MantisSoapAPI {
 
         structRequest.addProperty("issue", issueObject);
         structEnvelope.setOutputSoapObject(structRequest);
-        System.out.println(structEnvelope.bodyOut);
         try {
             structTransport.call("SOAPAction", structEnvelope);
         } catch (Exception ex) {
@@ -404,7 +430,7 @@ public class MantisSoapAPI {
             }
         } else if(structEnvelope.bodyIn instanceof SoapFault) {
             SoapFault fault = (SoapFault) structEnvelope.bodyIn;
-            Helper.printNotification(String.valueOf(fault.faultcode), fault.faultstring, NotificationType.ERROR);
+            Helper.printNotification(String.valueOf(fault.faultcode), fault.faultstring + "\nIf access-level has changed, go to settings and press 'Check access'!", NotificationType.ERROR);
             return false;
         } else {
             return false;
@@ -582,51 +608,37 @@ public class MantisSoapAPI {
         return ref;
     }
 
-    private List<Integer> getIntEnum(String type) {
-        List<Integer> enumList = new LinkedList<>();
-        SoapObject structRequest = new SoapObject(this.settings.getHostName() + "/api/soap/mantisconnect.php", "mc_enum_" + type);
-        try {
-            structRequest.addProperty("username", this.settings.getUserName());
-            structRequest.addProperty("password", this.settings.getPassword());
-            structEnvelope.setOutputSoapObject(structRequest);
-            structTransport.call("SOAPAction", structEnvelope);
-            SoapObject obj = (SoapObject) structEnvelope.bodyIn;
-            for(Object object : ((Vector) obj.getProperty(0))) {
-                enumList.add(Integer.parseInt(((SoapObject)object).getProperty("id").toString()));
-            }
-        } catch (Exception ex) {
-            return null;
-        }
-        return enumList;
-    }
-
     public List<MantisUser> getUsers(int pid) throws Exception {
-        List<Integer> accessLevels = this.getIntEnum("access_levels");
+        List<String> access_levels = this.getEnum("access_levels");
         List<MantisUser> userList = new LinkedList<>();
         SoapObject structRequest = new SoapObject(this.settings.getHostName() + "/api/soap/mantisconnect.php", "mc_project_get_users");
         structRequest.addProperty("username", this.settings.getUserName());
         structRequest.addProperty("password", this.settings.getPassword());
         structRequest.addProperty("project_id", pid);
-        assert accessLevels != null;
-        for(int level : accessLevels) {
-            structRequest.addProperty("access", level);
-            structEnvelope.setOutputSoapObject(structRequest);
-            structTransport.call("SOAPAction", structEnvelope);
-            SoapObject obj = (SoapObject) structEnvelope.bodyIn;
-            for(Object object : ((Vector) obj.getProperty(0))) {
-                SoapObject soapObject = (SoapObject) object;
-                MantisUser user = new MantisUser(checkAndGetProperty("name", soapObject));
-                user.setName(checkAndGetProperty("real_name", soapObject));
-                user.setId(Integer.parseInt(checkAndGetProperty("id", soapObject)));
-                user.setEmail(checkAndGetProperty("email", soapObject));
-                boolean state = true;
-                for(MantisUser tmp : userList) {
-                    if(tmp.getName().equals(user.getName())) {
-                        state = false;
+        for(String level : access_levels) {
+            ObjectRef objectRef = this.getEnum("access_levels", level);
+            if(objectRef!=null) {
+                if(objectRef.getId()!=10 && objectRef.getId()!=25 && objectRef.getId()!=40) {
+                    structRequest.addProperty("access", objectRef.getId());
+                    structEnvelope.setOutputSoapObject(structRequest);
+                    structTransport.call("SOAPAction", structEnvelope);
+                    SoapObject obj = (SoapObject) structEnvelope.bodyIn;
+                    for (Object object : ((Vector) obj.getProperty(0))) {
+                        SoapObject soapObject = (SoapObject) object;
+                        MantisUser user = new MantisUser(checkAndGetProperty("name", soapObject));
+                        user.setName(checkAndGetProperty("real_name", soapObject));
+                        user.setId(Integer.parseInt(checkAndGetProperty("id", soapObject)));
+                        user.setEmail(checkAndGetProperty("email", soapObject));
+                        boolean state = true;
+                        for (MantisUser tmp : userList) {
+                            if (tmp.getName().equals(user.getName())) {
+                                state = false;
+                            }
+                        }
+                        if (state) {
+                            userList.add(user);
+                        }
                     }
-                }
-                if(state) {
-                    userList.add(user);
                 }
             }
         }
@@ -1000,6 +1012,28 @@ public class MantisSoapAPI {
             return "";
         } catch (Exception ex) {
             return "";
+        }
+    }
+
+    private int checkAndGetIntProperty(String name, SoapObject object) {
+        try {
+            if(object.getProperty(name)!=null) {
+                return Integer.parseInt(object.getProperty(name).toString());
+            }
+            return 0;
+        } catch (Exception ex) {
+            return 0;
+        }
+    }
+
+    private boolean checkAndGetBooleanProperty(String name, SoapObject object) {
+        try {
+            if(object.getProperty(name)!=null) {
+                return Boolean.parseBoolean(object.getProperty(name).toString());
+            }
+            return false;
+        } catch (Exception ex) {
+            return false;
         }
     }
 }
