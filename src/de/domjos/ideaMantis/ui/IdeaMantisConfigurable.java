@@ -5,11 +5,14 @@ import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.SearchableConfigurable;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
+import com.intellij.openapi.wm.ToolWindow;
+import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.ui.IdeBorderFactory;
 import com.intellij.ui.JBColor;
 import com.intellij.ui.components.JBCheckBox;
 import com.intellij.ui.components.JBPasswordField;
 import com.intellij.ui.components.JBTextField;
+import com.intellij.ui.content.impl.ContentImpl;
 import com.intellij.util.ui.JBUI;
 import com.intellij.util.ui.UIUtil;
 import de.domjos.ideaMantis.model.MantisProject;
@@ -35,9 +38,11 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
     private JPanel newProjectPanel;
     private ComboBox<String> cmbProjects, cmbNewProjectProjects, cmbProjectViewState;
     private int projectID = 0;
+    private ToolWindowManager manager;
 
     public IdeaMantisConfigurable(@NotNull Project project) {
         this.settings = ConnectionSettings.getInstance(project);
+        this.manager = ToolWindowManager.getInstance(project);
     }
 
     @NotNull
@@ -102,12 +107,16 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
 
         this.cmdTestConnection = new JButton("Test Connection");
         this.cmdTestConnection.addActionListener(e -> {
-            MantisSoapAPI connection = new MantisSoapAPI(this.settings);
-            StringBuilder pwd = new StringBuilder();
+            StringBuilder pwd = new StringBuilder("");
             for(char ch : txtPassword.getPassword()) {
                 pwd.append(ch);
             }
-            if(this.changeConnectionLabel(connection.testConnection(txtHostName.getText(), txtUserName.getText(), pwd.toString()))) {
+
+            this.settings.setHostName(txtHostName.getText());
+            this.settings.setUserName(txtUserName.getText());
+            this.settings.setPassword(pwd.toString());
+            MantisSoapAPI connection = new MantisSoapAPI(this.settings);
+            if(this.changeConnectionLabel(connection.testConnection())) {
                 java.util.List<MantisProject> projects = connection.getProjects();
                 cmbProjects.removeAllItems();
                 cmbNewProjectProjects.removeAllItems();
@@ -121,15 +130,15 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
                 for(String item : connection.getEnum("view_states")) {
                     this.cmbProjectViewState.addItem(item);
                 }
+
+                for(int i = 0; i<=cmbProjects.getItemCount()-1; i++) {
+                    if(cmbProjects.getItemAt(i).startsWith(String.valueOf(settings.getProjectID()) + ":")) {
+                        cmbProjects.setSelectedItem(cmbProjects.getItemAt(i));
+                        break;
+                    }
+                }
             } else {
                 cmbProjects.removeAllItems();
-            }
-        });
-
-        this.cmbProjects = new ComboBox<>();
-        this.cmbProjects.addItemListener(event->{
-            if(event.getItem()!=null) {
-                projectID = Integer.parseInt(event.getItem().toString().split(":")[0]);
             }
         });
 
@@ -146,6 +155,13 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
 
         JButton cmdCreateNewProject = new JButton("New Project");
         cmdCreateNewProject.setName("cmdCreateNewProject");
+
+        this.cmbProjects = new ComboBox<>();
+        this.cmbProjects.addItemListener(event->{
+            if(event.getItem()!=null) {
+                projectID = Integer.parseInt(event.getItem().toString().split(":")[0]);
+            }
+        });
 
         JPanel projectPanel = new JPanel(new GridBagLayout());
         projectPanel.add(lblProjects, labelConstraint);
@@ -249,8 +265,6 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
                 buf.append(ch);
             }
 
-            String pwd = buf.toString();
-
             return
                 !this.settings.getHostName().equals(txtHostName.getText()) ||
                 !this.settings.getUserName().equals(txtUserName.getText()) ||
@@ -280,6 +294,10 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
             }
             this.settings.setItemsPerPage(itemsPerPage);
             this.settings.setProjectID(projectID);
+            ToolWindow window = this.manager.getToolWindow("Show MantisBT-Issues");
+            ContentImpl content = new ContentImpl(null, "", true);
+            content.setDescription("reload comboBoxes");
+            window.getContentManager().addContent(content);
         }
     }
 
