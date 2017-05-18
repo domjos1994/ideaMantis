@@ -130,11 +130,13 @@
                       </component>
                     </children>
                   </toolbar>
-                  <tabbedpane id="990f2" default-binding="true">
+                  <tabbedpane id="990f2">
                     <constraints>
                       <grid row="2" column="0" row-span="1" col-span="2" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
                     </constraints>
-                    <properties/>
+                    <properties>
+                      <toolTipText value="Custom Fields"/>
+                    </properties>
                     <border type="none"/>
                     <children>
                       <scrollpane id="7e5a5">
@@ -383,6 +385,14 @@
                             </children>
                           </grid>
                         </children>
+                      </scrollpane>
+                      <scrollpane id="77d3b" binding="pnlCustomFields">
+                        <constraints>
+                          <tabbedpane title="Custom Fields"/>
+                        </constraints>
+                        <properties/>
+                        <border type="none"/>
+                        <children/>
                       </scrollpane>
                       <scrollpane id="e12d7">
                         <constraints>

@@ -1,5 +1,6 @@
 package de.domjos.ideaMantis.ui;
 
+import com.intellij.application.options.TabbedLanguageCodeStylePanel;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.fileChooser.FileChooser;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
@@ -10,8 +11,12 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vcs.changes.*;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
+import com.intellij.ui.components.JBPanel;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
+import com.intellij.ui.content.ContentManagerEvent;
+import com.intellij.ui.content.ContentManagerListener;
+import com.intellij.uiDesigner.core.GridLayoutManager;
 import de.domjos.ideaMantis.model.*;
 import de.domjos.ideaMantis.service.ConnectionSettings;
 import de.domjos.ideaMantis.soap.MantisSoapAPI;
@@ -19,6 +24,8 @@ import de.domjos.ideaMantis.utils.Helper;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.datatransfer.*;
@@ -64,10 +71,12 @@ public class IdeaMantisIssues implements ToolWindowFactory {
     private JLabel lblIssueStatus;
     private JButton cmdForward;
     private JButton cmdBack;
+    private JScrollPane pnlCustomFields;
     private boolean state = false, loadComboBoxes = false;
     private int page = 1;
 
     private ChangeListManager changeListManager;
+    private Map.Entry<Integer, String> access;
 
 
     public IdeaMantisIssues() {
@@ -241,6 +250,9 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                         txtIssueStepsToReproduce.setText(issue.getSteps_to_reproduce());
                         txtBasicsTags.setText(issue.getTags());
                         if(issue.getReporter()!=null) {
+                            if(cmbIssueReporterName.getItemCount()==0) {
+                                cmbIssueReporterName.addItem(issue.getReporter().getUserName());
+                            }
                             cmbIssueReporterName.setSelectedItem(issue.getReporter().getUserName());
                             txtIssueReporterName.setText(issue.getReporter().getName());
                             txtIssueReporterEMail.setText(issue.getReporter().getEmail());
@@ -520,6 +532,9 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                             txtIssueNoteText.setText(note.getText());
                             cmbIssueNoteViewState.setSelectedItem(note.getView_state());
                             if(note.getReporter()!=null) {
+                                if(cmbIssueNoteReporterUser.getItemCount()==0) {
+                                    cmbIssueNoteReporterUser.addItem(note.getReporter().getUserName());
+                                }
                                 cmbIssueNoteReporterUser.setSelectedItem(note.getReporter().getUserName());
                                 txtIssueNoteReporterName.setText(note.getReporter().getName());
                                 txtIssueNoteReporterEMail.setText(note.getReporter().getEmail());
@@ -816,11 +831,46 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         settings = ConnectionSettings.getInstance(project);
         controlPagination();
         this.changeListManager = ChangeListManager.getInstance(project);
+        MantisSoapAPI api = new MantisSoapAPI(settings);
+        access = api.getRightsFromProject(settings.getProjectID());
+        checkRights();
         cmdReload.doClick();
         if(state) {
             if(!loadComboBoxes)
                 this.loadComboBoxes();
         }
+        addCustomFields(api);
+
+        toolWindow.getContentManager().addContentManagerListener(new ContentManagerListener() {
+            @Override
+            public void contentAdded(ContentManagerEvent contentManagerEvent) {
+                for(Content content : toolWindow.getContentManager().getContents()) {
+                    if(content!=null) {
+                        if(content.getDescription()!=null) {
+                            if (content.getDescription().equals("reload comboBoxes")) {
+                                MantisSoapAPI api = new MantisSoapAPI(settings);
+                                access = api.getRightsFromProject(settings.getProjectID());
+                                checkRights();
+                                loadComboBoxes();
+                                cmdReload.doClick();
+                                addCustomFields(api);
+                                toolWindow.getContentManager().removeContent(content, true);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void contentRemoved(ContentManagerEvent contentManagerEvent) {}
+
+            @Override
+            public void contentRemoveQuery(ContentManagerEvent contentManagerEvent) {}
+
+            @Override
+            public void selectionChanged(ContentManagerEvent contentManagerEvent) {}
+        });
         resetIssues();
     }
 
@@ -871,6 +921,20 @@ public class IdeaMantisIssues implements ToolWindowFactory {
             controlNotes(false, false);
             controlAttachments(false, false);
         }
+    }
+
+    private void addCustomFields(MantisSoapAPI api) {
+        pnlCustomFields.removeAll();
+        List<CustomField> fields = api.getCustomFields(settings.getProjectID());
+        fields.forEach(field -> {
+            JPanel panel = field.buildFieldPanel();
+            if(panel!=null) {
+                panel.setName(field.getName());
+                pnlCustomFields.add(panel);
+                pnlCustomFields.revalidate();
+                pnlCustomFields.repaint();
+            }
+        });
     }
 
     private void resetIssues() {
@@ -982,19 +1046,21 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         this.loadVersions(api);
 
         try {
-            List<MantisUser> user = api.getUsers(this.settings.getProjectID());
+            if(!access.getValue().equals("viewer") && !access.getValue().equals("reporter") && !access.getValue().equals("updater")) {
+                List<MantisUser> user = api.getUsers(this.settings.getProjectID());
 
-            if (user != null) {
-                cmbIssueReporterName.removeAllItems();
-                for (MantisUser usr : user) {
-                    cmbIssueReporterName.addItem(usr.getUserName());
+                if (user != null) {
+                    cmbIssueReporterName.removeAllItems();
+                    for (MantisUser usr : user) {
+                        cmbIssueReporterName.addItem(usr.getUserName());
+                    }
+                    cmbIssueReporterName.addItem("");
+                    cmbIssueNoteReporterUser.removeAllItems();
+                    for (MantisUser usr : user) {
+                        cmbIssueNoteReporterUser.addItem(usr.getUserName());
+                    }
+                    cmbIssueNoteReporterUser.addItem("");
                 }
-                cmbIssueReporterName.addItem("");
-                cmbIssueNoteReporterUser.removeAllItems();
-                for (MantisUser usr : user) {
-                    cmbIssueNoteReporterUser.addItem(usr.getUserName());
-                }
-                cmbIssueNoteReporterUser.addItem("");
             }
         } catch (Exception ex) {
             Helper.printNotification("Exception", ex.toString(), NotificationType.ERROR);
@@ -1055,9 +1121,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
     }
 
     private void checkRights() {
-        MantisSoapAPI api = new MantisSoapAPI(settings);
-        Map.Entry<Integer, String> rights = api.getRightsFromProject(settings.getProjectID());
-        switch (rights.getValue()) {
+        switch (access.getValue()) {
             case "viewer":
                 cmdIssueDelete.setVisible(false);
                 cmdIssueEdit.setVisible(false);
@@ -1219,6 +1283,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                                     tblIssueModel.removeRow(i);
                                 }
                             } else {
+
                                 state = true;
                                 tblIssues.removeAll();
                                 for (int i = tblIssueModel.getRowCount() - 1; i >= 0; i--) {
