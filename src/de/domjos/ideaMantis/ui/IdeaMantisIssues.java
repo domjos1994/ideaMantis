@@ -1,6 +1,5 @@
 package de.domjos.ideaMantis.ui;
 
-import com.intellij.application.options.TabbedLanguageCodeStylePanel;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.fileChooser.FileChooser;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
@@ -11,21 +10,18 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vcs.changes.*;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
-import com.intellij.ui.components.JBPanel;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
 import com.intellij.ui.content.ContentManagerEvent;
 import com.intellij.ui.content.ContentManagerListener;
-import com.intellij.uiDesigner.core.GridLayoutManager;
 import de.domjos.ideaMantis.model.*;
 import de.domjos.ideaMantis.service.ConnectionSettings;
 import de.domjos.ideaMantis.soap.MantisSoapAPI;
 import de.domjos.ideaMantis.utils.Helper;
+import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.datatransfer.*;
@@ -71,7 +67,8 @@ public class IdeaMantisIssues implements ToolWindowFactory {
     private JLabel lblIssueStatus;
     private JButton cmdForward;
     private JButton cmdBack;
-    private JScrollPane pnlCustomFields;
+    private JButton cmdCustomFields;
+    private JComboBox<String> cmbFilters;
     private boolean state = false, loadComboBoxes = false;
     private int page = 1;
 
@@ -91,6 +88,15 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         tblIssueAttachments.setDragEnabled(true);
         txtVCSComment.setEnabled(false);
         tblIssueAttachments.setCellEditor(null);
+
+        cmdCustomFields.addActionListener(e -> {
+            CustomFieldDialog dialog = new CustomFieldDialog(project, "report", currentIssue.getCustomFields());
+            dialog.show();
+            for(CustomFieldResult fieldResult : dialog.getResults()) {
+                String result = StringUtils.join(fieldResult.getResult(), "|");
+                this.currentIssue.addCustomField(fieldResult.getField(), result);
+            }
+        });
 
         cmdBack.addActionListener(e -> {
             if(this.page==1) {
@@ -191,7 +197,13 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                             if(settings.getItemsPerPage()==-1) {
                                 page = 1;
                             }
-                            List<MantisIssue> mantisIssues = new MantisSoapAPI(settings).getIssues(settings.getProjectID(), page);
+                            String filterID = "";
+                            if(cmbFilters.getSelectedItem()!=null) {
+                                if(!cmbFilters.getSelectedItem().toString().equals("")) {
+                                    filterID = cmbFilters.getSelectedItem().toString().split(":")[0].trim();
+                                }
+                            }
+                            List<MantisIssue> mantisIssues = new MantisSoapAPI(settings).getIssues(settings.getProjectID(), page, filterID);
                             progressIndicator.setFraction(0.0);
                             double factor = 100.0 / mantisIssues.size();
                             for(MantisIssue issue : mantisIssues) {
@@ -829,9 +841,9 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         Content content = contentFactory.createContent(this.pnlMain, "", false);
         toolWindow.getContentManager().addContent(content);
         settings = ConnectionSettings.getInstance(project);
+        MantisSoapAPI api = new MantisSoapAPI(settings);
         controlPagination();
         this.changeListManager = ChangeListManager.getInstance(project);
-        MantisSoapAPI api = new MantisSoapAPI(settings);
         access = api.getRightsFromProject(settings.getProjectID());
         checkRights();
         cmdReload.doClick();
@@ -839,7 +851,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
             if(!loadComboBoxes)
                 this.loadComboBoxes();
         }
-        addCustomFields(api);
+        cmdCustomFields.setVisible(!api.getCustomFields(settings.getProjectID()).isEmpty());
 
         toolWindow.getContentManager().addContentManagerListener(new ContentManagerListener() {
             @Override
@@ -853,7 +865,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                                 checkRights();
                                 loadComboBoxes();
                                 cmdReload.doClick();
-                                addCustomFields(api);
+                                cmdCustomFields.setVisible(!api.getCustomFields(settings.getProjectID()).isEmpty());
                                 toolWindow.getContentManager().removeContent(content, true);
                                 break;
                             }
@@ -881,6 +893,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
             txtVCSComment.setEnabled(false);
         }
         cmdIssueNoteNew.setEnabled(editMode);
+        cmdCustomFields.setEnabled(editMode);
         cmdIssueAttachmentNew.setEnabled(editMode);
         cmbIssueReporterName.setEnabled(editMode);
         cmbIssueCategory.setEnabled(editMode);
@@ -921,20 +934,6 @@ public class IdeaMantisIssues implements ToolWindowFactory {
             controlNotes(false, false);
             controlAttachments(false, false);
         }
-    }
-
-    private void addCustomFields(MantisSoapAPI api) {
-        pnlCustomFields.removeAll();
-        List<CustomField> fields = api.getCustomFields(settings.getProjectID());
-        fields.forEach(field -> {
-            JPanel panel = field.buildFieldPanel();
-            if(panel!=null) {
-                panel.setName(field.getName());
-                pnlCustomFields.add(panel);
-                pnlCustomFields.revalidate();
-                pnlCustomFields.repaint();
-            }
-        });
     }
 
     private void resetIssues() {
@@ -1101,6 +1100,16 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                 cmbIssueNoteViewState.addItem(viewState);
             }
         }
+
+        cmbFilters.removeAllItems();
+        cmbFilters.addItem("");
+        List<MantisFilter> filters = api.getFilters(settings.getProjectID());
+        if(filters!=null) {
+            for(MantisFilter filter : filters) {
+                cmbFilters.addItem(String.format("%4s: %s", filter.getId(), filter.getName()));
+            }
+        }
+
         this.loadComboBoxes = true;
     }
 
@@ -1290,7 +1299,13 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                                     tblIssueModel.removeRow(i);
                                 }
                                 tblIssues.setModel(tblIssueModel);
-                                List<MantisIssue> mantisIssues = new MantisSoapAPI(settings).getIssues(settings.getProjectID(), page);
+                                String filterID = "";
+                                if(cmbFilters.getSelectedItem()!=null) {
+                                    if(!cmbFilters.getSelectedItem().toString().equals("")) {
+                                        filterID = cmbFilters.getSelectedItem().toString().split(":")[0].trim();
+                                    }
+                                }
+                                List<MantisIssue> mantisIssues = new MantisSoapAPI(settings).getIssues(settings.getProjectID(), page, filterID);
                                 progressIndicator.setFraction(0.0);
                                 double factor = 100.0 / mantisIssues.size();
                                 for(MantisIssue issue : mantisIssues) {
