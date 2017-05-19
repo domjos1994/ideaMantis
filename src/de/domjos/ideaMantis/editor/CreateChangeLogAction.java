@@ -1,6 +1,5 @@
 package de.domjos.ideaMantis.editor;
 
-import com.intellij.ide.ui.EditorOptionsTopHitProvider;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
