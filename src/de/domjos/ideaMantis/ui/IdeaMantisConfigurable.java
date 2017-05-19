@@ -112,6 +112,9 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
                 pwd.append(ch);
             }
 
+            String hostName = this.settings.getHostName(),
+                        userName = this.settings.getUserName(),
+                        password = this.settings.getPassword();
             this.settings.setHostName(txtHostName.getText());
             this.settings.setUserName(txtUserName.getText());
             this.settings.setPassword(pwd.toString());
@@ -140,6 +143,9 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
             } else {
                 cmbProjects.removeAllItems();
             }
+            this.settings.setHostName(hostName);
+            this.settings.setUserName(userName);
+            this.settings.setPassword(password);
         });
 
         JPanel connPanel = new JPanel(new GridBagLayout());
