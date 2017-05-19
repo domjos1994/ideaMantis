@@ -59,6 +59,8 @@
       <ul>
         <li>solve the issue with access-levels</li>
         <li>enables showing only several issues (loads a bit faster)</li>
+        <li>show custom fields in issues</li>
+        <li>filter issues</li>
       </ul>
       <b>Notice: If you update to this version, you will have to retype your credentials!</b>
     ]]>
