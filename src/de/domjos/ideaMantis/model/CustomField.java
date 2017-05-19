@@ -1,6 +1,8 @@
 package de.domjos.ideaMantis.model;
 
 import com.intellij.ui.components.*;
+import com.intellij.util.ui.CheckBox;
+import com.intellij.util.ui.JBUI;
 
 import javax.swing.*;
 import java.awt.*;
@@ -194,14 +196,56 @@ public class CustomField {
         this.requireClosed = requireClosed;
     }
 
-    public JPanel buildFieldPanel() {
+    public JPanel buildFieldPanel(String state, String value) {
+        GridBagConstraints labelConstraint = new GridBagConstraints();
+        labelConstraint.anchor = GridBagConstraints.EAST;
+        labelConstraint.insets = JBUI.insets(5, 10);
+        GridBagConstraints txtConstraint = new GridBagConstraints();
+        txtConstraint.weightx = 2.0;
+        txtConstraint.fill = GridBagConstraints.HORIZONTAL;
+        txtConstraint.gridwidth = GridBagConstraints.REMAINDER;
+
         JBList<String> list = new JBList<>();
         DefaultListModel<String> listModel = new DefaultListModel<>();
-        JPanel panel = new JPanel();
-        BorderLayout layout = new BorderLayout();
-        panel.setLayout(layout);
+        JPanel panel = new JPanel(new GridBagLayout());
         JBLabel label = new JBLabel(this.getName());
-        panel.add(label);
+
+        switch (state) {
+            case "report":
+                if(!this.isDisplayReport()) {
+                    return null;
+                }
+                if(this.isRequireReport()) {
+                    label.setName(label.getName() + "*");
+                }
+                break;
+            case "update":
+                if(!this.isDisplayUpdate()) {
+                    return null;
+                }
+                if(this.isRequireUpdate()) {
+                    label.setName(label.getName() + "*");
+                }
+                break;
+            case "resolved":
+                if(!this.isDisplayResolved()) {
+                    return null;
+                }
+                if(this.isRequireResolved()) {
+                    label.setName(label.getName() + "*");
+                }
+                break;
+            case "closed":
+                if(!this.isDisplayClosed()) {
+                    return null;
+                }
+                if(this.isRequireClosed()) {
+                    label.setName(label.getName() + "*");
+                }
+                break;
+        }
+
+        panel.add(label, labelConstraint);
         switch (this.getTypeId()) {
             case 0:
             case 1:
@@ -209,10 +253,14 @@ public class CustomField {
             case 4:
             case 8:
                 JBTextField field = new JBTextField();
-                if(!this.getDefaultValue().isEmpty()) {
-                    field.setText(this.getDefaultValue());
+                if(value.isEmpty()) {
+                    if(!this.getDefaultValue().isEmpty()) {
+                        field.setText(this.getDefaultValue());
+                    }
+                } else {
+                    field.setText(value);
                 }
-                panel.add(field);
+                panel.add(field, txtConstraint);
                 break;
             case 3:
                 if(!this.getPossibleValues().contains("|")) {
@@ -223,29 +271,45 @@ public class CustomField {
                     }
                 }
                 list.setModel(listModel);
-                if(!this.getDefaultValue().isEmpty()) {
-                    list.setSelectedIndex(listModel.indexOf(this.getDefaultValue()));
+                if(value.isEmpty()) {
+                    if(!this.getDefaultValue().isEmpty()) {
+                        list.setSelectedIndex(listModel.indexOf(this.getDefaultValue()));
+                    }
+                } else {
+                    list.setSelectedIndex(listModel.indexOf(value));
                 }
-                panel.add(list);
+                panel.add(list, txtConstraint);
                 break;
             case 5:
                 if(!this.getPossibleValues().contains("|")) {
                     JBCheckBox checkBox = new JBCheckBox(this.getPossibleValues());
-                    if(!this.getDefaultValue().isEmpty()) {
-                        if(this.getPossibleValues().equals(this.getDefaultValue())) {
-                            checkBox.setSelected(true);
+                    if(value.isEmpty()) {
+                        if(!this.getDefaultValue().isEmpty()) {
+                            checkBox = setCheckBox(checkBox, this.getDefaultValue());
+                        }
+                    } else {
+                        if(value.contains("|")) {
+                            for(String text : value.split("\\|")) {
+                                checkBox = setCheckBox(checkBox, text.trim());
+                            }
                         }
                     }
-                    panel.add(checkBox);
+                    panel.add(checkBox, txtConstraint);
                 } else {
                     for(String item : this.getPossibleValues().split("\\|")) {
                         JBCheckBox checkBox = new JBCheckBox(item);
-                        if(!this.getDefaultValue().isEmpty()) {
-                            if(item.equals(this.getDefaultValue())) {
-                                checkBox.setSelected(true);
+                        if(value.isEmpty()) {
+                            if(!this.getDefaultValue().isEmpty()) {
+                                checkBox = setCheckBox(checkBox, this.getDefaultValue());
+                            }
+                        } else {
+                            if(value.contains("|")) {
+                                for(String text : value.split("\\|")) {
+                                    checkBox = setCheckBox(checkBox, text.trim());
+                                }
                             }
                         }
-                        panel.add(checkBox);
+                        panel.add(checkBox, txtConstraint);
                     }
                 }
                 break;
@@ -258,10 +322,14 @@ public class CustomField {
                     }
                 }
                 list.setModel(listModel);
-                if(!this.getDefaultValue().isEmpty()) {
-                    list.setSelectedIndex(listModel.indexOf(this.getDefaultValue()));
+                if(value.isEmpty()) {
+                    if(!this.getDefaultValue().isEmpty()) {
+                        list.setSelectedIndex(listModel.indexOf(this.getDefaultValue()));
+                    }
+                } else {
+                    list.setSelectedIndex(listModel.indexOf(value));
                 }
-                panel.add(list);
+                panel.add(list, txtConstraint);
                 break;
             case 7:
                 if(!this.getPossibleValues().contains("|")) {
@@ -272,43 +340,87 @@ public class CustomField {
                     }
                 }
                 list.setModel(listModel);
-                if(!this.getDefaultValue().isEmpty()) {
-                    list.setSelectedIndex(listModel.indexOf(this.getDefaultValue()));
+                if(value.isEmpty()) {
+                    if(!this.getDefaultValue().isEmpty()) {
+                        list.setSelectedIndex(listModel.indexOf(this.getDefaultValue()));
+                    }
+                } else {
+                    if(value.contains("|")) {
+                        int[] indices = new int[value.split("\\|").length];
+                        int i = 0;
+                        for(String selection : value.split("\\|")) {
+                            indices[i] = listModel.indexOf(selection);
+                        }
+                        list.setSelectedIndices(indices);
+                    } else {
+                        list.setSelectedIndex(listModel.indexOf(value));
+                    }
                 }
                 list.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-                panel.add(list);
+                panel.add(list, txtConstraint);
                 break;
             case 9:
                 if(!this.getPossibleValues().contains("|")) {
                     JBRadioButton radioButton = new JBRadioButton(this.getPossibleValues());
-                    if(!this.getDefaultValue().isEmpty()) {
-                        if(this.getPossibleValues().equals(this.getDefaultValue())) {
-                            radioButton.setSelected(true);
-                        }
-                    }
-                    panel.add(radioButton);
-                } else {
-                    for(String item : this.getPossibleValues().split("\\|")) {
-                        JBRadioButton radioButton = new JBRadioButton(item);
+                    if(value.isEmpty()) {
                         if(!this.getDefaultValue().isEmpty()) {
-                            if(item.equals(this.getDefaultValue())) {
+                            if(this.getPossibleValues().equals(this.getDefaultValue())) {
                                 radioButton.setSelected(true);
                             }
                         }
-                        panel.add(radioButton);
+                    } else {
+                        if(value.contains("|")) {
+                            for(String text : value.split("\\|")) {
+                                if(radioButton.getText().equals(text.trim())) {
+                                    radioButton.setSelected(true);
+                                }
+                            }
+                        }
+                    }
+                    panel.add(radioButton, txtConstraint);
+                } else {
+                    for(String item : this.getPossibleValues().split("\\|")) {
+                        JBRadioButton radioButton = new JBRadioButton(item);
+                        if(value.isEmpty()) {
+                            if(!this.getDefaultValue().isEmpty()) {
+                                if(item.equals(this.getDefaultValue())) {
+                                    radioButton.setSelected(true);
+                                }
+                            }
+                        } else {
+                            if(value.contains("|")) {
+                                for(String text : value.split("\\|")) {
+                                    if(radioButton.getText().equals(text.trim())) {
+                                        radioButton.setSelected(true);
+                                    }
+                                }
+                            }
+                        }
+                        panel.add(radioButton, txtConstraint);
                     }
                 }
                 break;
             case 10:
                 JTextArea area = new JTextArea();
-                if(!this.getDefaultValue().isEmpty()) {
-                    area.setText(this.getDefaultValue());
+                if(value.isEmpty()) {
+                    if(!this.getDefaultValue().isEmpty()) {
+                        area.setText(this.getDefaultValue());
+                    }
+                } else {
+                    area.setText(value);
                 }
-                panel.add(area);
+                panel.add(area,txtConstraint);
                 break;
             default:
                 System.out.println("Not Supported!");
         }
         return panel;
+    }
+
+    private JBCheckBox setCheckBox(JBCheckBox checkBox, String value) {
+        if(value.equals(checkBox.getText())) {
+            checkBox.setSelected(true);
+        }
+        return checkBox;
     }
 }

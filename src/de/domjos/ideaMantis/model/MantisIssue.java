@@ -1,7 +1,9 @@
 package de.domjos.ideaMantis.model;
 
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 public class MantisIssue {
     private int id;
@@ -19,6 +21,7 @@ public class MantisIssue {
     private String date_submitted;
     private List<IssueAttachment> issueAttachmentList;
     private List<IssueNote> issueNoteList;
+    private Map<CustomField, String> customFields;
 
     public MantisIssue() {
         this.reporter = null;
@@ -28,6 +31,7 @@ public class MantisIssue {
         this.tags = "";
         this.fixed_in_version = null;
         this.target_version = null;
+        this.setCustomFields(new LinkedHashMap<>());
     }
 
     public int getId() {
@@ -180,5 +184,17 @@ public class MantisIssue {
 
     public void setTags(String tags) {
         this.tags = tags;
+    }
+
+    public Map<CustomField, String> getCustomFields() {
+        return customFields;
+    }
+
+    public void addCustomField(CustomField field, String value) {
+        this.customFields.put(field, value);
+    }
+
+    public void setCustomFields(Map<CustomField, String> customFields) {
+        this.customFields = customFields;
     }
 }
