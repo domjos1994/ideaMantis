@@ -102,9 +102,11 @@ public class MantisSoapAPI {
         List<CustomField> customFields = new LinkedList<>();
         List<String> custom_types = getEnum("custom_field_types");
         List<ObjectRef> objectRefList = new LinkedList<>();
-        for(String item : custom_types) {
-            ObjectRef ref = getEnum("custom_field_types", item);
-            objectRefList.add(ref);
+        if(custom_types!=null) {
+            for(String item : custom_types) {
+                ObjectRef ref = getEnum("custom_field_types", item);
+                objectRefList.add(ref);
+            }
         }
 
         try {
