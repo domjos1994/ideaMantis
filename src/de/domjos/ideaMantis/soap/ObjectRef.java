@@ -2,7 +2,7 @@ package de.domjos.ideaMantis.soap;
 
 import org.ksoap2.serialization.SoapObject;
 
-class ObjectRef extends SoapObject {
+public class ObjectRef extends SoapObject {
     private int id;
     private String name;
 
@@ -20,7 +20,6 @@ class ObjectRef extends SoapObject {
         this.id = id;
     }
 
-    @Override
     public String getName() {
         return name;
     }

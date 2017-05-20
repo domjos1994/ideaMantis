@@ -1,5 +1,7 @@
 package de.domjos.ideaMantis.ui;
 
+import com.intellij.diagnostic.logging.LogConsoleManager;
+import com.intellij.diagnostic.logging.LogFilesManager;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.fileChooser.FileChooser;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
@@ -17,6 +19,7 @@ import com.intellij.ui.content.ContentManagerListener;
 import de.domjos.ideaMantis.model.*;
 import de.domjos.ideaMantis.service.ConnectionSettings;
 import de.domjos.ideaMantis.soap.MantisSoapAPI;
+import de.domjos.ideaMantis.soap.ObjectRef;
 import de.domjos.ideaMantis.utils.Helper;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -1065,39 +1068,39 @@ public class IdeaMantisIssues implements ToolWindowFactory {
             Helper.printNotification("Exception", ex.toString(), NotificationType.ERROR);
         }
 
-        List<String> priorities = api.getEnum("priorities");
+        List<ObjectRef> priorities = api.getEnum("priorities");
 
         if(priorities!=null) {
             cmbIssuePriority.removeAllItems();
-            for(String priority : priorities) {
-                cmbIssuePriority.addItem(priority);
+            for(ObjectRef priority : priorities) {
+                cmbIssuePriority.addItem(priority.getName());
             }
         }
 
-        List<String> severities = api.getEnum("severities");
+        List<ObjectRef> severities = api.getEnum("severities");
 
         if(severities!=null) {
             cmbIssueSeverity.removeAllItems();
-            for(String severity : severities) {
-                cmbIssueSeverity.addItem(severity);
+            for(ObjectRef severity : severities) {
+                cmbIssueSeverity.addItem(severity.getName());
             }
         }
 
-        List<String> states = api.getEnum("status");
+        List<ObjectRef> states = api.getEnum("status");
 
         if(states!=null) {
             cmbIssueStatus.removeAllItems();
-            for(String status : states) {
-                cmbIssueStatus.addItem(status);
+            for(ObjectRef status : states) {
+                cmbIssueStatus.addItem(status.getName());
             }
         }
 
-        List<String> viewStates = api.getEnum("view_states");
+        List<ObjectRef> viewStates = api.getEnum("view_states");
 
         if(viewStates!=null) {
             cmbIssueNoteViewState.removeAllItems();
-            for(String viewState : viewStates) {
-                cmbIssueNoteViewState.addItem(viewState);
+            for(ObjectRef viewState : viewStates) {
+                cmbIssueNoteViewState.addItem(viewState.getName());
             }
         }
 

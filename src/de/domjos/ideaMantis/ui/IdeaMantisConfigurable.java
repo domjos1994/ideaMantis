@@ -19,10 +19,12 @@ import de.domjos.ideaMantis.model.MantisProject;
 import de.domjos.ideaMantis.model.MantisUser;
 import de.domjos.ideaMantis.service.ConnectionSettings;
 import de.domjos.ideaMantis.soap.MantisSoapAPI;
+import de.domjos.ideaMantis.soap.ObjectRef;
 import de.domjos.ideaMantis.utils.Helper;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.omg.CORBA.Object;
 
 import javax.swing.*;
 import java.awt.*;
@@ -130,8 +132,8 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
                 cmbNewProjectProjects.setSelectedItem("");
 
                 cmbProjectViewState.removeAllItems();
-                for(String item : connection.getEnum("view_states")) {
-                    this.cmbProjectViewState.addItem(item);
+                for(ObjectRef item : connection.getEnum("view_states")) {
+                    this.cmbProjectViewState.addItem(item.getName());
                 }
 
                 for(int i = 0; i<=cmbProjects.getItemCount()-1; i++) {

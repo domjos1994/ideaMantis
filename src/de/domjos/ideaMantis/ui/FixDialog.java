@@ -8,6 +8,7 @@ import com.intellij.ui.components.JBTextField;
 import com.intellij.util.ui.JBUI;
 import de.domjos.ideaMantis.service.ConnectionSettings;
 import de.domjos.ideaMantis.soap.MantisSoapAPI;
+import de.domjos.ideaMantis.soap.ObjectRef;
 import de.domjos.ideaMantis.utils.Helper;
 import org.jetbrains.annotations.Nullable;
 
@@ -67,8 +68,8 @@ public class FixDialog extends DialogWrapper {
 
         cmbState = new ComboBox<>();
         cmbState.setName("cmbState");
-        for(String item : new MantisSoapAPI(ConnectionSettings.getInstance(project)).getEnum("view_states")) {
-            cmbState.addItem(item);
+        for(ObjectRef item : new MantisSoapAPI(ConnectionSettings.getInstance(project)).getEnum("view_states")) {
+            cmbState.addItem(item.getName());
         }
 
         java.awt.Label lblFixed = new java.awt.Label("Check In");

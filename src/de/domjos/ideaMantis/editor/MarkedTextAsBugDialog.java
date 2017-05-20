@@ -185,9 +185,9 @@ class MarkedTextAsBugDialog extends DialogWrapper {
         cmbPriority = new ComboBox<>();
         cmbSeverity = new ComboBox<>();
         cmbStatus = new ComboBox<>();
-        api.getEnum("priorities").forEach(cmbPriority::addItem);
-        api.getEnum("severities").forEach(cmbSeverity::addItem);
-        api.getEnum("status").forEach(cmbStatus::addItem);
+        api.getEnum("priorities").forEach(objectRef -> cmbPriority.addItem(objectRef.getName()));
+        api.getEnum("severities").forEach(objectRef -> cmbSeverity.addItem(objectRef.getName()));
+        api.getEnum("status").forEach(objectRef -> cmbStatus.addItem(objectRef.getName()));
 
         java.awt.Label lblPriority = new java.awt.Label("Priority");
         java.awt.Label lblSeverity = new java.awt.Label("Severity");
