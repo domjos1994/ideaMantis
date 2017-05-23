@@ -72,6 +72,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
     private JButton cmdBack;
     private JButton cmdCustomFields;
     private JComboBox<String> cmbFilters;
+    private JComboBox<String> cmbIssueProfile;
     private boolean state = false, loadComboBoxes = false;
     private int page = 1;
 
@@ -272,6 +273,19 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                             txtIssueReporterName.setText(issue.getReporter().getName());
                             txtIssueReporterEMail.setText(issue.getReporter().getEmail());
                         }
+                        if(issue.getProfile()!=null) {
+                            cmbIssueProfile.setSelectedItem(null);
+                            for(int i = 0; i<=cmbIssueProfile.getItemCount()-1; i++) {
+                                if(cmbIssueProfile.getItemAt(i).contains(": ")) {
+                                    String item = cmbIssueProfile.getItemAt(i).split(": ")[1];
+                                    if(String.format("%s %s %s", issue.getProfile().getPlatform(), issue.getProfile().getOs(), issue.getProfile().getOsBuild()).equals(item)) {
+                                        cmbIssueProfile.setSelectedIndex(i);
+                                    }
+                                }
+                            }
+                        } else {
+                            cmbIssueProfile.setSelectedItem(null);
+                        }
                         cmbIssueCategory.setSelectedItem(issue.getCategory());
                         if(issue.getTarget_version()!=null) {
                             for(int i = 0; i<=cmbIssueTargetVersion.getItemCount()-1 ;i++) {
@@ -443,7 +457,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                lblValidation.setText(this.validateIssue());
                if(lblValidation.getText().equals("")) {
-
+                   MantisSoapAPI api = new MantisSoapAPI(settings);
                    MantisIssue issue = currentIssue;
                    issue.setSummary(txtIssueSummary.getText());
                    issue.setDate_submitted(txtIssueDate.getText());
@@ -451,6 +465,25 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                    issue.setDescription(txtIssueDescription.getText());
                    issue.setSteps_to_reproduce(txtIssueStepsToReproduce.getText());
                    issue.setTags(txtBasicsTags.getText());
+
+                   if(cmbIssueProfile.getSelectedItem()!=null) {
+                       if(!cmbIssueProfile.getSelectedItem().toString().equals("")) {
+                           if(cmbIssueProfile.getSelectedItem().toString().contains(": ")) {
+                               int id = Integer.parseInt(cmbIssueProfile.getSelectedItem().toString().split(": ")[0]);
+                               for(MantisProfile profile : api.getProfiles()) {
+                                   if(profile.getId()==id) {
+                                       issue.setProfile(profile);
+                                   }
+                               }
+                           } else {
+                               issue.setProfile(null);
+                           }
+                       } else {
+                           issue.setProfile(null);
+                       }
+                   } else {
+                       issue.setProfile(null);
+                   }
 
                    if(cmbIssueCategory.getSelectedItem()!=null)
                        issue.setCategory(cmbIssueCategory.getSelectedItem().toString());
@@ -461,7 +494,6 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                    if(cmbIssueStatus.getSelectedItem()!=null)
                        issue.setStatus(cmbIssueStatus.getSelectedItem().toString());
 
-                   MantisSoapAPI api = new MantisSoapAPI(settings);
                    List<MantisVersion> versions = api.getVersions(settings.getProjectID());
                    if(cmbIssueFixedInVersion.getSelectedItem()!=null) {
                        for(MantisVersion version : versions) {
@@ -856,6 +888,8 @@ public class IdeaMantisIssues implements ToolWindowFactory {
             cmdCustomFields.setVisible(!api.getCustomFields(settings.getProjectID()).isEmpty());
         }
 
+        api.getProfiles();
+
         toolWindow.getContentManager().addContentManagerListener(new ContentManagerListener() {
             @Override
             public void contentAdded(ContentManagerEvent contentManagerEvent) {
@@ -909,6 +943,8 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         cmbBasicsTags.setEnabled(editMode);
         txtBasicsTags.setEnabled(editMode);
         tblIssues.setEnabled(!editMode);
+        cmbIssueProfile.setEnabled(
+                editMode);
         Helper.disableControlsInAPanel(pnlIssueDescriptions, editMode);
 
         if(editMode) {
@@ -951,6 +987,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         cmbIssueSeverity.setSelectedItem(null);
         cmbIssueStatus.setSelectedItem(null);
         cmbBasicsTags.setSelectedItem(null);
+        cmbIssueProfile.setSelectedItem(null);
         txtBasicsTags.setText("");
         tblIssueNotes.removeAll();
         tblIssueAttachments.removeAll();
@@ -1110,6 +1147,15 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         if(filters!=null) {
             for(MantisFilter filter : filters) {
                 cmbFilters.addItem(String.format("%4s: %s", filter.getId(), filter.getName()));
+            }
+        }
+
+        cmbIssueProfile.removeAllItems();
+        cmbIssueProfile.addItem("");
+        List<MantisProfile> mantisProfiles = api.getProfiles();
+        if(mantisProfiles!=null) {
+            for(MantisProfile profile : mantisProfiles) {
+                cmbIssueProfile.addItem(String.format("%s: %s %s %s", profile.getId(), profile.getPlatform(), profile.getOs(), profile.getOsBuild()));
             }
         }
 
