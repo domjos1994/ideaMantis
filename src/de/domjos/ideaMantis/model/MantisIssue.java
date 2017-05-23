@@ -22,6 +22,7 @@ public class MantisIssue {
     private List<IssueAttachment> issueAttachmentList;
     private List<IssueNote> issueNoteList;
     private Map<CustomField, String> customFields;
+    private MantisProfile profile;
 
     public MantisIssue() {
         this.reporter = null;
@@ -32,6 +33,7 @@ public class MantisIssue {
         this.fixed_in_version = null;
         this.target_version = null;
         this.setCustomFields(new LinkedHashMap<>());
+        this.profile = null;
     }
 
     public int getId() {
@@ -196,5 +198,13 @@ public class MantisIssue {
 
     public void setCustomFields(Map<CustomField, String> customFields) {
         this.customFields = customFields;
+    }
+
+    public MantisProfile getProfile() {
+        return profile;
+    }
+
+    public void setProfile(MantisProfile profile) {
+        this.profile = profile;
     }
 }
