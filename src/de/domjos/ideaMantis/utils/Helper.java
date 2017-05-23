@@ -27,6 +27,19 @@ public abstract class Helper {
         Notifications.Bus.notify(notification);
     }
 
+
+    public static void printException(Exception ex) {
+        String faultCode = "";
+        if(ex.getStackTrace().length>=1) {
+            faultCode = ex.getStackTrace()[0].getClassName() + ":" + ex.getStackTrace()[0].getLineNumber();
+        }
+        Helper.printNotification(
+                "Something went wrong!",
+                ex.getMessage() + "\nFaultCode: " + faultCode,
+                NotificationType.ERROR
+        );
+    }
+
     public static String getParam(SoapObject object, String name, boolean sub, int id) {
         try {
             if(object.getProperty(name)==null) {
