@@ -24,7 +24,6 @@ import de.domjos.ideaMantis.utils.Helper;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.omg.CORBA.Object;
 
 import javax.swing.*;
 import java.awt.*;
@@ -109,17 +108,8 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
 
         this.cmdTestConnection = new JButton("Test Connection");
         this.cmdTestConnection.addActionListener(e -> {
-            StringBuilder pwd = new StringBuilder("");
-            for(char ch : txtPassword.getPassword()) {
-                pwd.append(ch);
-            }
+            String oldSettings = this.temporarilyChangeSettings();
 
-            String hostName = this.settings.getHostName(),
-                        userName = this.settings.getUserName(),
-                        password = this.settings.getPassword();
-            this.settings.setHostName(txtHostName.getText());
-            this.settings.setUserName(txtUserName.getText());
-            this.settings.setPassword(pwd.toString());
             MantisSoapAPI connection = new MantisSoapAPI(this.settings);
             if(this.changeConnectionLabel(connection.testConnection())) {
                 java.util.List<MantisProject> projects = connection.getProjects();
@@ -145,9 +135,8 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
             } else {
                 cmbProjects.removeAllItems();
             }
-            this.settings.setHostName(hostName);
-            this.settings.setUserName(userName);
-            this.settings.setPassword(password);
+
+            this.temporarilyChangeSettingsBack(oldSettings);
         });
 
         JPanel connPanel = new JPanel(new GridBagLayout());
@@ -202,6 +191,8 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
         newProjectPanel.add(cmdProjectAdd, txtConstraint);
 
         cmdProjectAdd.addActionListener(e -> {
+            String oldSettings = this.temporarilyChangeSettings();
+
             MantisProject project = new MantisProject(txtProjectName.getText());
             project.setDescription(txtProjectDescription.getText());
             if(cmbProjectViewState.getSelectedItem()!=null)
@@ -235,6 +226,8 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
                     }
                 }
             }
+
+            this.temporarilyChangeSettingsBack(oldSettings);
         });
         newProjectPanel.setBorder(IdeBorderFactory.createTitledBorder("New Project"));
 
@@ -354,6 +347,29 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
             }
             return getProject(id, projects.get(0).getSubProjects());
         }
+    }
+
+    private String temporarilyChangeSettings() {
+        StringBuilder pwd = new StringBuilder("");
+        for(char ch : txtPassword.getPassword()) {
+            pwd.append(ch);
+        }
+
+        String  hostName = this.settings.getHostName(),
+                userName = this.settings.getUserName(),
+                password = this.settings.getPassword();
+        this.settings.setHostName(txtHostName.getText());
+        this.settings.setUserName(txtUserName.getText());
+        this.settings.setPassword(pwd.toString());
+
+        return String.format("%s;-;%s;-;%s", hostName, userName, password);
+    }
+
+    private void temporarilyChangeSettingsBack(String oldSettings) {
+        String[] data = oldSettings.split(";-;");
+        this.settings.setHostName(data[0].trim());
+        this.settings.setUserName(data[1].trim());
+        this.settings.setPassword(data[2].trim());
     }
 }
 
