@@ -26,6 +26,7 @@ class MarkedTextAsBugDialog extends DialogWrapper {
     private JTextArea txtDescription;
     private JComboBox<String> cmbCategory, cmbSeverity, cmbPriority, cmbStatus, cmbTargetVersion, cmbFixedInVersion;
     private String description, documentPath;
+    private int id;
 
     private MantisSoapAPI api;
     private ConnectionSettings settings;
@@ -79,6 +80,7 @@ class MarkedTextAsBugDialog extends DialogWrapper {
                         attachment.setSize((int) new File(txtDocumentPath.getText()).getTotalSpace());
                         issue.addAttachment(attachment);
                         api.addIssue(issue);
+                        this.id = api.getIssueID();
                     } catch (Exception ex) {
                         Helper.printNotification("Exception", ex.toString(), NotificationType.ERROR);
                     }
@@ -87,6 +89,10 @@ class MarkedTextAsBugDialog extends DialogWrapper {
         }catch (Exception ex) {
             Helper.printNotification("Exception", ex.toString(), NotificationType.ERROR);
         }
+    }
+
+    int getID() {
+        return this.id;
     }
 
     @Override
@@ -203,7 +209,6 @@ class MarkedTextAsBugDialog extends DialogWrapper {
 
         statePanel.setBorder(IdeBorderFactory.createTitledBorder("View-State"));
         root.add(statePanel, constraints);
-
 
         if(!this.documentPath.equals("")) {
             JPanel attachmentPanel = new JPanel();

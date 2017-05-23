@@ -33,23 +33,23 @@ public class MarkedTextAsBugEditorAction extends AnAction {
         final int end = selectionModel.getSelectionEnd();
 
         //Making the replacement
+        final String[] pathToDocument = new String[1];
         WriteCommandAction.runWriteCommandAction(project,()->{
-            String pathToDocument;
             String pathToDocumentArray[] = document.toString().split("file://");
             if(pathToDocumentArray.length==2) {
-                pathToDocument = pathToDocumentArray[1].replace("]", "").trim();
+                pathToDocument[0] = pathToDocumentArray[1].replace("]", "").trim();
             } else {
-                pathToDocument = document.toString();
+                pathToDocument[0] = document.toString();
             }
-
-            MarkedTextAsBugDialog markedTextAsBugDialog;
-            if(new File(pathToDocument).exists()) {
-                markedTextAsBugDialog = new MarkedTextAsBugDialog(project, document.getText(new TextRange(start, end)), pathToDocument);
-            } else {
-                markedTextAsBugDialog = new MarkedTextAsBugDialog(project, document.getText(new TextRange(start, end)));
-            }
-            markedTextAsBugDialog.show();
         });
+
+        MarkedTextAsBugDialog markedTextAsBugDialog;
+        if(new File(pathToDocument[0]).exists()) {
+            markedTextAsBugDialog = new MarkedTextAsBugDialog(project, document.getText(new TextRange(start, end)), pathToDocument[0]);
+        } else {
+            markedTextAsBugDialog = new MarkedTextAsBugDialog(project, document.getText(new TextRange(start, end)));
+        }
+        markedTextAsBugDialog.show();
         selectionModel.removeSelection();
     }
 }
