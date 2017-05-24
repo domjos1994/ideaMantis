@@ -1114,7 +1114,7 @@ public class MantisSoapAPI {
                     }
                 }
             } catch (Exception ex) {
-                Helper.printException(ex);
+                //Helper.printException(ex);
             }
         }
         return issue;
