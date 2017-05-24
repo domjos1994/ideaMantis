@@ -367,9 +367,11 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
 
     private void temporarilyChangeSettingsBack(String oldSettings) {
         String[] data = oldSettings.split(";-;");
-        this.settings.setHostName(data[0].trim());
-        this.settings.setUserName(data[1].trim());
-        this.settings.setPassword(data[2].trim());
+        if(data.length>=3) {
+            this.settings.setHostName(data[0].trim());
+            this.settings.setUserName(data[1].trim());
+            this.settings.setPassword(data[2].trim());
+        }
     }
 }
 

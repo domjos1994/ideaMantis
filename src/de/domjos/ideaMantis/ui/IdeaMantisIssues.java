@@ -94,7 +94,35 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         tblIssueAttachments.setCellEditor(null);
 
         cmdCustomFields.addActionListener(e -> {
-            CustomFieldDialog dialog = new CustomFieldDialog(project, "report", currentIssue.getCustomFields());
+            String state = "report";
+            if(cmbIssueStatus.getSelectedItem()!=null) {
+                List<ObjectRef> refs = new MantisSoapAPI(settings).getEnum("status");
+                for(ObjectRef ref : refs) {
+                    if(ref.getName().equals(cmbIssueStatus.getSelectedItem().toString())) {
+                        switch (ref.getId()) {
+                            case 10:
+                            case 50:
+                                state = "report";
+                                break;
+                            case 20:
+                            case 30:
+                            case 40:
+                                state = "update";
+                                break;
+                            case 80:
+                                state = "resolved";
+                                break;
+                            case 90:
+                                state = "closed";
+                                break;
+                            default:
+                                state = "";
+                        }
+                    }
+                }
+            }
+
+            CustomFieldDialog dialog = new CustomFieldDialog(project, state, currentIssue.getCustomFields());
             dialog.show();
             for(CustomFieldResult fieldResult : dialog.getResults()) {
                 String result = StringUtils.join(fieldResult.getResult(), "|");
@@ -257,6 +285,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                         MantisSoapAPI api = new MantisSoapAPI(settings);
                         MantisIssue issue = api.getIssue(id);
                         currentIssue = issue;
+                        cmdCustomFields.setVisible(!api.getCustomFields(settings.getProjectID()).isEmpty());
                         cmdIssueEdit.setEnabled(true);
                         cmdIssueDelete.setEnabled(true);
                         txtIssueSummary.setText(issue.getSummary());
