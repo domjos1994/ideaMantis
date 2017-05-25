@@ -1,8 +1,12 @@
 package de.domjos.ideaMantis.ui;
 
 import com.intellij.notification.NotificationType;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.SearchableConfigurable;
+import com.intellij.openapi.progress.ProgressIndicator;
+import com.intellij.openapi.progress.ProgressManager;
+import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.openapi.wm.ToolWindow;
@@ -29,6 +33,7 @@ import javax.swing.*;
 import java.awt.*;
 
 public class IdeaMantisConfigurable implements SearchableConfigurable {
+    private JComponent component;
     private ConnectionSettings settings;
     private JBTextField txtHostName, txtUserName, txtProjectName, txtIssuesPerPage;
     private JTextArea txtProjectDescription;
@@ -40,10 +45,43 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
     private ComboBox<String> cmbProjects, cmbNewProjectProjects, cmbProjectViewState;
     private int projectID = 0;
     private ToolWindowManager manager;
+    private Task task;
 
     public IdeaMantisConfigurable(@NotNull Project project) {
         this.settings = ConnectionSettings.getInstance(project);
         this.manager = ToolWindowManager.getInstance(project);
+        this.task = new Task.Backgroundable(project, "Load Data...") {
+            @Override
+            public void run(@NotNull ProgressIndicator progressIndicator) {
+                try {
+                    settings.setHostName(txtHostName.getText());
+                    settings.setUserName(txtUserName.getText());
+                    StringBuilder buf = new StringBuilder();
+                    for(char ch : txtPassword.getPassword()) {
+                        buf.append(ch);
+                    }
+                    settings.setPassword(buf.toString());
+                    int itemsPerPage;
+                    try {
+                        itemsPerPage = Integer.parseInt(txtIssuesPerPage.getText());
+                    } catch (Exception ex) {
+                        itemsPerPage = -1;
+                    }
+                    settings.setItemsPerPage(itemsPerPage);
+                    settings.setProjectID(projectID);
+                    ApplicationManager.getApplication().invokeLater(()->{
+                        ToolWindow window = manager.getToolWindow("Show MantisBT-Issues");
+                        ContentImpl content = new ContentImpl(null, "", true);
+                        content.setDescription("reload comboBoxes");
+                        window.getContentManager().addContent(content);
+                    });
+                } catch (Exception ex) {
+                    Helper.printException(ex);
+                } finally {
+                    component.setCursor(Cursor.getDefaultCursor());
+                }
+            }
+        };
     }
 
     @NotNull
@@ -246,6 +284,7 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
         root.add(projectPanel,constraints);
         constraints.weighty = 2.0;
         root.add(newProjectPanel,constraints);
+        this.component = root;
         return root;
     }
 
@@ -280,25 +319,8 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
     @Override
     public void apply() throws ConfigurationException {
         if(this.settings!=null) {
-            this.settings.setHostName(txtHostName.getText());
-            this.settings.setUserName(txtUserName.getText());
-            StringBuilder buf = new StringBuilder();
-            for(char ch : txtPassword.getPassword()) {
-                buf.append(ch);
-            }
-            this.settings.setPassword(buf.toString());
-            int itemsPerPage;
-            try {
-                itemsPerPage = Integer.parseInt(txtIssuesPerPage.getText());
-            } catch (Exception ex) {
-                itemsPerPage = -1;
-            }
-            this.settings.setItemsPerPage(itemsPerPage);
-            this.settings.setProjectID(projectID);
-            ToolWindow window = this.manager.getToolWindow("Show MantisBT-Issues");
-            ContentImpl content = new ContentImpl(null, "", true);
-            content.setDescription("reload comboBoxes");
-            window.getContentManager().addContent(content);
+            this.component.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+            ProgressManager.getInstance().run(this.task);
         }
     }
 

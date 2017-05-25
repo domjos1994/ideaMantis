@@ -12,6 +12,10 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.*;
+import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.LinkedList;
 import java.util.Map;
 
@@ -39,58 +43,76 @@ public class CustomFieldDialog extends DialogWrapper {
                 this.getButton(this.getOKAction()).addActionListener((event) -> {
                     for(int i = 0; i<=this.panel.getComponentCount()-1; i++) {
                         if(this.panel.getComponent(i) instanceof JPanel) {
-                             CustomFieldResult result = new CustomFieldResult();
-                             JPanel child = (JPanel) this.panel.getComponent(i);
-                             String name = ((JLabel) child.getComponent(0)).getText();
-                             if(name.endsWith("*")) {
-                                 name = name.replace("*", "").trim();
-                             }
-                             for(CustomField customField : this.customFieldList) {
-                                 if(name.equals(customField.getName())) {
-                                     result.setField(customField);
-                                 }
-                             }
+                            CustomFieldResult result = new CustomFieldResult();
+                            JPanel child = (JPanel) this.panel.getComponent(i);
+                            String name = ((JLabel) child.getComponent(0)).getText();
+                            if(name.endsWith("*")) {
+                                name = name.replace("*", "").trim();
+                            }
+                            for(CustomField customField : this.customFieldList) {
+                                if(name.equals(customField.getName())) {
+                                    result.setField(customField);
+                                }
+                            }
 
-                             for(int j = 1; j<=child.getComponentCount()-1; j++) {
-                                 if(child.getComponent(j) instanceof JTextField) {
-                                     String value = ((JTextField) child.getComponent(j)).getText();
-                                     result.addResult(value);
-                                 }
-                                 if(child.getComponent(j) instanceof JTextArea) {
-                                     String value = ((JTextArea) child.getComponent(j)).getText();
-                                     result.addResult(value);
-                                 }
-                                 if(child.getComponent(j) instanceof JList) {
-                                     JList<String> list = (JList<String>) child.getComponent(j);
-                                     if(list.getSelectionMode()== ListSelectionModel.MULTIPLE_INTERVAL_SELECTION) {
-                                         for(String selection : list.getSelectedValuesList()) {
-                                             result.addResult(selection);
-                                         }
-                                     } else {
-                                         result.addResult(list.getSelectedValue());
-                                     }
-                                 }
-                                 if(child.getComponent(j) instanceof JCheckBox) {
-                                     JCheckBox checkBox = (JCheckBox) child.getComponent(j);
-                                     if(checkBox.isSelected()) {
-                                         result.addResult(checkBox.getText());
-                                     }
-                                 }
-                                 if(child.getComponent(j) instanceof JRadioButton) {
-                                     JRadioButton radioButton = (JRadioButton) child.getComponent(j);
-                                     if(radioButton.isSelected()) {
-                                         result.addResult(radioButton.getText());
-                                     }
-                                 }
-                             }
-                             this.resultList.add(result);
+                            for(int j = 1; j<=child.getComponentCount()-1; j++) {
+                                if(child.getComponent(j) instanceof JTextField) {
+                                    String value = ((JTextField) child.getComponent(j)).getText();
+                                    if(result.getField().getTypeId()==8) {
+                                        try {
+                                            DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                                            LocalDate localDate = LocalDate.parse(value, dtf);
+                                            result.addResult(String.valueOf(Timestamp.valueOf(localDate.atTime(0,0)).getTime()/1000));
+                                        } catch (Exception ex) {
+                                            try {
+                                                DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+                                                LocalDate localDate = LocalDate.parse(value, dtf);
+                                                result.addResult(String.valueOf(Timestamp.valueOf(localDate.atTime(0,0)).getTime()/1000));
+                                            } catch (Exception ex2) {
+                                                result.addResult(String.valueOf(Timestamp.valueOf(LocalDateTime.now()).getTime()/1000));
+                                            }
+                                        }
+                                        System.out.println(result.getResult().get(result.getResult().size()-1));
+                                    }
+                                    result.addResult(value);
+                                }
+                                if(child.getComponent(j) instanceof JTextArea) {
+                                    String value = ((JTextArea) child.getComponent(j)).getText();
+                                    result.addResult(value);
+                                }
+                                if(child.getComponent(j) instanceof JList) {
+                                    JList<String> list = (JList<String>) child.getComponent(j);
+                                    if(list.getSelectionMode()== ListSelectionModel.MULTIPLE_INTERVAL_SELECTION) {
+                                        for(String selection : list.getSelectedValuesList()) {
+                                            result.addResult(selection);
+                                        }
+                                    } else {
+                                        result.addResult(list.getSelectedValue());
+                                    }
+                                }
+                                if(child.getComponent(j) instanceof JPanel) {
+                                    for(Component component : ((JPanel)child.getComponent(j)).getComponents()) {
+                                        if(component instanceof JCheckBox) {
+                                            JCheckBox checkBox = (JCheckBox) component;
+                                            if(checkBox.isSelected()) {
+                                                result.addResult(checkBox.getText());
+                                            }
+                                        }
+                                        if(component instanceof JRadioButton) {
+                                            JRadioButton radioButton = (JRadioButton) component;
+                                            if(radioButton.isSelected()) {
+                                                result.addResult(radioButton.getText());
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            this.resultList.add(result);
                         }
                     }
                 });
             }
-
-
-        }catch (Exception ex) {
+        } catch (Exception ex) {
             Helper.printNotification("Exception", ex.toString(), NotificationType.ERROR);
         }
     }
