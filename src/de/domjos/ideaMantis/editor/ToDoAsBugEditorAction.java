@@ -14,7 +14,7 @@ import java.io.File;
 
 public class ToDoAsBugEditorAction extends AnAction {
     private Editor editor;
-    private String content;
+    private String content, originalContent;
 
     @Override
     public void update(final AnActionEvent e) {
@@ -27,6 +27,7 @@ public class ToDoAsBugEditorAction extends AnAction {
             int pos = editor.getCaretModel().getCurrentCaret().getSelectionStart();
             String text = editor.getDocument().getText().substring(pos);
             this.content = text.substring(0, text.indexOf("\n"));
+            this.originalContent = this.content;
         }
 
         e.getPresentation().setVisible(content.toLowerCase().contains("todo") && !content.toLowerCase().contains("mantis#"));
@@ -63,11 +64,13 @@ public class ToDoAsBugEditorAction extends AnAction {
         }
         markedTextAsBugDialog.show();
         int id = markedTextAsBugDialog.getID();
-        String newContent = "Mantis#" + id + " " + this.content;
+        int index = this.originalContent.toLowerCase().indexOf("todo");
+        String sub = this.originalContent.substring(0, index + 4);
+        String newContent = sub + " Mantis#" + id + " " + this.originalContent.replace(sub, "");
 
-        String text = editor.getDocument().getText().replace(this.content, newContent);
-        WriteCommandAction.runWriteCommandAction(project, () ->
-            editor.getDocument().setText(text)
-        );
+        String text = editor.getDocument().getText().replace(this.originalContent, newContent);
+        WriteCommandAction.runWriteCommandAction(project, () -> {
+            editor.getDocument().setText(text);
+        });
     }
 }

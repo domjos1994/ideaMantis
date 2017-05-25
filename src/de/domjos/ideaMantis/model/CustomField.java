@@ -1,11 +1,19 @@
 package de.domjos.ideaMantis.model;
 
+import com.intellij.openapi.ui.ValidationInfo;
+import com.intellij.ui.DocumentAdapter;
 import com.intellij.ui.components.*;
-import com.intellij.util.ui.CheckBox;
 import com.intellij.util.ui.JBUI;
+import org.apache.commons.lang.math.NumberUtils;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.UndoableEditEvent;
+import javax.swing.event.UndoableEditListener;
 import java.awt.*;
+import java.util.AbstractMap;
+import java.util.Arrays;
+import java.util.Map;
 
 public class CustomField {
     private int id, typeId, min, max, readAccessID, writeAccessID;
@@ -204,7 +212,6 @@ public class CustomField {
         txtConstraint.weightx = 2.0;
         txtConstraint.fill = GridBagConstraints.HORIZONTAL;
         txtConstraint.gridwidth = GridBagConstraints.REMAINDER;
-
         JBList<String> list = new JBList<>();
         DefaultListModel<String> listModel = new DefaultListModel<>();
         JPanel panel = new JPanel(new GridBagLayout());
@@ -258,8 +265,49 @@ public class CustomField {
                         field.setText(this.getDefaultValue());
                     }
                 } else {
-                    field.setText(value);
+                    if(getTypeId()==8) {
+                        if(value.contains("|")) {
+                            String date = value.split("\\|")[1];
+                            field.setText(date);
+                        }
+                    } else {
+                        field.setText(value);
+                    }
                 }
+                field.getDocument().addDocumentListener(new DocumentAdapter() {
+                    @Override
+                    protected void textChanged(DocumentEvent documentEvent) {
+                        documentEvent.getDocument().addUndoableEditListener(new UndoableEditListener() {
+                            @Override
+                            public void undoableEditHappened(UndoableEditEvent e) {
+                                if(getTypeId()==1) {
+                                    if(!field.getText().isEmpty()) {
+                                        if(!NumberUtils.isDigits(field.getText())) {
+                                            field.setText(getDefaultValue());
+                                        }
+                                    }
+                                }
+                                if(getTypeId()==2) {
+                                    try {
+                                        Double.parseDouble(field.getText());
+                                    } catch (Exception ex) {
+                                        field.setText(getDefaultValue());
+                                    }
+                                }
+                                if(getTypeId()==8) {
+                                    java.util.List<String> allowed = Arrays.asList("0","1","2","3","4","5","6","7", "8","9","-",".");
+                                    char[] chars = field.getText().toCharArray();
+                                    for(char ch : chars) {
+                                        String strDigit = String.valueOf(ch);
+                                        if(!allowed.contains(strDigit)) {
+                                            field.setText(getDefaultValue());
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    }
+                });
                 panel.add(field, txtConstraint);
                 break;
             case 3:
@@ -283,34 +331,16 @@ public class CustomField {
             case 5:
                 if(!this.getPossibleValues().contains("|")) {
                     JBCheckBox checkBox = new JBCheckBox(this.getPossibleValues());
-                    if(value.isEmpty()) {
-                        if(!this.getDefaultValue().isEmpty()) {
-                            checkBox = setCheckBox(checkBox, this.getDefaultValue());
-                        }
-                    } else {
-                        if(value.contains("|")) {
-                            for(String text : value.split("\\|")) {
-                                checkBox = setCheckBox(checkBox, text.trim());
-                            }
-                        }
-                    }
+                    checkBox = this.selectCheckbox(checkBox, value);
                     panel.add(checkBox, txtConstraint);
                 } else {
+                    JPanel pnlGroup = new JPanel(new GridBagLayout());
                     for(String item : this.getPossibleValues().split("\\|")) {
                         JBCheckBox checkBox = new JBCheckBox(item);
-                        if(value.isEmpty()) {
-                            if(!this.getDefaultValue().isEmpty()) {
-                                checkBox = setCheckBox(checkBox, this.getDefaultValue());
-                            }
-                        } else {
-                            if(value.contains("|")) {
-                                for(String text : value.split("\\|")) {
-                                    checkBox = setCheckBox(checkBox, text.trim());
-                                }
-                            }
-                        }
-                        panel.add(checkBox, txtConstraint);
+                        checkBox = this.selectCheckbox(checkBox, value);
+                        pnlGroup.add(checkBox, txtConstraint);
                     }
+                    panel.add(pnlGroup, txtConstraint);
                 }
                 break;
             case 6:
@@ -379,8 +409,11 @@ public class CustomField {
                     }
                     panel.add(radioButton, txtConstraint);
                 } else {
+                    JPanel pnlGroup = new JPanel(new GridBagLayout());
+                    ButtonGroup group = new ButtonGroup();
                     for(String item : this.getPossibleValues().split("\\|")) {
                         JBRadioButton radioButton = new JBRadioButton(item);
+                        group.add(radioButton);
                         if(value.isEmpty()) {
                             if(!this.getDefaultValue().isEmpty()) {
                                 if(item.equals(this.getDefaultValue())) {
@@ -394,10 +427,15 @@ public class CustomField {
                                         radioButton.setSelected(true);
                                     }
                                 }
+                            } else {
+                                if(radioButton.getText().equals(value.trim())) {
+                                    radioButton.setSelected(true);
+                                }
                             }
                         }
-                        panel.add(radioButton, txtConstraint);
+                        pnlGroup.add(radioButton, txtConstraint);
                     }
+                    panel.add(pnlGroup, txtConstraint);
                 }
                 break;
             case 10:
@@ -415,6 +453,21 @@ public class CustomField {
                 System.out.println("Not Supported!");
         }
         return panel;
+    }
+
+    private JBCheckBox selectCheckbox(JBCheckBox checkBox, String value) {
+        if(value.isEmpty()) {
+            if(!this.getDefaultValue().isEmpty()) {
+                checkBox = setCheckBox(checkBox, this.getDefaultValue());
+            }
+        } else {
+            if(value.contains("|")) {
+                for(String text : value.split("\\|")) {
+                    checkBox = setCheckBox(checkBox, text.trim());
+                }
+            }
+        }
+        return checkBox;
     }
 
     private JBCheckBox setCheckBox(JBCheckBox checkBox, String value) {
