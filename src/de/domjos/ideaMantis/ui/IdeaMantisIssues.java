@@ -1,7 +1,5 @@
 package de.domjos.ideaMantis.ui;
 
-import com.intellij.diagnostic.logging.LogConsoleManager;
-import com.intellij.diagnostic.logging.LogFilesManager;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.fileChooser.FileChooser;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
@@ -25,6 +23,8 @@ import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
+import javax.swing.event.PopupMenuEvent;
+import javax.swing.event.PopupMenuListener;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.datatransfer.*;
@@ -204,56 +204,56 @@ public class IdeaMantisIssues implements ToolWindowFactory {
             try {
                 pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                 ProgressManager manager = ProgressManager.getInstance();
-                Task.WithResult<Boolean, Exception> task =
-                    new Task.WithResult<Boolean, Exception>(project, "Load Issues...", true) {
+                Task task =
+                    new Task.Backgroundable(project, "Load Issues...") {
                     @Override
-                    protected Boolean compute(@NotNull ProgressIndicator progressIndicator) throws Exception {
-                        if(!settings.validateSettings()) {
-                            Helper.printNotification("Wrong settings!", "The connection-settings are incorrect!", NotificationType.WARNING);
-                            state = false;
-                            tblIssues.removeAll();
-                            for (int i = tblIssueModel.getRowCount() - 1; i >= 0; i--) {
-                                tblIssueModel.removeRow(i);
-                            }
-                        } else {
-                            checkRights();
-                            controlPagination();
-                            state = true;
-                            tblIssues.removeAll();
-                            for (int i = tblIssueModel.getRowCount() - 1; i >= 0; i--) {
-                                tblIssueModel.removeRow(i);
-                            }
-                            tblIssues.setModel(tblIssueModel);
-                            if(!loadComboBoxes)
-                                loadComboBoxes();
-                            if(settings.getItemsPerPage()==-1) {
-                                page = 1;
-                            }
-                            String filterID = "";
-                            if(cmbFilters.getSelectedItem()!=null) {
-                                if(!cmbFilters.getSelectedItem().toString().equals("")) {
-                                    filterID = cmbFilters.getSelectedItem().toString().split(":")[0].trim();
+                    public void run(@NotNull ProgressIndicator progressIndicator) {
+                        try {
+                            if(!settings.validateSettings()) {
+                                Helper.printNotification("Wrong settings!", "The connection-settings are incorrect!", NotificationType.WARNING);
+                                state = false;
+                                tblIssues.removeAll();
+                                for (int i = tblIssueModel.getRowCount() - 1; i >= 0; i--) {
+                                    tblIssueModel.removeRow(i);
                                 }
+                            } else {
+                                checkRights();
+                                controlPagination();
+                                state = true;
+                                tblIssues.removeAll();
+                                for (int i = tblIssueModel.getRowCount() - 1; i >= 0; i--) {
+                                    tblIssueModel.removeRow(i);
+                                }
+                                tblIssues.setModel(tblIssueModel);
+                                if(!loadComboBoxes)
+                                    loadComboBoxes();
+                                if(settings.getItemsPerPage()==-1) {
+                                    page = 1;
+                                }
+                                String filterID = "";
+                                if(cmbFilters.getSelectedItem()!=null) {
+                                    if(!cmbFilters.getSelectedItem().toString().equals("")) {
+                                        filterID = cmbFilters.getSelectedItem().toString().split(":")[0].trim();
+                                    }
+                                }
+                                List<MantisIssue> mantisIssues = new MantisSoapAPI(settings).getIssues(settings.getProjectID(), page, filterID);
+                                progressIndicator.setFraction(0.0);
+                                double factor = 100.0 / mantisIssues.size();
+                                for(MantisIssue issue : mantisIssues) {
+                                    tblIssueModel.addRow(new Object[]{issue.getId(), issue.getSummary(), issue.getStatus()});
+                                    progressIndicator.setFraction(progressIndicator.getFraction() + factor);
+                                }
+                                tblIssues.setModel(tblIssueModel);
+                                cmdIssueNew.setEnabled(true);
                             }
-                            List<MantisIssue> mantisIssues = new MantisSoapAPI(settings).getIssues(settings.getProjectID(), page, filterID);
-                            progressIndicator.setFraction(0.0);
-                            double factor = 100.0 / mantisIssues.size();
-                            for(MantisIssue issue : mantisIssues) {
-                                tblIssueModel.addRow(new Object[]{issue.getId(), issue.getSummary(), issue.getStatus()});
-                                progressIndicator.setFraction(progressIndicator.getFraction() + factor);
-                            }
-                            tblIssues.setModel(tblIssueModel);
-                            cmdIssueNew.setEnabled(true);
+                        } catch (Exception ex) {
+                            Helper.printException(ex);
+                        } finally {
+                            pnlMain.setCursor(Cursor.getDefaultCursor());
                         }
-                        return state;
                     }
                 };
                 manager.run(task);
-                if(task.getResult()) {
-                    pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-                } else {
-                    pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-                }
                 resetIssues();
                 if(tblIssues.getColumnCount()>=1) {
                     tblIssues.getColumnModel().getColumn(0).setWidth(40);
@@ -304,6 +304,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                         }
                         if(issue.getProfile()!=null) {
                             cmbIssueProfile.setSelectedItem(null);
+                            cmbIssueProfile.firePopupMenuWillBecomeVisible();
                             for(int i = 0; i<=cmbIssueProfile.getItemCount()-1; i++) {
                                 if(cmbIssueProfile.getItemAt(i).contains(": ")) {
                                     String item = cmbIssueProfile.getItemAt(i).split(": ")[1];
@@ -869,6 +870,54 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         });
 
         chkAddVCS.addActionListener(e -> txtVCSComment.setEnabled(chkAddVCS.isSelected()));
+
+        cmbFilters.addPopupMenuListener(new PopupMenuListener() {
+            @Override
+            public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
+                cmbFilters.removeAllItems();
+                cmbFilters.addItem("");
+                List<MantisFilter> filters = new MantisSoapAPI(settings).getFilters(settings.getProjectID());
+                if(filters!=null) {
+                    for(MantisFilter filter : filters) {
+                        cmbFilters.addItem(String.format("%4s: %s", filter.getId(), filter.getName()));
+                    }
+                }
+            }
+
+            @Override
+            public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
+
+            }
+
+            @Override
+            public void popupMenuCanceled(PopupMenuEvent e) {
+
+            }
+        });
+
+        cmbIssueProfile.addPopupMenuListener(new PopupMenuListener() {
+            @Override
+            public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
+                cmbIssueProfile.removeAllItems();
+                cmbIssueProfile.addItem("");
+                List<MantisProfile> mantisProfiles = new MantisSoapAPI(settings).getProfiles();
+                if(mantisProfiles!=null) {
+                    for(MantisProfile profile : mantisProfiles) {
+                        cmbIssueProfile.addItem(String.format("%s: %s %s %s", profile.getId(), profile.getPlatform(), profile.getOs(), profile.getOsBuild()));
+                    }
+                }
+            }
+
+            @Override
+            public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
+
+            }
+
+            @Override
+            public void popupMenuCanceled(PopupMenuEvent e) {
+
+            }
+        });
     }
 
     private String validateIssue() {
@@ -1167,24 +1216,6 @@ public class IdeaMantisIssues implements ToolWindowFactory {
             cmbIssueNoteViewState.removeAllItems();
             for(ObjectRef viewState : viewStates) {
                 cmbIssueNoteViewState.addItem(viewState.getName());
-            }
-        }
-
-        cmbFilters.removeAllItems();
-        cmbFilters.addItem("");
-        List<MantisFilter> filters = api.getFilters(settings.getProjectID());
-        if(filters!=null) {
-            for(MantisFilter filter : filters) {
-                cmbFilters.addItem(String.format("%4s: %s", filter.getId(), filter.getName()));
-            }
-        }
-
-        cmbIssueProfile.removeAllItems();
-        cmbIssueProfile.addItem("");
-        List<MantisProfile> mantisProfiles = api.getProfiles();
-        if(mantisProfiles!=null) {
-            for(MantisProfile profile : mantisProfiles) {
-                cmbIssueProfile.addItem(String.format("%s: %s %s %s", profile.getId(), profile.getPlatform(), profile.getOs(), profile.getOsBuild()));
             }
         }
 
