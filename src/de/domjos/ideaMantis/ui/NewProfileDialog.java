@@ -33,7 +33,7 @@ public class NewProfileDialog extends DialogWrapper {
                 });
             }
         }catch (Exception ex) {
-            Helper.printNotification("Exception", ex.toString(), NotificationType.ERROR);
+            Helper.printException(ex);
         }
     }
 

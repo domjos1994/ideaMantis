@@ -59,7 +59,7 @@ public class OpenToDoAsBugEditorAction extends AnAction {
                     Desktop.getDesktop().browse(new URI(url));
                 }
             } catch (Exception ex) {
-                Helper.printNotification(ex.getMessage(), ex.toString(), NotificationType.ERROR);
+                Helper.printException(ex);
             }
         }
     }

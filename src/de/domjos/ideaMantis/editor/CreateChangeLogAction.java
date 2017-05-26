@@ -95,7 +95,7 @@ public class CreateChangeLogAction extends AnAction {
                     }
                 });
             } catch (Exception ex) {
-                Helper.printNotification(ex.getMessage(), ex.toString(), NotificationType.ERROR);
+                Helper.printException(ex);
             }
         }
     }

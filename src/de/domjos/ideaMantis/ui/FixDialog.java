@@ -27,19 +27,19 @@ public class FixDialog extends DialogWrapper {
         try {
             this.api = new MantisSoapAPI(ConnectionSettings.getInstance(project));
             this.setTitle("Fix Bug");
-            this.setOKButtonText("Add Issue");
+            this.setOKButtonText("Resolve Issue");
             this.init();
             if(this.getButton(this.getOKAction())!=null) {
                 this.getButton(this.getOKAction()).addActionListener((event) -> {
                     try {
                         api.checkInIssue(id, txtFixed.getText(), cmbState.getSelectedItem().toString());
                     } catch (Exception ex) {
-                        Helper.printNotification("Exception", ex.toString(), NotificationType.ERROR);
+                        Helper.printException(ex);
                     }
                 });
             }
         }catch (Exception ex) {
-            Helper.printNotification("Exception", ex.toString(), NotificationType.ERROR);
+            Helper.printException(ex);
         }
     }
 

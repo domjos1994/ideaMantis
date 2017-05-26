@@ -82,12 +82,12 @@ class MarkedTextAsBugDialog extends DialogWrapper {
                         api.addIssue(issue);
                         this.id = api.getIssueID();
                     } catch (Exception ex) {
-                        Helper.printNotification("Exception", ex.toString(), NotificationType.ERROR);
+                        Helper.printException(ex);
                     }
                 });
             }
         }catch (Exception ex) {
-            Helper.printNotification("Exception", ex.toString(), NotificationType.ERROR);
+            Helper.printException(ex);
         }
     }
 
