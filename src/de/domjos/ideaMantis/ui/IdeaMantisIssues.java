@@ -183,7 +183,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                         }
                     }
                 } catch (Exception ex) {
-                    Helper.printNotification("Exception", ex.toString(), NotificationType.ERROR);
+                    Helper.printException(ex);
                 }
             }
 
@@ -260,10 +260,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                     tblIssues.getColumnModel().getColumn(0).setMaxWidth(100);
                 }
             } catch (Exception ex) {
-                Helper.printNotification("Exception", ex.toString(), NotificationType.ERROR);
-                for(StackTraceElement element : ex.getStackTrace()) {
-                    System.out.println(String.format("%s:%s:%s: %s", element.getFileName(), element.getClassName(), element.getMethodName(), element.getLineNumber()));
-                }
+                Helper.printException(ex);
             }
         });
 
@@ -359,7 +356,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                         controlAttachments(false, false);
                     }
                 } catch (Exception ex) {
-                    Helper.printNotification("Exception", ex.toString(), NotificationType.ERROR);
+                    Helper.printException(ex);
                 } finally {
                     pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
                 }
@@ -476,7 +473,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                     cmdReload.doClick();
                 }
             } catch (Exception ex) {
-                Helper.printNotification("Exception", ex.toString(), NotificationType.ERROR);
+                Helper.printException(ex);
             } finally {
                 pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
             }
@@ -585,7 +582,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                    cmdReload.doClick();
                }
            } catch (Exception ex) {
-               Helper.printNotification("Exception", ex.toString(), NotificationType.ERROR);
+               Helper.printException(ex);
            } finally {
                pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
            }
@@ -622,7 +619,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                     controlNotes(true, false);
                 }
             } catch (Exception ex) {
-                Helper.printNotification("Exception", ex.toString(), NotificationType.ERROR);
+                Helper.printException(ex);
             } finally {
                 pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
             }
@@ -649,7 +646,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                 }
                 controlNotes(false, false);
             } catch (Exception ex) {
-                Helper.printNotification("Exception", ex.toString(), NotificationType.ERROR);
+                Helper.printException(ex);
             } finally {
                 pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
             }
@@ -711,7 +708,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                     controlNotes(false, false);
                 }
             } catch (Exception ex) {
-                Helper.printNotification("Exception", ex.toString(), NotificationType.ERROR);
+                Helper.printException(ex);
             } finally {
                 pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
             }
@@ -739,7 +736,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                     controlAttachments(true, false);
                 }
             } catch (Exception ex) {
-                Helper.printNotification("Exception", ex.toString(), NotificationType.ERROR);
+                Helper.printException(ex);
             } finally {
                 pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
             }
@@ -763,7 +760,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                     controlAttachments(false, false);
                 }
             } catch (Exception ex) {
-                Helper.printNotification("Exception", ex.toString(), NotificationType.ERROR);
+                Helper.printException(ex);
             } finally {
                 pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
             }
@@ -810,7 +807,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                     controlAttachments(false, false);
                 }
             } catch (Exception ex) {
-                Helper.printNotification("Exception", ex.toString(), NotificationType.ERROR);
+                Helper.printException(ex);
             } finally {
                 pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
             }
@@ -846,7 +843,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                     }
                 }
             } catch (Exception ex) {
-                Helper.printNotification("Exception", ex.toString(), NotificationType.ERROR);
+                Helper.printException(ex);
             }
         });
 
@@ -865,7 +862,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                     }
                 }
             } catch (Exception ex) {
-                Helper.printNotification("Exception", ex.toString(), NotificationType.ERROR);
+                Helper.printException(ex);
             }
         });
 
@@ -1180,7 +1177,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                 }
             }
         } catch (Exception ex) {
-            Helper.printNotification("Exception", ex.toString(), NotificationType.ERROR);
+            Helper.printException(ex);
         }
 
         List<ObjectRef> priorities = api.getEnum("priorities");
@@ -1389,11 +1386,12 @@ public class IdeaMantisIssues implements ToolWindowFactory {
     }
 
     private void loadList(DefaultTableModel tblIssueModel, ProgressManager manager) {
-        try {
-            Task.WithResult<Boolean, Exception> task =
-                    new Task.WithResult<Boolean, Exception>(project, "Load Issues...", true) {
-                        @Override
-                        protected Boolean compute(@NotNull ProgressIndicator progressIndicator) throws Exception {
+        pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+        Task task =
+                new Task.Backgroundable(project, "Load Issues...", true) {
+                    @Override
+                    public void run(@NotNull ProgressIndicator progressIndicator) {
+                        try {
                             controlPagination();
                             if(!settings.validateSettings()) {
                                 Helper.printNotification("Wrong settings!", "The connection-settings are incorrect!", NotificationType.WARNING);
@@ -1426,13 +1424,14 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                                 tblIssues.setModel(tblIssueModel);
                                 cmdIssueNew.setEnabled(true);
                             }
-                            return state;
+                        } catch (Exception ex) {
+                            Helper.printException(ex);
+                        } finally {
+                            pnlMain.setCursor(Cursor.getDefaultCursor());
                         }
-                    };
-            manager.run(task);
-        } catch (Exception ex) {
-            Helper.printNotification(ex.getMessage(), ex.toString(), NotificationType.ERROR);
-        }
+                    }
+                };
+        manager.run(task);
     }
 
     private void controlPagination() {
