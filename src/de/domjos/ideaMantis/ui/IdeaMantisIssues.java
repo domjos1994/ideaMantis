@@ -21,6 +21,7 @@ import de.domjos.ideaMantis.soap.ObjectRef;
 import de.domjos.ideaMantis.utils.Helper;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
+import sun.java2d.cmm.Profile;
 
 import javax.swing.*;
 import javax.swing.event.PopupMenuEvent;
@@ -310,6 +311,20 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                                     }
                                 }
                             }
+
+                            if(cmbIssueProfile.getSelectedItem()==null) {
+                                MantisProfile profile = issue.getProfile();
+                                String item = String.format("%s: %s, %s, %s", profile.getId(), profile.getPlatform(), profile.getOs(), profile.getOsBuild());
+                                cmbIssueProfile.addItem(item);
+                                cmbIssueProfile.setSelectedItem(item);
+                            } else {
+                                if(cmbIssueProfile.getSelectedItem().toString().equals("")) {
+                                    MantisProfile profile = issue.getProfile();
+                                    String item = String.format("%s: %s, %s, %s", profile.getId(), profile.getPlatform(), profile.getOs(), profile.getOsBuild());
+                                    cmbIssueProfile.addItem(item);
+                                    cmbIssueProfile.setSelectedItem(item);
+                                }
+                            }
                         } else {
                             cmbIssueProfile.setSelectedItem(null);
                         }
@@ -497,10 +512,20 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                        if(!cmbIssueProfile.getSelectedItem().toString().equals("")) {
                            if(cmbIssueProfile.getSelectedItem().toString().contains(": ")) {
                                int id = Integer.parseInt(cmbIssueProfile.getSelectedItem().toString().split(": ")[0]);
-                               for(MantisProfile profile : api.getProfiles()) {
-                                   if(profile.getId()==id) {
-                                       issue.setProfile(profile);
+                               if(id!=0) {
+                                   for(MantisProfile profile : api.getProfiles()) {
+                                       if(profile.getId()==id) {
+                                           issue.setProfile(profile);
+                                       }
                                    }
+                               } else {
+                                   String[] split = cmbIssueProfile.getSelectedItem().toString().replace(id + ": ", "").split(", ");
+                                   MantisProfile profile = new MantisProfile();
+                                   profile.setId(0);
+                                   profile.setPlatform(split[0].trim());
+                                   profile.setOs(split[1].trim());
+                                   profile.setOsBuild(split[2].trim());
+                                   issue.setProfile(profile);
                                }
                            } else {
                                issue.setProfile(null);
@@ -897,10 +922,11 @@ public class IdeaMantisIssues implements ToolWindowFactory {
             public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
                 cmbIssueProfile.removeAllItems();
                 cmbIssueProfile.addItem("");
+                cmbIssueProfile.addItem("...");
                 List<MantisProfile> mantisProfiles = new MantisSoapAPI(settings).getProfiles();
                 if(mantisProfiles!=null) {
                     for(MantisProfile profile : mantisProfiles) {
-                        cmbIssueProfile.addItem(String.format("%s: %s %s %s", profile.getId(), profile.getPlatform(), profile.getOs(), profile.getOsBuild()));
+                        cmbIssueProfile.addItem(String.format("%s: %s, %s, %s", profile.getId(), profile.getPlatform(), profile.getOs(), profile.getOsBuild()));
                     }
                 }
             }
@@ -913,6 +939,21 @@ public class IdeaMantisIssues implements ToolWindowFactory {
             @Override
             public void popupMenuCanceled(PopupMenuEvent e) {
 
+            }
+        });
+
+        cmbIssueProfile.addActionListener(e -> {
+            if(cmbIssueProfile.getSelectedItem()!=null) {
+                if(cmbIssueProfile.getSelectedItem().equals("...")) {
+                    NewProfileDialog newProfileDialog = new NewProfileDialog(project);
+                    newProfileDialog.show();
+                    MantisProfile profile = newProfileDialog.getProfile();
+                    if(profile!=null) {
+                        String item = String.format("%s: %s, %s, %s", profile.getId(), profile.getPlatform(), profile.getOs(), profile.getOsBuild());
+                        cmbIssueProfile.addItem(item);
+                        cmbIssueProfile.setSelectedItem(item);
+                    }
+                }
             }
         });
     }
