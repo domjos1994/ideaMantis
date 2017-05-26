@@ -62,15 +62,15 @@ public class NewProfileDialog extends DialogWrapper {
 
         txtPlatform = new JBTextField();
         txtPlatform.setName("txtPlatform");
-        txtPlatform.setPreferredSize(new Dimension(150, 200));
+        txtPlatform.setPreferredSize(new Dimension(200, 50));
 
         txtOS = new JBTextField();
         txtOS.setName("txtOS");
-        txtOS.setPreferredSize(new Dimension(150, 200));
+        txtOS.setPreferredSize(new Dimension(200, 50));
 
         txtBuild = new JBTextField();
         txtBuild.setName("txtBuild");
-        txtBuild.setPreferredSize(new Dimension(150, 200));
+        txtBuild.setPreferredSize(new Dimension(200, 50));
 
         java.awt.Label lblPlatform = new java.awt.Label("Platform");
         java.awt.Label lblOS = new java.awt.Label("OS");
