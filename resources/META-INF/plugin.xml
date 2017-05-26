@@ -64,6 +64,7 @@
         <li>get and set profiles</li>
         <li>create new issue from todo in code</li>
         <li>close todo-issue with shortcut</li>
+        <li>open todo-issue in browser</li>
       </ul>
       <b>Notice: If you update to this version, you will have to retype your credentials!</b>
     ]]>
