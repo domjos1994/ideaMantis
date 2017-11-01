@@ -568,12 +568,14 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                                    }
                                } else {
                                    String[] split = cmbIssueProfile.getSelectedItem().toString().replace(id + ": ", "").split(", ");
-                                   MantisProfile profile = new MantisProfile();
-                                   profile.setId(0);
-                                   profile.setPlatform(split[0].trim());
-                                   profile.setOs(split[1].trim());
-                                   profile.setOsBuild(split[2].trim());
-                                   issue.setProfile(profile);
+                                   if(split.length != 0) {
+                                       MantisProfile profile = new MantisProfile();
+                                       profile.setId(0);
+                                       profile.setPlatform(split[0].trim());
+                                       profile.setOs(split[1].trim());
+                                       profile.setOsBuild(split[2].trim());
+                                       issue.setProfile(profile);
+                                   }
                                }
                            } else {
                                issue.setProfile(null);
