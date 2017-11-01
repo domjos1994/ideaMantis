@@ -130,7 +130,7 @@
                       </component>
                     </children>
                   </toolbar>
-                  <tabbedpane id="990f2">
+                  <tabbedpane id="990f2" binding="tbPnlMain">
                     <constraints>
                       <grid row="2" column="0" row-span="1" col-span="2" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
                     </constraints>
@@ -139,7 +139,7 @@
                     </properties>
                     <border type="none"/>
                     <children>
-                      <scrollpane id="7e5a5">
+                      <scrollpane id="7e5a5" binding="pnlBasics">
                         <constraints>
                           <tabbedpane title="Basics"/>
                         </constraints>
@@ -408,7 +408,7 @@
                           </grid>
                         </children>
                       </scrollpane>
-                      <scrollpane id="e12d7">
+                      <scrollpane id="e12d7" binding="pnlDescriptions">
                         <constraints>
                           <tabbedpane title="Descriptions"/>
                         </constraints>
@@ -473,7 +473,7 @@
                           </grid>
                         </children>
                       </scrollpane>
-                      <scrollpane id="3ee82">
+                      <scrollpane id="3ee82" binding="pnlNotes">
                         <constraints>
                           <tabbedpane title="Notes"/>
                         </constraints>
@@ -675,7 +675,7 @@
                           </grid>
                         </children>
                       </scrollpane>
-                      <scrollpane id="c296a">
+                      <scrollpane id="c296a" binding="pnlAttachments">
                         <constraints>
                           <tabbedpane title="Attachments"/>
                         </constraints>

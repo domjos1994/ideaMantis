@@ -24,11 +24,15 @@ import org.jetbrains.annotations.NotNull;
 import sun.java2d.cmm.Profile;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.datatransfer.*;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.net.URI;
@@ -74,6 +78,11 @@ public class IdeaMantisIssues implements ToolWindowFactory {
     private JButton cmdCustomFields;
     private JComboBox<String> cmbFilters;
     private JComboBox<String> cmbIssueProfile;
+    private JScrollPane pnlBasics;
+    private JScrollPane pnlDescriptions;
+    private JScrollPane pnlNotes;
+    private JScrollPane pnlAttachments;
+    private JTabbedPane tbPnlMain;
     private boolean state = false, loadComboBoxes = false;
     private int page = 1;
 
@@ -369,6 +378,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                         controlIssues(true, false);
                         controlNotes(false, false);
                         controlAttachments(false, false);
+                        checkMandatoryFieldsAreNotEmpty(true);
                     }
                 } catch (Exception ex) {
                     Helper.printException(ex);
@@ -460,6 +470,42 @@ public class IdeaMantisIssues implements ToolWindowFactory {
             }
         });
 
+        txtIssueSummary.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                checkMandatoryFieldsAreNotEmpty(false);
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                checkMandatoryFieldsAreNotEmpty(false);
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                checkMandatoryFieldsAreNotEmpty(false);
+            }
+        });
+
+        cmbIssueCategory.addItemListener(e -> checkMandatoryFieldsAreNotEmpty(false));
+
+        txtIssueDescription.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                checkMandatoryFieldsAreNotEmpty(false);
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                checkMandatoryFieldsAreNotEmpty(false);
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                checkMandatoryFieldsAreNotEmpty(false);
+            }
+        });
+
         cmdIssueNew.addActionListener(e -> {
             currentIssue = new MantisIssue();
             tblIssueAttachments.removeAll();
@@ -473,6 +519,8 @@ public class IdeaMantisIssues implements ToolWindowFactory {
             controlIssues(false, true);
             resetIssues();
             txtIssueDate.setText(new Date().toString());
+
+            this.checkMandatoryFieldsAreNotEmpty(false);
         });
         cmdIssueEdit.addActionListener(e -> controlIssues(true, true));
 
@@ -616,6 +664,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         cmdIssueAbort.addActionListener(e -> {
             lblValidation.setText("");
             controlIssues(false, false);
+            this.checkMandatoryFieldsAreNotEmpty(true);
         });
 
 
@@ -1482,6 +1531,25 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         } else {
             cmdBack.setEnabled(true);
             cmdForward.setEnabled(true);
+        }
+    }
+
+    private void checkMandatoryFieldsAreNotEmpty(boolean isAbort) {
+        if(!isAbort) {
+            if(!txtIssueSummary.getText().isEmpty() && cmbIssueCategory.getSelectedItem()!=null) {
+                tbPnlMain.setTitleAt(0, "Basics");
+            } else {
+                tbPnlMain.setTitleAt(0, "Basics*");
+            }
+
+            if(!txtIssueDescription.getText().isEmpty()) {
+                tbPnlMain.setTitleAt(1, "Descriptions");
+            } else {
+                tbPnlMain.setTitleAt(1, "Descriptions*");
+            }
+        } else {
+            tbPnlMain.setTitleAt(0, "Basics");
+            tbPnlMain.setTitleAt(1, "Descriptions");
         }
     }
 }
