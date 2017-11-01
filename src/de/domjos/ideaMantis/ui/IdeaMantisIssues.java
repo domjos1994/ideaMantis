@@ -329,9 +329,11 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                             } else {
                                 if(cmbIssueProfile.getSelectedItem().toString().equals("")) {
                                     MantisProfile profile = issue.getProfile();
-                                    String item = String.format("%s: %s, %s, %s", profile.getId(), profile.getPlatform(), profile.getOs(), profile.getOsBuild());
-                                    cmbIssueProfile.addItem(item);
-                                    cmbIssueProfile.setSelectedItem(item);
+                                    if(profile.getId()!=0) {
+                                        String item = String.format("%s: %s, %s, %s", profile.getId(), profile.getPlatform(), profile.getOs(), profile.getOsBuild());
+                                        cmbIssueProfile.addItem(item);
+                                        cmbIssueProfile.setSelectedItem(item);
+                                    }
                                 }
                             }
                         } else {
