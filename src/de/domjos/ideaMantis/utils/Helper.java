@@ -1,26 +1,23 @@
 package de.domjos.ideaMantis.utils;
 
 import com.intellij.credentialStore.CredentialAttributes;
-import com.intellij.credentialStore.OneTimeString;
 import com.intellij.ide.passwordSafe.PasswordSafe;
-import com.intellij.ide.passwordSafe.PasswordStorage;
-import com.intellij.ide.passwordSafe.impl.providers.EncryptionUtil;
 import com.intellij.notification.Notification;
 import com.intellij.notification.NotificationType;
 import com.intellij.notification.Notifications;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vcs.changes.Change;
 import com.intellij.openapi.vcs.changes.ChangeListManager;
 import com.intellij.openapi.vcs.changes.LocalChangeList;
-import com.intellij.util.EncryptionSupport;
 import de.domjos.ideaMantis.model.MantisIssue;
 import org.ksoap2.serialization.SoapObject;
 
 import javax.swing.*;
 import java.awt.*;
-import java.nio.charset.Charset;
 import java.util.*;
 
 public abstract class Helper {
+    private static Project project;
 
     public static void printNotification(String header, String content, NotificationType type) {
         Notification notification = new Notification(Helper.class.getName(), header, content, type);
@@ -144,6 +141,7 @@ public abstract class Helper {
         return comment;
     }
 
+    @SuppressWarnings("deprecation")
     public static void commitAllFiles(String comment, ChangeListManager changeListManager) {
         java.util.List<Change> changeList = new LinkedList<>();
         changeList.addAll(changeListManager.getAllChanges());
@@ -163,5 +161,13 @@ public abstract class Helper {
         CredentialAttributes attributes = new CredentialAttributes(de.domjos.ideaMantis.service.ConnectionSettings.class.getName());
         PasswordSafe safe = PasswordSafe.getInstance();
         return safe.getPassword(attributes);
+    }
+
+    public static void setProject(Project project) {
+        Helper.project = project;
+    }
+
+    public static Project getProject() {
+        return Helper.project;
     }
 }

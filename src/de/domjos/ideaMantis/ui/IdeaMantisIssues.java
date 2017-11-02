@@ -21,7 +21,6 @@ import de.domjos.ideaMantis.soap.ObjectRef;
 import de.domjos.ideaMantis.utils.Helper;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
-import sun.java2d.cmm.Profile;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -31,8 +30,6 @@ import javax.swing.event.PopupMenuListener;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.datatransfer.*;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.net.URI;
@@ -40,7 +37,6 @@ import java.util.*;
 import java.util.List;
 
 public class IdeaMantisIssues implements ToolWindowFactory {
-    private Project project;
     private ConnectionSettings settings;
     private MantisIssue currentIssue;
 
@@ -78,10 +74,6 @@ public class IdeaMantisIssues implements ToolWindowFactory {
     private JButton cmdCustomFields;
     private JComboBox<String> cmbFilters;
     private JComboBox<String> cmbIssueProfile;
-    private JScrollPane pnlBasics;
-    private JScrollPane pnlDescriptions;
-    private JScrollPane pnlNotes;
-    private JScrollPane pnlAttachments;
     private JTabbedPane tbPnlMain;
     private boolean state = false, loadComboBoxes = false;
     private int page = 1;
@@ -132,7 +124,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                 }
             }
 
-            CustomFieldDialog dialog = new CustomFieldDialog(project, state, currentIssue.getCustomFields());
+            CustomFieldDialog dialog = new CustomFieldDialog(Helper.getProject(), state, currentIssue.getCustomFields());
             dialog.show();
             for(CustomFieldResult fieldResult : dialog.getResults()) {
                 String result = StringUtils.join(fieldResult.getResult(), "|");
@@ -155,17 +147,19 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         });
 
         cmdVersionAdd.addActionListener(e -> {
-            VersionDialog dialog = new VersionDialog(project, settings.getProjectID());
+            VersionDialog dialog = new VersionDialog(Helper.getProject(), settings.getProjectID());
             if(dialog.showAndGet())
-                this.loadVersions(new MantisSoapAPI(ConnectionSettings.getInstance(project)));
+                this.loadVersions(new MantisSoapAPI(ConnectionSettings.getInstance(Helper.getProject())));
         });
 
         cmbBasicsTags.addActionListener(e -> {
             try {
-                if(txtBasicsTags.getText().equals("")) {
-                    txtBasicsTags.setText(cmbBasicsTags.getSelectedItem().toString());
-                } else {
-                    txtBasicsTags.setText(txtBasicsTags.getText() + ", " + cmbBasicsTags.getSelectedItem().toString());
+                if(cmbBasicsTags.getSelectedItem()!=null) {
+                    if(txtBasicsTags.getText().equals("")) {
+                        txtBasicsTags.setText(cmbBasicsTags.getSelectedItem().toString());
+                    } else {
+                        txtBasicsTags.setText(txtBasicsTags.getText() + ", " + cmbBasicsTags.getSelectedItem().toString());
+                    }
                 }
             } catch (Exception ex) {
                 txtBasicsTags.setText("");
@@ -215,7 +209,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                 pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                 ProgressManager manager = ProgressManager.getInstance();
                 Task task =
-                    new Task.Backgroundable(project, "Load Issues...") {
+                    new Task.Backgroundable(Helper.getProject(), "Load Issues...") {
                     @Override
                     public void run(@NotNull ProgressIndicator progressIndicator) {
                         try {
@@ -400,13 +394,15 @@ public class IdeaMantisIssues implements ToolWindowFactory {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if(e.getClickCount()==2) {
-                    MantisSoapAPI api = new MantisSoapAPI(ConnectionSettings.getInstance(project));
-                    for(MantisVersion version : api.getVersions(ConnectionSettings.getInstance(project).getProjectID())) {
-                        if(version.getId()==Integer.parseInt(cmbIssueTargetVersion.getSelectedItem().toString().split(":")[0])) {
-                            VersionDialog dialog = new VersionDialog(project, settings.getProjectID(), version);
-                            if(dialog.showAndGet())
-                                loadVersions(api);
-                            break;
+                    MantisSoapAPI api = new MantisSoapAPI(ConnectionSettings.getInstance(Helper.getProject()));
+                    for(MantisVersion version : api.getVersions(ConnectionSettings.getInstance(Helper.getProject()).getProjectID())) {
+                        if(cmbIssueTargetVersion.getSelectedItem()!=null) {
+                            if (version.getId() == Integer.parseInt(cmbIssueTargetVersion.getSelectedItem().toString().split(":")[0])) {
+                                VersionDialog dialog = new VersionDialog(Helper.getProject(), settings.getProjectID(), version);
+                                if (dialog.showAndGet())
+                                    loadVersions(api);
+                                break;
+                            }
                         }
                     }
                 }
@@ -437,11 +433,11 @@ public class IdeaMantisIssues implements ToolWindowFactory {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if(e.getClickCount()==2) {
-                    MantisSoapAPI api = new MantisSoapAPI(ConnectionSettings.getInstance(project));
-                    for(MantisVersion version : api.getVersions(ConnectionSettings.getInstance(project).getProjectID())) {
+                    MantisSoapAPI api = new MantisSoapAPI(ConnectionSettings.getInstance(Helper.getProject()));
+                    for(MantisVersion version : api.getVersions(ConnectionSettings.getInstance(Helper.getProject()).getProjectID())) {
                         if(cmbIssueFixedInVersion.getSelectedItem()!=null) {
                             if (version.getId() == Integer.parseInt(cmbIssueFixedInVersion.getSelectedItem().toString().split(":")[0])) {
-                                VersionDialog dialog = new VersionDialog(project, settings.getProjectID(), version);
+                                VersionDialog dialog = new VersionDialog(Helper.getProject(), settings.getProjectID(), version);
                                 if (dialog.showAndGet())
                                     loadVersions(api);
                                 break;
@@ -618,9 +614,11 @@ public class IdeaMantisIssues implements ToolWindowFactory {
 
                    if(!txtIssueReporterName.getText().equals("")) {
                        for(MantisUser user : new MantisSoapAPI(this.settings).getUsers(this.settings.getProjectID())) {
-                           if(user.getUserName().equals(cmbIssueReporterName.getSelectedItem().toString())) {
-                               issue.setReporter(user);
-                               break;
+                           if(cmbIssueReporterName.getSelectedItem()!=null) {
+                               if (user.getUserName().equals(cmbIssueReporterName.getSelectedItem().toString())) {
+                                   issue.setReporter(user);
+                                   break;
+                               }
                            }
                        }
                    } else {
@@ -634,7 +632,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                    if(issue.getId()!=0) {
                        MantisIssue mantisIssue = api.getIssue(issue.getId());
                        if(!mantisIssue.getStatus().equals(issue.getStatus())) {
-                           FixDialog dialog = new FixDialog(project, issue.getId());
+                           FixDialog dialog = new FixDialog(Helper.getProject(), issue.getId());
                            dialog.show();
                        }
                    }
@@ -744,9 +742,11 @@ public class IdeaMantisIssues implements ToolWindowFactory {
 
                     if(!txtIssueNoteReporterName.getText().equals("")) {
                         for(MantisUser user : new MantisSoapAPI(this.settings).getUsers(this.settings.getProjectID())) {
-                            if(user.getUserName().equals(cmbIssueNoteReporterUser.getSelectedItem().toString())) {
-                                note.setReporter(user);
-                                break;
+                            if(cmbIssueNoteReporterUser.getSelectedItem()!=null) {
+                                if(user.getUserName().equals(cmbIssueNoteReporterUser.getSelectedItem().toString())) {
+                                    note.setReporter(user);
+                                    break;
+                                }
                             }
                         }
                     } else {
@@ -897,7 +897,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         });
 
         cmdIssueAttachmentSearch.addActionListener(e ->
-            FileChooser.chooseFile(new FileChooserDescriptor(true, false, false, false, false, false), project, null, (virtualFile) -> {
+            FileChooser.chooseFile(new FileChooserDescriptor(true, false, false, false, false, false), Helper.getProject(), null, (virtualFile) -> {
                 if(virtualFile!=null) {
                     txtIssueAttachmentFileName.setText(virtualFile.getPath());
                     txtIssueAttachmentSize.setText(String.valueOf(virtualFile.getLength()));
@@ -998,7 +998,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         cmbIssueProfile.addActionListener(e -> {
             if(cmbIssueProfile.getSelectedItem()!=null) {
                 if(cmbIssueProfile.getSelectedItem().equals("...")) {
-                    NewProfileDialog newProfileDialog = new NewProfileDialog(project);
+                    NewProfileDialog newProfileDialog = new NewProfileDialog(Helper.getProject());
                     newProfileDialog.show();
                     MantisProfile profile = newProfileDialog.getProfile();
                     if(profile!=null) {
@@ -1040,7 +1040,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
 
     @Override
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
-        this.project = project;
+        Helper.setProject(project);
         ContentFactory contentFactory = ContentFactory.SERVICE.getInstance();
         Content content = contentFactory.createContent(this.pnlMain, "", false);
         toolWindow.getContentManager().addContent(content);
@@ -1482,7 +1482,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
     private void loadList(DefaultTableModel tblIssueModel, ProgressManager manager) {
         pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         Task task =
-                new Task.Backgroundable(project, "Load Issues...", true) {
+                new Task.Backgroundable(Helper.getProject(), "Load Issues...", true) {
                     @Override
                     public void run(@NotNull ProgressIndicator progressIndicator) {
                         try {

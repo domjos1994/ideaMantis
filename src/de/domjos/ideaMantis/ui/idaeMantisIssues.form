@@ -139,7 +139,7 @@
                     </properties>
                     <border type="none"/>
                     <children>
-                      <scrollpane id="7e5a5" binding="pnlBasics">
+                      <scrollpane id="7e5a5">
                         <constraints>
                           <tabbedpane title="Basics"/>
                         </constraints>
@@ -408,7 +408,7 @@
                           </grid>
                         </children>
                       </scrollpane>
-                      <scrollpane id="e12d7" binding="pnlDescriptions">
+                      <scrollpane id="e12d7">
                         <constraints>
                           <tabbedpane title="Descriptions"/>
                         </constraints>
@@ -473,7 +473,7 @@
                           </grid>
                         </children>
                       </scrollpane>
-                      <scrollpane id="3ee82" binding="pnlNotes">
+                      <scrollpane id="3ee82">
                         <constraints>
                           <tabbedpane title="Notes"/>
                         </constraints>
@@ -675,7 +675,7 @@
                           </grid>
                         </children>
                       </scrollpane>
-                      <scrollpane id="c296a" binding="pnlAttachments">
+                      <scrollpane id="c296a">
                         <constraints>
                           <tabbedpane title="Attachments"/>
                         </constraints>
