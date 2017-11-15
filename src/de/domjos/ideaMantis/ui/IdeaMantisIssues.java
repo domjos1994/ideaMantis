@@ -21,6 +21,7 @@ import de.domjos.ideaMantis.soap.ObjectRef;
 import de.domjos.ideaMantis.utils.Helper;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
+import org.kohsuke.rngom.util.Uri;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -33,6 +34,8 @@ import java.awt.datatransfer.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.net.URI;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.*;
 import java.util.List;
 
@@ -177,7 +180,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                             for (IssueAttachment attachment : issue.getIssueAttachmentList()) {
                                 if (attachment.getId() == Integer.parseInt(tblIssueAttachments.getValueAt(tblIssueAttachments.getSelectedRow(), 0).toString())) {
                                     if (Desktop.isDesktopSupported()) {
-                                        Desktop.getDesktop().browse(new URI(attachment.getDownload_url()));
+                                        Desktop.getDesktop().browse(new URI(attachment.getDownload_url().replace("&amp;", "&").replace("&lt;", "<").replace("&gt;", ">").replace("&quot;", "\"")));
                                     } else {
                                         StringSelection selection = new StringSelection(attachment.getDownload_url());
                                         clipboard.setContents(selection, selection);
