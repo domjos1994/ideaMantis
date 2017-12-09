@@ -561,7 +561,12 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                lblValidation.setText(this.validateIssue());
                if(lblValidation.getText().equals("")) {
                    MantisSoapAPI api = new MantisSoapAPI(settings);
-                   MantisIssue issue = currentIssue;
+                   MantisIssue issue;
+                   if(currentIssue!=null) {
+                       issue = currentIssue;
+                   } else {
+                       issue = new MantisIssue();
+                   }
                    issue.setSummary(txtIssueSummary.getText());
                    issue.setDate_submitted(txtIssueDate.getText());
                    issue.setAdditional_information(txtIssueAdditionalInformation.getText());
@@ -646,9 +651,11 @@ public class IdeaMantisIssues implements ToolWindowFactory {
 
                    if(issue.getId()!=0) {
                        MantisIssue mantisIssue = api.getIssue(issue.getId());
-                       if(!mantisIssue.getStatus().equals(issue.getStatus())) {
-                           FixDialog dialog = new FixDialog(Helper.getProject(), issue.getId());
-                           dialog.show();
+                       if(mantisIssue!=null) {
+                           if(!mantisIssue.getStatus().equals(issue.getStatus())) {
+                               FixDialog dialog = new FixDialog(Helper.getProject(), issue.getId());
+                               dialog.show();
+                           }
                        }
                    }
 
@@ -1169,8 +1176,18 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         cmdIssueAttachmentNew.setEnabled(editMode);
         cmdIssueNoteNew.setEnabled(editMode);
         if(selected) {
-            cmdIssueEdit.setEnabled(!editMode);
-            cmdIssueDelete.setEnabled(!editMode);
+            if(settings!=null) {
+                if(settings.isFastTrack()) {
+                    cmdIssueEdit.setEnabled(true);
+                    cmdIssueDelete.setEnabled(true);
+                } else {
+                    cmdIssueEdit.setEnabled(!editMode);
+                    cmdIssueDelete.setEnabled(!editMode);
+                }
+            } else {
+                cmdIssueEdit.setEnabled(!editMode);
+                cmdIssueDelete.setEnabled(!editMode);
+            }
         } else {
             cmdIssueEdit.setEnabled(false);
             cmdIssueDelete.setEnabled(false);
