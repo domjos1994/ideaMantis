@@ -2,7 +2,7 @@
   <id>de.domjos.ideaMantis</id>
   <name>ideaMantis</name>
   <description>IntelliJ-Idea Plugin to create, edit and delete Issues from Mantis BugTracker!</description>
-  <version>1.0</version>
+  <version>1.1</version>
   <vendor email="webmaster@domjos.de" url="http://domjos.de">Dominic Joas</vendor>
 
   <change-notes>
@@ -66,12 +66,19 @@
         <li>close todo-issue with shortcut</li>
         <li>open todo-issue in browser</li>
       </ul>
-      <b>Notice: If you update to this version, you will have to retype your credentials!</b>
+      <b>Notice: If you update to this version, you will have to retype your credentials!</b></br>
     ]]>
     <![CDATA[
       <h2>1.0</h2>
       <ul>
         <li>solve Bugs</li>
+      </ul>
+    ]]>
+    <![CDATA[
+      <h2>1.1</h2>
+      <ul>
+        <li>solve Bugs</li>
+        <li>add fast-track-mode</li>
       </ul>
     ]]>
   </change-notes>
