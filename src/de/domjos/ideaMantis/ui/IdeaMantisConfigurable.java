@@ -38,7 +38,7 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
     private JBTextField txtHostName, txtUserName, txtProjectName, txtIssuesPerPage;
     private JTextArea txtProjectDescription;
     private JBPasswordField txtPassword;
-    private JBCheckBox chkProjectEnabled;
+    private JBCheckBox chkProjectEnabled, chkFastTrackEnabled;
     private java.awt.Label lblConnectionState;
     private JButton cmdTestConnection;
     private JPanel newProjectPanel;
@@ -75,6 +75,7 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
                         content.setDescription("reload comboBoxes");
                         window.getContentManager().addContent(content);
                     });
+                    settings.setFastTrack(chkFastTrackEnabled.isSelected());
                 } catch (Exception ex) {
                     Helper.printException(ex);
                 } finally {
@@ -139,6 +140,7 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
         java.awt.Label lblIssuesPerPage = new java.awt.Label("Issues per page (-1 for all)");
         java.awt.Label lblProjectName = new java.awt.Label("Name" + "*");
         java.awt.Label lblProjectDescription = new java.awt.Label("Description");
+        java.awt.Label lblProjectFastTrack = new java.awt.Label("Copy and Paste Bugs faster");
         java.awt.Label lblProjectViewState = new java.awt.Label("State");
         this.lblConnectionState = new Label("Not Connected");
         this.changeConnectionLabel(null);
@@ -177,6 +179,8 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
             this.temporarilyChangeSettingsBack(oldSettings);
         });
 
+        this.chkFastTrackEnabled = new JBCheckBox("Enable Fast-Track-Mode");
+
         JPanel connPanel = new JPanel(new GridBagLayout());
         connPanel.add(lblHostName, labelConstraint);
         connPanel.add(txtHostName, txtConstraint);
@@ -203,6 +207,8 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
         projectPanel.add(cmbProjects, txtConstraint);
         projectPanel.add(lblIssuesPerPage, labelConstraint);
         projectPanel.add(txtIssuesPerPage, txtConstraint);
+        projectPanel.add(lblProjectFastTrack, labelConstraint);
+        projectPanel.add(chkFastTrackEnabled, txtConstraint);
         projectPanel.add(cmdCreateNewProject, txtConstraint);
         projectPanel.setBorder(IdeBorderFactory.createTitledBorder("Project"));
 
@@ -310,7 +316,8 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
                 !this.settings.getUserName().equals(txtUserName.getText()) ||
                 !this.settings.getPassword().equals(buf.toString()) ||
                 !String.valueOf(this.settings.getItemsPerPage()).equals(txtIssuesPerPage.getText()) ||
-                (this.settings.getProjectID()!=projectID && projectID!=0);
+                (this.settings.getProjectID()!=projectID && projectID!=0) ||
+                !this.settings.isFastTrack()==chkFastTrackEnabled.isSelected();
         } else {
             return false;
         }
@@ -329,6 +336,7 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
         txtHostName.setText(this.settings.getHostName());
         txtUserName.setText(this.settings.getUserName());
         txtPassword.setText(this.settings.getPassword());
+        chkFastTrackEnabled.setSelected(this.settings.isFastTrack());
         txtIssuesPerPage.setText(String.valueOf(this.settings.getItemsPerPage()));
         cmdTestConnection.doClick();
         for(int i = 0; i<=cmbProjects.getItemCount()-1; i++) {
@@ -346,6 +354,7 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
         UIUtil.dispose(txtIssuesPerPage);
         UIUtil.dispose(cmbProjects);
         UIUtil.dispose(cmdTestConnection);
+        UIUtil.dispose(chkFastTrackEnabled);
     }
 
     private boolean changeConnectionLabel(MantisUser user) {

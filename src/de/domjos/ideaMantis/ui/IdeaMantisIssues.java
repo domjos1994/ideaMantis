@@ -21,7 +21,6 @@ import de.domjos.ideaMantis.soap.ObjectRef;
 import de.domjos.ideaMantis.utils.Helper;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
-import org.kohsuke.rngom.util.Uri;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -34,8 +33,6 @@ import java.awt.datatransfer.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.net.URI;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
 import java.util.*;
 import java.util.List;
 
@@ -92,7 +89,11 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         DefaultTableModel tblIssueModel = this.addColumnsToIssueTable();
         DefaultTableModel tblIssueAttachmentModel = this.addColumnsToIssueAttachmentTable();
         DefaultTableModel tblIssueNoteModel = this.addColumnsToIssueNoteTable();
-        controlIssues(false, false);
+        if(settings==null) {
+            controlIssues(false, false);
+        } else {
+            controlIssues(false, settings.isFastTrack());
+        }
         cmdIssueNew.setEnabled(false);
         tblIssueAttachments.setDragEnabled(true);
         txtVCSComment.setEnabled(false);
@@ -374,9 +375,16 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                             tblIssueAttachmentModel.addRow(new Object[]{attachment.getId(), attachment.getFilename()});
                         }
                         tblIssueAttachments.setModel(tblIssueAttachmentModel);
-                        controlIssues(true, false);
-                        controlNotes(false, false);
-                        controlAttachments(false, false);
+                        if(settings==null) {
+                            controlIssues(true, false);
+                            controlNotes(false, false);
+                            controlAttachments(false, false);
+
+                        } else {
+                            controlIssues(true, settings.isFastTrack());
+                            controlNotes(false, settings.isFastTrack());
+                            controlAttachments(false, settings.isFastTrack());
+                        }
                         checkMandatoryFieldsAreNotEmpty(true);
                     }
                 } catch (Exception ex) {
@@ -533,7 +541,11 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                     if(!new MantisSoapAPI(this.settings).removeIssue(id)) {
                         Helper.printNotification("Exception", String.format("Can't delete %s!", "Issue"), NotificationType.ERROR);
                     }
-                    controlIssues(false, false);
+                    if(settings==null) {
+                        controlIssues(false, false);
+                    } else {
+                        controlIssues(false, settings.isFastTrack());
+                    }
                     cmdReload.doClick();
                 }
             } catch (Exception ex) {
@@ -656,7 +668,11 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                       }
                   }
 
-                   controlIssues(false, false);
+                   if(settings==null) {
+                       controlIssues(false, false);
+                   } else {
+                       controlIssues(false, settings.isFastTrack());
+                   }
                    cmdReload.doClick();
                }
            } catch (Exception ex) {
@@ -668,7 +684,11 @@ public class IdeaMantisIssues implements ToolWindowFactory {
 
         cmdIssueAbort.addActionListener(e -> {
             lblValidation.setText("");
-            controlIssues(false, false);
+            if(settings==null) {
+                controlIssues(false, false);
+            } else {
+                controlIssues(false, settings.isFastTrack());
+            }
             this.checkMandatoryFieldsAreNotEmpty(true);
         });
 
@@ -1076,6 +1096,9 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                                 cmdReload.doClick();
                                 cmdCustomFields.setVisible(!api.getCustomFields(settings.getProjectID()).isEmpty());
                                 toolWindow.getContentManager().removeContent(content, true);
+                                controlIssues(false, settings.isFastTrack());
+                                controlAttachments(false, settings.isFastTrack());
+                                controlNotes(false, settings.isFastTrack());
                                 break;
                             }
                         }
@@ -1093,6 +1116,9 @@ public class IdeaMantisIssues implements ToolWindowFactory {
             public void selectionChanged(ContentManagerEvent contentManagerEvent) {}
         });
         resetIssues();
+        controlIssues(false, settings.isFastTrack());
+        controlAttachments(false, settings.isFastTrack());
+        controlNotes(false, settings.isFastTrack());
     }
 
     private void controlIssues(boolean selected, boolean editMode) {
@@ -1114,9 +1140,16 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         cmdVersionAdd.setEnabled(editMode);
         cmbBasicsTags.setEnabled(editMode);
         txtBasicsTags.setEnabled(editMode);
-        tblIssues.setEnabled(!editMode);
-        cmbIssueProfile.setEnabled(
-                editMode);
+        if(settings!=null) {
+            if(settings.isFastTrack()) {
+                tblIssues.setEnabled(true);
+            } else {
+                tblIssues.setEnabled(!editMode);
+            }
+        } else {
+            tblIssues.setEnabled(!editMode);
+        }
+        cmbIssueProfile.setEnabled(editMode);
         Helper.disableControlsInAPanel(pnlIssueDescriptions, editMode);
 
         if(editMode) {

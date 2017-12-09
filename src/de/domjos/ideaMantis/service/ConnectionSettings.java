@@ -20,6 +20,7 @@ public class ConnectionSettings implements PersistentStateComponent<Element> {
     private String hostName = "";
     private String userName = "";
     private String password = "";
+    private boolean fastTrack = false;
     private int itemsPerPage = 0;
     private int projectID = 0;
 
@@ -38,6 +39,7 @@ public class ConnectionSettings implements PersistentStateComponent<Element> {
         Helper.setPassword(this.getPassword());
         connection.setAttribute("itemsPerPage", String.valueOf(this.itemsPerPage));
         connection.setAttribute("projectID", String.valueOf(this.getProjectID()));
+        connection.setAttribute("fastTrack", String.valueOf(this.fastTrack));
         return connection;
     }
 
@@ -55,6 +57,7 @@ public class ConnectionSettings implements PersistentStateComponent<Element> {
                 this.setProjectID(Integer.parseInt(content));
             }
         }
+        this.fastTrack = Boolean.parseBoolean(element.getAttributeValue("fastTrack"));
     }
 
     public String getHostName() {
@@ -99,6 +102,14 @@ public class ConnectionSettings implements PersistentStateComponent<Element> {
 
     public void setProjectID(int projectID) {
         this.projectID = projectID;
+    }
+
+    public boolean isFastTrack() {
+        return this.fastTrack;
+    }
+
+    public void setFastTrack(boolean fastTrack) {
+        this.fastTrack = fastTrack;
     }
 
     public boolean validateSettings() {
