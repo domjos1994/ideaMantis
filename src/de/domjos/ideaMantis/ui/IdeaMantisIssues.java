@@ -787,6 +787,10 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                         note.setId(Integer.parseInt(tblIssueNotes.getValueAt(tblIssueNotes.getSelectedRow(), 0).toString()));
                     }
 
+                    if(currentIssue==null) {
+                        currentIssue = new MantisIssue();
+                    }
+
                     if(currentIssue.getId()!=0) {
                         if(!new MantisSoapAPI(this.settings).addNote(currentIssue.getId(), note)) {
                             Helper.printNotification("Exception", "Can't delete Note!", NotificationType.ERROR);
@@ -885,6 +889,10 @@ public class IdeaMantisIssues implements ToolWindowFactory {
 
                     if(!tblIssueAttachments.getSelectionModel().isSelectionEmpty()) {
                         attachment.setId(Integer.parseInt(tblIssueAttachments.getValueAt(tblIssueAttachments.getSelectedRow(), 0).toString()));
+                    }
+
+                    if(currentIssue==null) {
+                        currentIssue = new MantisIssue();
                     }
 
                     if(currentIssue.getId()!=0) {
@@ -1226,7 +1234,14 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         txtIssueNoteText.setEnabled(editMode);
         cmbIssueNoteReporterUser.setEnabled(editMode);
         cmbIssueNoteViewState.setEnabled(editMode);
-        tblIssueNotes.setEnabled(!editMode);
+
+        if(settings==null) {
+            tblIssueNotes.setEnabled(!editMode);
+        } else {
+            if(settings.isFastTrack()) {
+                tblIssues.setEnabled(true);
+            }
+        }
 
         if(cmdIssueSave.isEnabled()) {
             cmdIssueNoteNew.setEnabled(!editMode);
@@ -1235,6 +1250,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         }
         cmdIssueNoteSave.setEnabled(editMode);
         cmdIssueNoteAbort.setEnabled(editMode);
+
         if(selected && cmdIssueNoteNew.isEnabled()) {
             cmdIssueNoteEdit.setEnabled(!editMode);
             cmdIssueNoteDelete.setEnabled(!editMode);
@@ -1259,7 +1275,14 @@ public class IdeaMantisIssues implements ToolWindowFactory {
 
     private void controlAttachments(boolean selected, boolean editMode) {
         cmdIssueAttachmentSearch.setEnabled(editMode);
-        tblIssueAttachments.setEnabled(!editMode);
+
+        if(settings==null) {
+            tblIssueAttachments.setEnabled(!editMode);
+        } else {
+            if(settings.isFastTrack()) {
+                tblIssueAttachments.setEnabled(true);
+            }
+        }
 
         if(cmdIssueSave.isEnabled()) {
             cmdIssueAttachmentNew.setEnabled(!editMode);
