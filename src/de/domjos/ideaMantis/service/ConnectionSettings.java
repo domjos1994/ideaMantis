@@ -10,11 +10,11 @@ import org.jdom.Element;
 import org.jetbrains.annotations.Nullable;
 
 @State(
-        name = "ideaMantisSettings",
-        storages = {
-                @Storage(id = "default", file = "$PROJECT_FILE$"),
-                @Storage(id = "ideaMantisSettings", file = "$PROJECT_CONFIG_DIR$/ideaMantis.xml", scheme = StorageScheme.DIRECTORY_BASED)
-        }
+    name = "ideaMantisSettings",
+    storages = {
+        @Storage(file = "$PROJECT_FILE$"),
+        @Storage(file = "$PROJECT_CONFIG_DIR$/ideaMantis.xml", scheme = StorageScheme.DIRECTORY_BASED)
+    }
 )
 public class ConnectionSettings implements PersistentStateComponent<Element> {
     private String hostName = "";

@@ -1,6 +1,5 @@
 package de.domjos.ideaMantis.editor;
 
-import com.intellij.notification.NotificationType;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.openapi.ui.DialogWrapper;
@@ -18,12 +17,15 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.*;
 
 class MarkedTextAsBugDialog extends DialogWrapper {
     private JBTextField txtSummary, txtDocumentPath, txtDate;
     private JTextArea txtDescription;
+    private JCheckBox chkAttachment;
     private JComboBox<String> cmbCategory, cmbSeverity, cmbPriority, cmbStatus, cmbTargetVersion, cmbFixedInVersion;
     private String description, documentPath;
     private int id;
@@ -211,13 +213,24 @@ class MarkedTextAsBugDialog extends DialogWrapper {
         root.add(statePanel, constraints);
 
         if(!this.documentPath.equals("")) {
-            JPanel attachmentPanel = new JPanel();
+            JPanel attachmentPanel = new JPanel(new GridBagLayout());
             txtDocumentPath = new JBTextField();
             txtDocumentPath.setEnabled(false);
-            txtDocumentPath.setText(this.documentPath);
             java.awt.Label lblDocumentPath = new java.awt.Label("File-Name");
             attachmentPanel.add(lblDocumentPath, labelConstraint);
             attachmentPanel.add(txtDocumentPath, txtConstraint);
+
+            chkAttachment = new JCheckBox();
+            chkAttachment.setText("Add File as Attachment!");
+            chkAttachment.addActionListener(e -> {
+                if(chkAttachment.isSelected()) {
+                    txtDocumentPath.setText(this.documentPath);
+                } else {
+                    txtDocumentPath.setText("");
+                }
+            });
+            attachmentPanel.add(new Label(), labelConstraint);
+            attachmentPanel.add(chkAttachment, txtConstraint);
 
             attachmentPanel.setBorder(IdeBorderFactory.createTitledBorder("Attachment"));
             root.add(attachmentPanel, constraints);
