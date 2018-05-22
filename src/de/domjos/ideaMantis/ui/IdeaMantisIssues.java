@@ -23,11 +23,9 @@ import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import javax.swing.event.PopupMenuEvent;
-import javax.swing.event.PopupMenuListener;
+import javax.swing.event.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.awt.datatransfer.*;
 import java.awt.event.MouseEvent;
@@ -75,6 +73,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
     private JComboBox<String> cmbFilters;
     private JComboBox<String> cmbIssueProfile;
     private JTabbedPane tbPnlMain;
+    private JComboBox<String> cmbFilterStatus;
     private boolean state = false, loadComboBoxes = false;
     private int page = 1;
 
@@ -98,6 +97,10 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         tblIssueAttachments.setDragEnabled(true);
         txtVCSComment.setEnabled(false);
         tblIssueAttachments.setCellEditor(null);
+
+        TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(tblIssueModel);
+        sorter.setRowFilter(RowFilter.regexFilter("zugewiesen", 2));
+        this.tblIssues.setRowSorter(sorter);
 
         cmdCustomFields.addActionListener(e -> {
             String state = "report";
@@ -137,9 +140,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         });
 
         cmdBack.addActionListener(e -> {
-            if(this.page==1) {
-                this.page = 1;
-            } else {
+            if(this.page!=1) {
                 this.page = this.page-1;
             }
             this.loadList(tblIssueModel, ProgressManager.getInstance());
@@ -1047,6 +1048,16 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                 }
             }
         });
+
+        cmbFilterStatus.addActionListener(e -> {
+            TableRowSorter<DefaultTableModel> rowSorter = new TableRowSorter<>(tblIssueModel);
+            if(cmbFilterStatus.getSelectedItem()!=null) {
+                if(!cmbFilterStatus.getSelectedItem().toString().isEmpty()) {
+                    rowSorter.setRowFilter(RowFilter.regexFilter(cmbFilterStatus.getSelectedItem().toString(), 2));
+                }
+            }
+            this.tblIssues.setRowSorter(rowSorter);
+        });
     }
 
     private String validateIssue() {
@@ -1372,9 +1383,13 @@ public class IdeaMantisIssues implements ToolWindowFactory {
 
         if(states!=null) {
             cmbIssueStatus.removeAllItems();
+            cmbFilterStatus.removeAllItems();
+            cmbFilterStatus.addItem("");
             for(ObjectRef status : states) {
                 cmbIssueStatus.addItem(status.getName());
+                cmbFilterStatus.addItem(status.getName());
             }
+            cmbFilterStatus.setSelectedIndex(0);
         }
 
         List<ObjectRef> viewStates = api.getEnum("view_states");
@@ -1523,6 +1538,21 @@ public class IdeaMantisIssues implements ToolWindowFactory {
             public boolean isCellEditable(int row, int column) {
                 return false;
             }
+
+            @Override
+            public Class getColumnClass(int column) {
+                switch (column) {
+                    case 0:
+                        return Integer.class;
+                    case 1:
+                        return String.class;
+                    case 2:
+                        return Integer.class;
+                    default:
+                        return String.class;
+                }
+            }
+
         };
         model.addColumn("ID");
         model.addColumn("Summary");
