@@ -212,7 +212,7 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
         projectPanel.add(cmdCreateNewProject, txtConstraint);
         projectPanel.setBorder(IdeBorderFactory.createTitledBorder("Project"));
 
-        JButton cmdProjectAdd = new JButton(("Add Issue"));
+        JButton cmdProjectAdd = new JButton(("Add Project"));
         cmdProjectAdd.setName("cmdProjectAdd");
 
         this.cmbProjectViewState = new ComboBox<>();
