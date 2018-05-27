@@ -1,5 +1,6 @@
 package de.domjos.ideaMantis.ui;
 
+import com.intellij.ide.ui.EditorOptionsTopHitProvider;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.fileChooser.FileChooser;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
@@ -40,7 +41,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
 
     private JPanel pnlIssueDescriptions, pnlMain;
 
-    private JButton cmdIssueNew, cmdIssueEdit, cmdIssueDelete, cmdIssueSave,cmdIssueAbort;
+    private JButton cmdIssueNew, cmdIssueEdit, cmdIssueDelete, cmdIssueSave,cmdIssueAbort, cmdIssueResolve;
     private JButton cmdIssueNoteNew, cmdIssueNoteEdit, cmdIssueNoteDelete, cmdIssueNoteSave, cmdIssueNoteAbort;
     private JButton cmdIssueAttachmentSearch, cmdIssueAttachmentNew, cmdIssueAttachmentEdit, cmdIssueAttachmentDelete;
     private JButton cmdIssueAttachmentSave, cmdIssueAttachmentAbort;
@@ -79,6 +80,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
 
     private ChangeListManager changeListManager;
     private Map.Entry<Integer, String> access;
+    private ObjectRef resolved = null;
 
 
     public IdeaMantisIssues() {
@@ -99,8 +101,14 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         tblIssueAttachments.setCellEditor(null);
 
         TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(tblIssueModel);
-        sorter.setRowFilter(RowFilter.regexFilter("zugewiesen", 2));
         this.tblIssues.setRowSorter(sorter);
+
+        this.cmdIssueNew.setPreferredSize(new Dimension(30, 20));
+        this.cmdIssueEdit.setPreferredSize(new Dimension(30, 20));
+        this.cmdIssueDelete.setPreferredSize(new Dimension(30, 20));
+        this.cmdIssueSave.setPreferredSize(new Dimension(30, 20));
+        this.cmdIssueAbort.setPreferredSize(new Dimension(30, 20));
+        this.cmdIssueResolve.setPreferredSize(new Dimension(30, 20));
 
         cmdCustomFields.addActionListener(e -> {
             String state = "report";
@@ -533,6 +541,17 @@ public class IdeaMantisIssues implements ToolWindowFactory {
             this.checkMandatoryFieldsAreNotEmpty(false);
         });
         cmdIssueEdit.addActionListener(e -> controlIssues(true, true));
+        cmdIssueResolve.addActionListener(e -> {
+            try {
+                FixDialog fixDialog = new FixDialog(Helper.getProject(), currentIssue.getId());
+                fixDialog.show();
+                currentIssue.setStatus(resolved.getName());
+                new MantisSoapAPI(settings).addIssue(currentIssue);
+                cmdReload.doClick();
+            } catch (Exception ex) {
+                Helper.printException(ex);
+            }
+        });
 
         cmdIssueDelete.addActionListener(e -> {
             try {
@@ -1199,17 +1218,21 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                 if(settings.isFastTrack()) {
                     cmdIssueEdit.setEnabled(true);
                     cmdIssueDelete.setEnabled(true);
+                    cmdIssueResolve.setEnabled(true);
                 } else {
                     cmdIssueEdit.setEnabled(!editMode);
                     cmdIssueDelete.setEnabled(!editMode);
+                    cmdIssueResolve.setEnabled(!editMode);
                 }
             } else {
                 cmdIssueEdit.setEnabled(!editMode);
                 cmdIssueDelete.setEnabled(!editMode);
+                cmdIssueResolve.setEnabled(!editMode);
             }
         } else {
             cmdIssueEdit.setEnabled(false);
             cmdIssueDelete.setEnabled(false);
+            cmdIssueResolve.setEnabled(false);
             resetIssues();
             controlNotes(false, false);
             controlAttachments(false, false);
@@ -1388,6 +1411,9 @@ public class IdeaMantisIssues implements ToolWindowFactory {
             for(ObjectRef status : states) {
                 cmbIssueStatus.addItem(status.getName());
                 cmbFilterStatus.addItem(status.getName());
+                if(status.getId()==80) {
+                    resolved = status;
+                }
             }
             cmbFilterStatus.setSelectedIndex(0);
         }

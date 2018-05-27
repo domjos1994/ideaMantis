@@ -13,7 +13,9 @@
           <grid row="0" column="0" row-span="1" col-span="3" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
-          <text value="Reload"/>
+          <icon value="de/domjos/ideaMantis/images/refresh.png"/>
+          <text value=""/>
+          <toolTipText value="Refresh"/>
         </properties>
       </component>
       <grid id="389d0" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
@@ -64,7 +66,7 @@
                 <children>
                   <toolbar id="c591b">
                     <constraints>
-                      <grid row="0" column="0" row-span="1" col-span="2" vsize-policy="0" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false">
+                      <grid row="0" column="0" row-span="1" col-span="2" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false">
                         <preferred-size width="-1" height="20"/>
                       </grid>
                     </constraints>
@@ -74,41 +76,64 @@
                       <component id="d326" class="javax.swing.JButton" binding="cmdIssueNew">
                         <constraints/>
                         <properties>
-                          <text value="New"/>
+                          <horizontalTextPosition value="0"/>
+                          <icon value="de/domjos/ideaMantis/images/add.png"/>
+                          <text value=""/>
+                          <toolTipText value="New"/>
                         </properties>
                       </component>
                       <component id="d332e" class="javax.swing.JButton" binding="cmdIssueEdit">
                         <constraints/>
                         <properties>
-                          <text value="Edit"/>
+                          <horizontalTextPosition value="0"/>
+                          <icon value="de/domjos/ideaMantis/images/edit.png"/>
+                          <text value=""/>
+                          <toolTipText value="Edit"/>
                         </properties>
                       </component>
                       <component id="bf7f4" class="javax.swing.JButton" binding="cmdIssueDelete">
                         <constraints/>
                         <properties>
-                          <text value="Delete"/>
+                          <horizontalTextPosition value="0"/>
+                          <icon value="de/domjos/ideaMantis/images/delete.png"/>
+                          <text value=""/>
+                          <toolTipText value="Delete"/>
                         </properties>
                       </component>
-                      <hspacer id="65761">
+                      <component id="425e5" class="javax.swing.JButton" binding="cmdIssueResolve">
+                        <constraints/>
+                        <properties>
+                          <icon value="de/domjos/ideaMantis/images/resolve.png"/>
+                          <text value=""/>
+                          <toolTipText value="Resolve Issue"/>
+                        </properties>
+                      </component>
+                      <hspacer id="356ef">
                         <constraints/>
                       </hspacer>
                       <component id="21bdf" class="javax.swing.JButton" binding="cmdIssueSave">
                         <constraints/>
                         <properties>
-                          <text value="Save"/>
+                          <horizontalTextPosition value="0"/>
+                          <icon value="de/domjos/ideaMantis/images/save.png"/>
+                          <text value=""/>
+                          <toolTipText value="Save"/>
                         </properties>
                       </component>
                       <component id="252e8" class="javax.swing.JButton" binding="cmdIssueAbort">
                         <constraints/>
                         <properties>
-                          <text value="Cancel"/>
+                          <horizontalTextPosition value="0"/>
+                          <icon value="de/domjos/ideaMantis/images/cancel.png"/>
+                          <text value=""/>
+                          <toolTipText value="Cancel"/>
                         </properties>
                       </component>
                     </children>
                   </toolbar>
                   <toolbar id="110cd">
                     <constraints>
-                      <grid row="1" column="0" row-span="1" col-span="2" vsize-policy="0" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false">
+                      <grid row="1" column="0" row-span="1" col-span="2" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false">
                         <preferred-size width="-1" height="20"/>
                       </grid>
                     </constraints>
@@ -825,7 +850,7 @@
       </grid>
       <component id="52476" class="javax.swing.JLabel" binding="lblValidation">
         <constraints>
-          <grid row="5" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+          <grid row="5" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
           <foreground color="-50658"/>
@@ -842,7 +867,7 @@
       </component>
       <component id="6a7e9" class="javax.swing.JButton" binding="cmdBack">
         <constraints>
-          <grid row="3" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+          <grid row="3" column="0" row-span="1" col-span="2" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
           <text value="&lt;"/>
@@ -850,21 +875,13 @@
       </component>
       <component id="3da8" class="javax.swing.JComboBox" binding="cmbFilters">
         <constraints>
-          <grid row="2" column="1" row-span="1" col-span="2" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+          <grid row="2" column="0" row-span="1" col-span="3" vsize-policy="0" hsize-policy="3" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties/>
       </component>
-      <component id="a7451" class="javax.swing.JLabel">
-        <constraints>
-          <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-        </constraints>
-        <properties>
-          <text value="Filtern nach Status"/>
-        </properties>
-      </component>
       <component id="4cb1c" class="javax.swing.JComboBox" binding="cmbFilterStatus">
         <constraints>
-          <grid row="1" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+          <grid row="1" column="0" row-span="1" col-span="3" vsize-policy="0" hsize-policy="3" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties/>
       </component>

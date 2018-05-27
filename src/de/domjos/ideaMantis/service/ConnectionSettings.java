@@ -2,11 +2,11 @@ package de.domjos.ideaMantis.service;
 
 import com.intellij.openapi.components.*;
 import com.intellij.openapi.project.Project;
-import com.sun.istack.internal.NotNull;
 import de.domjos.ideaMantis.model.MantisUser;
 import de.domjos.ideaMantis.soap.MantisSoapAPI;
 import de.domjos.ideaMantis.utils.Helper;
 import org.jdom.Element;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @State(
