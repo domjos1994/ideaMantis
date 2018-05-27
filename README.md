@@ -2,22 +2,8 @@
 ![Logo](https://raw.githubusercontent.com/domjos1994/ideaMantis/master/resources/de/domjos/ideaMantis/images/icon.png "Logo") IntelliJ Idea Plugin to create, edit and delete Issues from Mantis BugTracker!
 
 ## ideaMantis - Functions
-
-![ideaMantis - Settings-Screen](https://raw.githubusercontent.com/domjos1994/ideaMantis/master/resources/de/domjos/ideaMantis/images/ideaMantis_settings_connection.png "ideaMantis - Settings-Screen") <br/>
-Connect to your installation of Mantis-BugTracker with the Settings-Screen of ideaMantis.
-
-![ideaMantis - Settings-Screen](https://raw.githubusercontent.com/domjos1994/ideaMantis/master/resources/de/domjos/ideaMantis/images/ideaMantis_settings_project.png "ideaMantis - Project") <br/>
-Choose an available project.
-
-![ideaMantis - Settings-Screen](https://raw.githubusercontent.com/domjos1994/ideaMantis/master/resources/de/domjos/ideaMantis/images/ideaMantis_settings_newProject.png "ideaMantis - new Project") <br/>
-Or add a new Project.
-
-![ideaMantis - Screen](https://raw.githubusercontent.com/domjos1994/ideaMantis/master/resources/de/domjos/ideaMantis/images/ideaMantis_screen.png "ideaMantis - Screen")  <br/>
-Open new Issues, solve new Issues, add some notes to an Issue, add attachments like images to an Issue or read details about it.<br/> Everything is possible with the PlugIn ideaMantis.
-
-![ideaMantis - ContextMenu](https://raw.githubusercontent.com/domjos1994/ideaMantis/master/resources/de/domjos/ideaMantis/images/ideaMantis_context.png "ideaMantis - ContextMenu") <br/>
-You can create new Issues directly from a document. Add an open File as Attachment or mark code in a file as Bug!
-You can also add ToDos as new Bug or resolve it with an shortcut.
+IdeaMantis is a Plugin for the IDEs of JetBrains. It connects the IDEs to the Mantis-Bugtracker.<br/>
+Go to the Wiki of this Project to get further Informations: <a href='https://github.com/domjos1994/ideaMantis/wiki' title='To Project Wiki!'>Wiki</a>
 
 ## Libraries
 
