@@ -20,7 +20,8 @@ public class ConnectionSettings implements PersistentStateComponent<Element> {
     private String hostName = "";
     private String userName = "";
     private String password = "";
-    private boolean fastTrack = false;
+    private int reloadTime = 300;
+    private boolean fastTrack = false, reload = false;
     private int itemsPerPage = 0;
     private int projectID = 0;
 
@@ -40,6 +41,8 @@ public class ConnectionSettings implements PersistentStateComponent<Element> {
         connection.setAttribute("itemsPerPage", String.valueOf(this.itemsPerPage));
         connection.setAttribute("projectID", String.valueOf(this.getProjectID()));
         connection.setAttribute("fastTrack", String.valueOf(this.fastTrack));
+        connection.setAttribute("reload", String.valueOf(this.reload));
+        connection.setAttribute("reloadTime", String.valueOf(this.reloadTime));
         return connection;
     }
 
@@ -58,6 +61,8 @@ public class ConnectionSettings implements PersistentStateComponent<Element> {
             }
         }
         this.fastTrack = Boolean.parseBoolean(element.getAttributeValue("fastTrack"));
+        this.reload = Boolean.parseBoolean(element.getAttributeValue("reload"));
+        this.reloadTime = Integer.parseInt(element.getAttributeValue("reloadTime"));
     }
 
     public String getHostName() {
@@ -110,6 +115,22 @@ public class ConnectionSettings implements PersistentStateComponent<Element> {
 
     public void setFastTrack(boolean fastTrack) {
         this.fastTrack = fastTrack;
+    }
+
+    public boolean isReload() {
+        return this.reload;
+    }
+
+    public void setReload(boolean reload) {
+        this.reload = reload;
+    }
+
+    public int getReloadTime() {
+        return this.reloadTime;
+    }
+
+    public void setReloadTime(int reloadTime) {
+        this.reloadTime = reloadTime;
     }
 
     public boolean validateSettings() {

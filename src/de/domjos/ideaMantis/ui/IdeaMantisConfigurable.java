@@ -35,10 +35,10 @@ import java.awt.*;
 public class IdeaMantisConfigurable implements SearchableConfigurable {
     private JComponent component;
     private ConnectionSettings settings;
-    private JBTextField txtHostName, txtUserName, txtProjectName, txtIssuesPerPage;
+    private JBTextField txtHostName, txtUserName, txtProjectName, txtIssuesPerPage, txtReloadTime;
     private JTextArea txtProjectDescription;
     private JBPasswordField txtPassword;
-    private JBCheckBox chkProjectEnabled, chkFastTrackEnabled;
+    private JBCheckBox chkProjectEnabled, chkFastTrackEnabled, chkReloadAutomatically;
     private java.awt.Label lblConnectionState;
     private JButton cmdTestConnection;
     private JPanel newProjectPanel;
@@ -76,6 +76,15 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
                         window.getContentManager().addContent(content);
                     });
                     settings.setFastTrack(chkFastTrackEnabled.isSelected());
+                    settings.setReload(chkReloadAutomatically.isSelected());
+
+                    int reloadTime;
+                    try {
+                        reloadTime = Integer.parseInt(txtReloadTime.getText());
+                    } catch (Exception ex) {
+                        reloadTime = 300;
+                    }
+                    settings.setReloadTime(reloadTime);
                 } catch (Exception ex) {
                     Helper.printException(ex);
                 } finally {
@@ -202,6 +211,14 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
             }
         });
 
+        this.chkReloadAutomatically = new JBCheckBox("Reload bugs after some time!");
+        this.chkReloadAutomatically.addActionListener(e -> this.txtReloadTime.setEnabled(this.chkReloadAutomatically.isSelected()));
+        this.txtReloadTime = new JBTextField();
+        this.txtReloadTime.setName("txtReloadTime");
+        this.txtReloadTime.setToolTipText("Time (in s)");
+        this.txtReloadTime.setText("300");
+        this.txtReloadTime.setEnabled(false);
+
         JPanel projectPanel = new JPanel(new GridBagLayout());
         projectPanel.add(lblProjects, labelConstraint);
         projectPanel.add(cmbProjects, txtConstraint);
@@ -209,6 +226,8 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
         projectPanel.add(txtIssuesPerPage, txtConstraint);
         projectPanel.add(lblProjectFastTrack, labelConstraint);
         projectPanel.add(chkFastTrackEnabled, txtConstraint);
+        projectPanel.add(this.chkReloadAutomatically, labelConstraint);
+        projectPanel.add(this.txtReloadTime, txtConstraint);
         projectPanel.add(cmdCreateNewProject, txtConstraint);
         projectPanel.setBorder(IdeBorderFactory.createTitledBorder("Project"));
 
@@ -317,7 +336,9 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
                 !this.settings.getPassword().equals(buf.toString()) ||
                 !String.valueOf(this.settings.getItemsPerPage()).equals(txtIssuesPerPage.getText()) ||
                 (this.settings.getProjectID()!=projectID && projectID!=0) ||
-                !this.settings.isFastTrack()==chkFastTrackEnabled.isSelected();
+                !this.settings.isFastTrack()==chkFastTrackEnabled.isSelected() ||
+                !this.settings.isReload()==chkReloadAutomatically.isSelected() ||
+                !String.valueOf(this.settings.getReloadTime()).equals(txtReloadTime.getText());
         } else {
             return false;
         }
@@ -337,6 +358,9 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
         txtUserName.setText(this.settings.getUserName());
         txtPassword.setText(this.settings.getPassword());
         chkFastTrackEnabled.setSelected(this.settings.isFastTrack());
+        chkReloadAutomatically.setSelected(this.settings.isReload());
+        txtReloadTime.setEnabled(chkReloadAutomatically.isSelected());
+        txtReloadTime.setText(String.valueOf(this.settings.getReloadTime()));
         txtIssuesPerPage.setText(String.valueOf(this.settings.getItemsPerPage()));
         cmdTestConnection.doClick();
         for(int i = 0; i<=cmbProjects.getItemCount()-1; i++) {
@@ -355,6 +379,8 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
         UIUtil.dispose(cmbProjects);
         UIUtil.dispose(cmdTestConnection);
         UIUtil.dispose(chkFastTrackEnabled);
+        UIUtil.dispose(chkReloadAutomatically);
+        UIUtil.dispose(txtReloadTime);
     }
 
     private boolean changeConnectionLabel(MantisUser user) {
