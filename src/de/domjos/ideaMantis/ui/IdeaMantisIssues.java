@@ -1,6 +1,5 @@
 package de.domjos.ideaMantis.ui;
 
-import com.intellij.ide.ui.EditorOptionsTopHitProvider;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.fileChooser.FileChooser;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
@@ -34,8 +33,10 @@ import java.awt.event.MouseListener;
 import java.net.URI;
 import java.util.*;
 import java.util.List;
+import java.util.Timer;
 
 public class IdeaMantisIssues implements ToolWindowFactory {
+    private Timer timer;
     private ConnectionSettings settings;
     private MantisIssue currentIssue;
 
@@ -81,13 +82,14 @@ public class IdeaMantisIssues implements ToolWindowFactory {
     private ChangeListManager changeListManager;
     private Map.Entry<Integer, String> access;
     private ObjectRef resolved = null;
+    private DefaultTableModel tblIssueModel;
 
 
     public IdeaMantisIssues() {
         tblIssues.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tblIssueAttachments.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tblIssueNotes.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        DefaultTableModel tblIssueModel = this.addColumnsToIssueTable();
+        tblIssueModel = this.addColumnsToIssueTable();
         DefaultTableModel tblIssueAttachmentModel = this.addColumnsToIssueAttachmentTable();
         DefaultTableModel tblIssueNoteModel = this.addColumnsToIssueNoteTable();
         if(settings==null) {
@@ -1144,6 +1146,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                                 controlIssues(false, settings.isFastTrack());
                                 controlAttachments(false, settings.isFastTrack());
                                 controlNotes(false, settings.isFastTrack());
+                                initTimer(settings);
                                 break;
                             }
                         }
@@ -1164,6 +1167,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         controlIssues(false, settings.isFastTrack());
         controlAttachments(false, settings.isFastTrack());
         controlNotes(false, settings.isFastTrack());
+        this.initTimer(settings);
     }
 
     private void controlIssues(boolean selected, boolean editMode) {
@@ -1686,6 +1690,29 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         } else {
             tbPnlMain.setTitleAt(0, "Basics");
             tbPnlMain.setTitleAt(1, "Descriptions");
+        }
+    }
+
+    private void initTimer(ConnectionSettings settings) {
+        try {
+            if(this.timer!=null) {
+                this.timer.cancel();
+            } else {
+                this.timer = new Timer();
+            }
+            this.timer.scheduleAtFixedRate(new TimerTask() {
+                @Override
+                public void run() {
+                    if(settings.isReload()) {
+                        cmdReload.doClick();
+                    } else {
+                        this.cancel();
+                    }
+                }
+            }, 0, settings.getReloadTime() * 1000);
+        } catch (Exception ex) {
+            this.timer = null;
+            this.initTimer(settings);
         }
     }
 }
