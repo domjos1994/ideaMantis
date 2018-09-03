@@ -470,6 +470,8 @@ public class MantisSoapAPI {
         if(issue.getReporter()!=null)
             issueObject = buildAccountData(issue.getReporter(), issueObject, "handler");
         issueObject.addProperty("summary", issue.getSummary());
+        if(issue.getVersion()!=null)
+            issueObject.addProperty("version", issue.getVersion().getName());
         if(issue.getFixed_in_version()!=null)
             issueObject.addProperty("fixed_in_version", issue.getFixed_in_version().getName());
         if(issue.getTarget_version()!=null)
@@ -1029,7 +1031,7 @@ public class MantisSoapAPI {
         if(!small) {
             for (MantisVersion version : versions) {
                 if (version.getName().equals(checkAndGetProperty("version", soapObjIssue))) {
-                    issue.setFixed_in_version(version);
+                    issue.setVersion(version);
                     break;
                 }
             }
@@ -1037,6 +1039,12 @@ public class MantisSoapAPI {
         for(MantisVersion version :  versions) {
             if(version.getName().equals(checkAndGetProperty("target_version", soapObjIssue))) {
                 issue.setTarget_version(version);
+                break;
+            }
+        }
+        for(MantisVersion version :  versions) {
+            if(version.getName().equals(checkAndGetProperty("fixed_in_version", soapObjIssue))) {
+                issue.setFixed_in_version(version);
                 break;
             }
         }

@@ -16,7 +16,9 @@ public class MantisIssue {
     private String reproducibility;
     private String tags;
     private String description, steps_to_reproduce, additional_information;
-    private MantisVersion fixed_in_version, target_version;
+    private MantisVersion version;
+    private MantisVersion fixed_in_version;
+    private MantisVersion target_version;
     private MantisUser reporter;
     private String date_submitted;
     private List<IssueAttachment> issueAttachmentList;
@@ -30,6 +32,7 @@ public class MantisIssue {
         this.issueAttachmentList = new LinkedList<>();
         this.issueNoteList = new LinkedList<>();
         this.tags = "";
+        this.setVersion(null);
         this.fixed_in_version = null;
         this.target_version = null;
         this.setCustomFields(new LinkedHashMap<>());
@@ -98,6 +101,14 @@ public class MantisIssue {
 
     public void setReproducibility(String reproducibility) {
         this.reproducibility = reproducibility;
+    }
+
+    public MantisVersion getVersion() {
+        return version;
+    }
+
+    public void setVersion(MantisVersion version) {
+        this.version = version;
     }
 
     public MantisVersion getFixed_in_version() {

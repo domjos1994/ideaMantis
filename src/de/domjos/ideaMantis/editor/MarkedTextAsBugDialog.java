@@ -26,7 +26,7 @@ class MarkedTextAsBugDialog extends DialogWrapper {
     private JBTextField txtSummary, txtDocumentPath, txtDate;
     private JTextArea txtDescription;
     private JCheckBox chkAttachment;
-    private JComboBox<String> cmbCategory, cmbSeverity, cmbPriority, cmbStatus, cmbTargetVersion, cmbFixedInVersion;
+    private JComboBox<String> cmbCategory, cmbSeverity, cmbPriority, cmbStatus, cmbVersion, cmbTargetVersion, cmbFixedInVersion;
     private String description, documentPath;
     private int id;
 
@@ -61,6 +61,14 @@ class MarkedTextAsBugDialog extends DialogWrapper {
                         issue.setStatus(cmbStatus.getSelectedItem().toString());
                         MantisSoapAPI api = new MantisSoapAPI(settings);
                         java.util.List<MantisVersion> versions = api.getVersions(settings.getProjectID());
+                        if(cmbVersion.getSelectedItem()!=null) {
+                            for(MantisVersion version : versions) {
+                                if(version.getName().equals(cmbVersion.getSelectedItem())) {
+                                    issue.setVersion(version);
+                                    break;
+                                }
+                            }
+                        }
                         if(cmbFixedInVersion.getSelectedItem()!=null) {
                             for(MantisVersion version : versions) {
                                 if(version.getName().equals(cmbFixedInVersion.getSelectedItem())) {
@@ -170,17 +178,22 @@ class MarkedTextAsBugDialog extends DialogWrapper {
         root.add(basicsPanel, constraints);
 
 
+        cmbVersion = new ComboBox<>();
         cmbTargetVersion = new ComboBox<>();
         cmbFixedInVersion = new ComboBox<>();
         api.getVersions(settings.getProjectID()).forEach(version -> {
+            cmbVersion.addItem(version.getName());
             cmbFixedInVersion.addItem(version.getName());
             cmbTargetVersion.addItem(version.getName());
         });
 
+        java.awt.Label lblVersion = new java.awt.Label("Version");
         java.awt.Label lblFixedInVersion = new java.awt.Label("Fixed in Version");
         java.awt.Label lblTargetVersion = new java.awt.Label("Target Version");
 
         JPanel versionPanel = new JPanel(new GridBagLayout());
+        versionPanel.add(lblVersion, labelConstraint);
+        versionPanel.add(cmbVersion, txtConstraint);
         versionPanel.add(lblTargetVersion, labelConstraint);
         versionPanel.add(cmbTargetVersion, txtConstraint);
         versionPanel.add(lblFixedInVersion, labelConstraint);
