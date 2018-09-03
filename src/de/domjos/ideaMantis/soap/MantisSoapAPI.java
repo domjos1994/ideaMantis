@@ -25,6 +25,7 @@ import de.domjos.ideaMantis.utils.Helper;
 import org.ksoap2.SoapEnvelope;
 import org.ksoap2.SoapFault;
 import org.ksoap2.serialization.MarshalBase64;
+import org.ksoap2.serialization.PropertyInfo;
 import org.ksoap2.serialization.SoapObject;
 import org.ksoap2.serialization.SoapSerializationEnvelope;
 import org.ksoap2.transport.HttpTransportSE;
@@ -470,12 +471,21 @@ public class MantisSoapAPI {
         if(issue.getReporter()!=null)
             issueObject = buildAccountData(issue.getReporter(), issueObject, "handler");
         issueObject.addProperty("summary", issue.getSummary());
-        if(issue.getVersion()!=null)
+        if(issue.getVersion()!=null) {
             issueObject.addProperty("version", issue.getVersion().getName());
-        if(issue.getFixed_in_version()!=null)
+        } else {
+            issueObject.addProperty("version", null);
+        }
+        if(issue.getFixed_in_version()!=null) {
             issueObject.addProperty("fixed_in_version", issue.getFixed_in_version().getName());
-        if(issue.getTarget_version()!=null)
+        } else {
+            issueObject.addProperty("fixed_in_version", null);
+        }
+        if(issue.getTarget_version()!=null) {
             issueObject.addProperty("target_version", issue.getTarget_version().getName());
+        } else {
+            issueObject.addProperty("target_version", null);
+        }
         issueObject.addProperty("description", issue.getDescription());
         issueObject.addProperty("steps_to_reproduce", issue.getSteps_to_reproduce());
         issueObject.addProperty("additional_information", issue.getAdditional_information());

@@ -61,4 +61,9 @@ public class MantisVersion {
     public void setObsolete(boolean obsolete) {
         this.obsolete = obsolete;
     }
+
+    @Override
+    public String toString() {
+        return this.getName();
+    }
 }
