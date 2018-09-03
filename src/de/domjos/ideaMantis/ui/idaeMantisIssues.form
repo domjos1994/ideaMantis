@@ -854,6 +854,19 @@
                           </grid>
                         </children>
                       </scrollpane>
+                      <scrollpane id="b3cb9">
+                        <constraints>
+                          <tabbedpane title="History"/>
+                        </constraints>
+                        <properties/>
+                        <border type="none"/>
+                        <children>
+                          <component id="5133" class="javax.swing.JTable" binding="tblHistory">
+                            <constraints/>
+                            <properties/>
+                          </component>
+                        </children>
+                      </scrollpane>
                     </children>
                   </tabbedpane>
                 </children>

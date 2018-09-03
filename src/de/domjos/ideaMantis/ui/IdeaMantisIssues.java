@@ -31,6 +31,7 @@ import java.awt.datatransfer.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.net.URI;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
 import java.util.Timer;
@@ -59,7 +60,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
     private JTextField txtIssueNoteReporterName, txtIssueNoteReporterEMail, txtIssueNoteDate, txtIssueAttachmentFileName;
     private JTextField txtIssueAttachmentSize;
 
-    private JTable tblIssues, tblIssueAttachments, tblIssueNotes;
+    private JTable tblIssues, tblIssueAttachments, tblIssueNotes, tblHistory;
 
     private JLabel lblValidation;
     private JCheckBox chkAddVCS;
@@ -86,12 +87,14 @@ public class IdeaMantisIssues implements ToolWindowFactory {
 
 
     public IdeaMantisIssues() {
+        tblHistory.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tblIssues.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tblIssueAttachments.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tblIssueNotes.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tblIssueModel = this.addColumnsToIssueTable();
         DefaultTableModel tblIssueAttachmentModel = this.addColumnsToIssueAttachmentTable();
         DefaultTableModel tblIssueNoteModel = this.addColumnsToIssueNoteTable();
+        DefaultTableModel tblHistoryModel = this.addColumnsToHistoryTable();
         if(settings==null) {
             controlIssues(false, false);
         } else {
@@ -394,6 +397,19 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                             tblIssueAttachmentModel.addRow(new Object[]{attachment.getId(), attachment.getFilename()});
                         }
                         tblIssueAttachments.setModel(tblIssueAttachmentModel);
+
+                        tblHistory.removeAll();
+                        for (int i = tblHistoryModel.getRowCount() - 1; i >= 0; i--) {
+                            tblHistoryModel.removeRow(i);
+                        }
+                        List<HistoryItem> historyItems = api.getHistory(issue.getId());
+                        for(HistoryItem historyItem : historyItems) {
+                            String date = new SimpleDateFormat("yyyy.MM.dd HH:mm").format(historyItem.getChangedAt());
+                            String user = historyItem.getUser().getUserName();
+                            tblHistoryModel.addRow(new Object[]{date, user, historyItem.getField(), historyItem.getOldValue(), historyItem.getNewValue()});
+                        }
+                        tblHistory.setModel(tblHistoryModel);
+
                         if(settings==null) {
                             controlIssues(true, false);
                             controlNotes(false, false);
@@ -1323,6 +1339,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         this.resetNotes();
         tblIssueAttachments.setModel(addColumnsToIssueAttachmentTable());
         tblIssueNotes.setModel(addColumnsToIssueNoteTable());
+        tblHistory.setModel(addColumnsToHistoryTable());
     }
 
     private void controlNotes(boolean selected, boolean editMode) {
@@ -1674,6 +1691,21 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         };
         model.addColumn("ID");
         model.addColumn("File-Name");
+        return model;
+    }
+
+    private DefaultTableModel addColumnsToHistoryTable() {
+        DefaultTableModel model  = new DefaultTableModel(){
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        model.addColumn("Date");
+        model.addColumn("User");
+        model.addColumn("Field");
+        model.addColumn("Old Value");
+        model.addColumn("New Value");
         return model;
     }
 

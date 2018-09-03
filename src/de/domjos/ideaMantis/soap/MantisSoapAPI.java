@@ -748,6 +748,35 @@ public class MantisSoapAPI {
         return userList;
     }
 
+    public List<HistoryItem> getHistory(int issueID) {
+        List<HistoryItem> historyItems = new LinkedList<>();
+        try {
+            SoapObject structRequest = this.executeQueryAndGetSoapObject("mc_issue_get_history", new Object[][]{{"issue_id", issueID}});
+            if(structRequest!=null) {
+                Vector vector = (Vector) structRequest.getProperty("return");
+                for(Object object : vector) {
+                    HistoryItem historyItem = new HistoryItem();
+                    SoapObject soapObject = (SoapObject) object;
+
+                    MantisUser user = new MantisUser(this.checkAndGetProperty("username", soapObject));
+                    user.setId(this.checkAndGetIntProperty("userid", soapObject));
+                    historyItem.setUser(user);
+
+                    historyItem.setChangedAt(this.checkAndGetIntProperty("date", soapObject));
+                    historyItem.setType(this.checkAndGetIntProperty("type", soapObject));
+                    historyItem.setField(this.checkAndGetProperty("field", soapObject));
+                    historyItem.setOldValue(this.checkAndGetProperty("old_value", soapObject));
+                    historyItem.setNewValue(this.checkAndGetProperty("new_value", soapObject));
+
+                    historyItems.add(historyItem);
+                }
+            }
+        } catch (Exception ex) {
+            Helper.printException(ex);
+        }
+        return historyItems;
+    }
+
     public List<MantisProfile> getProfiles() {
         List<MantisProfile> mantisProfiles = new LinkedList<>();
         try {
