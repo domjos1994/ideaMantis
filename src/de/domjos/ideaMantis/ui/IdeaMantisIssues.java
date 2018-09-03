@@ -14,6 +14,7 @@ import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
 import com.intellij.ui.content.ContentManagerEvent;
 import com.intellij.ui.content.ContentManagerListener;
+import de.domjos.ideaMantis.custom.AutoComplete;
 import de.domjos.ideaMantis.model.*;
 import de.domjos.ideaMantis.service.ConnectionSettings;
 import de.domjos.ideaMantis.soap.MantisSoapAPI;
@@ -768,6 +769,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                       }
                   }
 
+                  this.addAutoCompletion(api);
                    if(settings==null) {
                        controlIssues(false, false);
                    } else {
@@ -1199,6 +1201,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         }
 
         api.getProfiles();
+        this.addAutoCompletion(api);
 
         toolWindow.getContentManager().addContentManagerListener(new ContentManagerListener() {
             @Override
@@ -1808,5 +1811,14 @@ public class IdeaMantisIssues implements ToolWindowFactory {
             this.timer = null;
             this.initTimer(settings);
         }
+    }
+
+    private void addAutoCompletion(MantisSoapAPI api) {
+        this.txtBasicsTags.setFocusTraversalKeysEnabled(false);
+        List<MantisTag> tags = api.getTags();
+        List<String> autoCompletion = new LinkedList<>();
+        tags.forEach(tag -> autoCompletion.add(tag.getName()));
+        AutoComplete autoComplete = new AutoComplete(this.txtBasicsTags, autoCompletion);
+        this.txtBasicsTags.getDocument().addDocumentListener(autoComplete);
     }
 }
