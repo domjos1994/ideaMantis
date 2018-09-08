@@ -226,8 +226,8 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
         projectPanel.add(txtIssuesPerPage, txtConstraint);
         projectPanel.add(lblProjectFastTrack, labelConstraint);
         projectPanel.add(chkFastTrackEnabled, txtConstraint);
-        projectPanel.add(this.chkReloadAutomatically, labelConstraint);
-        projectPanel.add(this.txtReloadTime, txtConstraint);
+        //projectPanel.add(this.chkReloadAutomatically, labelConstraint);
+        //projectPanel.add(this.txtReloadTime, txtConstraint);
         projectPanel.add(cmdCreateNewProject, txtConstraint);
         projectPanel.setBorder(IdeBorderFactory.createTitledBorder("Project"));
 
