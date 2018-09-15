@@ -2,7 +2,7 @@
   <id>de.domjos.ideaMantis</id>
   <name>ideaMantis</name>
   <description>IntelliJ-Idea Plugin to create, edit and delete Issues from Mantis BugTracker!</description>
-  <version>1.2</version>
+  <version>1.3</version>
   <vendor email="developing@domjos.de" url="http://domjos.de">Dominic Joas</vendor>
 
   <change-notes>
@@ -87,6 +87,13 @@
         <li>solve language-bugs</li>
         <li>add checkbox to upload file on context-menu</li>
         <li>add icons instead of texts in tool-window</li>
+      </ul>
+    ]]>
+    <![CDATA[
+      <h2>1.3</h2>
+      <ul>
+        <li>solve bugs</li>
+        <li>add normal version</li>
       </ul>
     ]]>
   </change-notes>
