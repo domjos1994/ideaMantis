@@ -1,0 +1,188 @@
+<idea-plugin>
+  <id>de.domjos.ideaMantis</id>
+  <name>ideaMantis</name>
+  <description>IntelliJ-Idea Plugin to create, edit and delete Issues from Mantis BugTracker!</description>
+  <version>1.3</version>
+  <vendor email="developing@domjos.de" url="http://domjos.de">Dominic Joas</vendor>
+
+  <change-notes>
+    <![CDATA[
+      <h2>0.1</h2>
+      <ul>
+        <li>Add ToolWindow to</li>
+        <ul>
+          <li>add Issues</li>
+          <li>edit Issues</li>
+          <li>delete Issues</li>
+          <li>add notes to Issues</li>
+          <li>add attachments to Issues</li>
+        </ul>
+      </ul>
+    ]]>
+    <![CDATA[
+      <h2>0.2</h2>
+      <ul>
+        <li>Add Settings-Screen to connect to MantisBT-Installation</li>
+      </ul>
+    ]]>
+    <![CDATA[
+      <h2>0.3</h2>
+      <ul>
+        <li>Add Context-Menu-Entry to mark text as Bug and add to new Issue</li>
+        <li>Add Context-Menu-Entry to add document as Attachment to new Issue</li>
+      </ul>
+    ]]>
+    <![CDATA[
+      <h2>0.4</h2>
+      <ul>
+        <li>change settings and test connection without pressing apply before</li>
+        <li>solve bug: no settings at the beginning</li>
+        <li>improve View</li>
+      </ul>
+    ]]>
+    <![CDATA[
+      <h2>0.5</h2>
+      <ul>
+        <li>add new projects</li>
+        <li>create changeLogs</li>
+        <li>add tags</li>
+      </ul>
+    ]]>
+    <![CDATA[
+      <h2>0.7</h2>
+      <ul>
+        <li>add support for every intellij-platform</li>
+      </ul>
+    ]]>
+    <![CDATA[
+      <h2>0.8</h2>
+      <ul>
+        <li>solve the issue with access-levels</li>
+        <li>enables showing only several issues (loads a bit faster)</li>
+        <li>show custom fields in issues</li>
+        <li>filter issues</li>
+        <li>get and set profiles</li>
+        <li>create new issue from todo in code</li>
+        <li>close todo-issue with shortcut</li>
+        <li>open todo-issue in browser</li>
+      </ul>
+      <b>Notice: If you update to this version, you will have to retype your credentials!</b></br>
+    ]]>
+    <![CDATA[
+      <h2>1.0</h2>
+      <ul>
+        <li>solve Bugs</li>
+      </ul>
+    ]]>
+    <![CDATA[
+      <h2>1.1</h2>
+      <ul>
+        <li>solve Bugs</li>
+        <li>add fast-track-mode</li>
+      </ul>
+    ]]>
+    <![CDATA[
+      <h2>1.2</h2>
+      <ul>
+        <li>solve language-bugs</li>
+        <li>add checkbox to upload file on context-menu</li>
+        <li>add icons instead of texts in tool-window</li>
+      </ul>
+    ]]>
+    <![CDATA[
+      <h2>1.3</h2>
+      <ul>
+        <li>solve bugs</li>
+        <li>add normal version</li>
+      </ul>
+    ]]>
+  </change-notes>
+
+  <idea-version since-build="141.0"/>
+
+  <depends>com.intellij.modules.lang</depends>
+  
+  <extensions defaultExtensionNs="com.intellij">
+
+    <toolWindow
+            id="Show MantisBT-Issues"
+            secondary="true"
+            icon="/de/domjos/ideaMantis/images/icon.png"
+            anchor="right"
+            factoryClass="de.domjos.ideaMantis.ui.IdeaMantisIssues"/>
+
+    <projectService
+            serviceImplementation="de.domjos.ideaMantis.service.ConnectionSettings"/>
+
+    <projectConfigurable
+            id="de.domjos.ideaMantis.ui.IdeaMantisConfigurable"
+            nonDefaultProject="true"
+            groupId="tools"
+            instance="de.domjos.ideaMantis.ui.IdeaMantisConfigurable"/>
+  </extensions>
+
+  <actions>
+    <group id="ideaMantis" text="ideaMantis" popup="true" icon="/de/domjos/ideaMantis/images/icon.png">
+      <add-to-group anchor="last" group-id="EditorPopupMenu"/>
+    </group>
+
+    <action
+            id="MarkedCodeAsBug"
+            icon="/de/domjos/ideaMantis/images/icon.png"
+            class="de.domjos.ideaMantis.editor.MarkedTextAsBugEditorAction"
+            text="Mark code as bug!"
+            description="Marked selected code as Bug and send it to MantisBT">
+      <keyboard-shortcut first-keystroke="control alt C" second-keystroke="C" keymap="$default"/>
+      <add-to-group group-id="ideaMantis" anchor="first"/>
+    </action>
+
+    <action
+            id="ToDoAsBug"
+            icon="/de/domjos/ideaMantis/images/icon.png"
+            class="de.domjos.ideaMantis.editor.ToDoAsBugEditorAction"
+            text="Mark ToDo as bug"
+            description="Marked ToDo as Bug and send it to MantisBT">
+      <keyboard-shortcut first-keystroke="control alt T" second-keystroke="T" keymap="$default"/>
+      <add-to-group group-id="ideaMantis" anchor="after" relative-to-action="MarkedCodeAsBug"/>
+    </action>
+
+    <action
+            id="ResolveToDoAsBug"
+            icon="/de/domjos/ideaMantis/images/icon.png"
+            class="de.domjos.ideaMantis.editor.ResolveToDoAsBugEditorAction"
+            text="Resolve ToDo in MantisBT"
+            description="Marked ToDo as Bug and send it to MantisBT">
+      <keyboard-shortcut first-keystroke="control alt R" second-keystroke="R" keymap="$default"/>
+      <add-to-group group-id="ideaMantis" anchor="after" relative-to-action="ToDoAsBug"/>
+    </action>
+
+    <action
+            id="OpenToDoAsBug"
+            icon="/de/domjos/ideaMantis/images/icon.png"
+            class="de.domjos.ideaMantis.editor.OpenToDoAsBugEditorAction"
+            text="Open Bug in Web-Browser"
+            description="Open Bug in Web-Browser">
+      <keyboard-shortcut first-keystroke="control alt O" second-keystroke="O" keymap="$default"/>
+      <add-to-group group-id="ideaMantis" anchor="after" relative-to-action="ResolveToDoAsBug"/>
+    </action>
+
+    <action
+            id="WholeFileAsBug"
+            icon="/de/domjos/ideaMantis/images/icon.png"
+            class="de.domjos.ideaMantis.editor.WholeFileAsBugEditorAction"
+            text="Add File to new bug!"
+            description="Add File as Attachment to new Bug and send it to MantisBT">
+      <keyboard-shortcut first-keystroke="control alt F" second-keystroke="F" keymap="$default"/>
+      <add-to-group group-id="ideaMantis" anchor="after" relative-to-action="OpenToDoAsBug"/>
+    </action>
+    <action
+            id="CreateChangeLog"
+            icon="/de/domjos/ideaMantis/images/icon.png"
+            class="de.domjos.ideaMantis.editor.CreateChangeLogAction"
+            text="Create ChangeLog"
+            description="Create an ChangeLog from MantisBT">
+      <keyboard-shortcut first-keystroke="control alt L" second-keystroke="L" keymap="$default"/>
+      <add-to-group group-id="ideaMantis" anchor="last"/>
+    </action>
+  </actions>
+</idea-plugin>
