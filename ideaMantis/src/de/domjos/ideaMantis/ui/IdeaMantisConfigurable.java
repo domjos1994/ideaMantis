@@ -1,8 +1,6 @@
 package de.domjos.ideaMantis.ui;
 
-import com.intellij.notification.NotificationType;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.SearchableConfigurable;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
@@ -31,6 +29,7 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.Arrays;
 
 public class IdeaMantisConfigurable implements SearchableConfigurable {
     private JComponent component;
@@ -39,13 +38,14 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
     private JTextArea txtProjectDescription;
     private JBPasswordField txtPassword;
     private JBCheckBox chkProjectEnabled, chkFastTrackEnabled, chkReloadAutomatically;
-    private java.awt.Label lblConnectionState;
+    private java.awt.Label lblConnectionState, lblProjectState;
     private JButton cmdTestConnection;
     private JPanel newProjectPanel;
     private ComboBox<String> cmbProjects, cmbNewProjectProjects, cmbProjectViewState;
     private int projectID = 0;
     private ToolWindowManager manager;
     private Task task;
+    private GridBagConstraints labelConstraint, txtConstraint;
 
     public IdeaMantisConfigurable(@NotNull Project project) {
         this.settings = ConnectionSettings.getInstance(project);
@@ -119,13 +119,13 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
     }
 
     public JComponent createComponent() {
-        GridBagConstraints labelConstraint = new GridBagConstraints();
-        labelConstraint.anchor = GridBagConstraints.EAST;
-        labelConstraint.insets = JBUI.insets(5, 10);
-        GridBagConstraints txtConstraint = new GridBagConstraints();
-        txtConstraint.weightx = 2.0;
-        txtConstraint.fill = GridBagConstraints.HORIZONTAL;
-        txtConstraint.gridwidth = GridBagConstraints.REMAINDER;
+        this.labelConstraint = new GridBagConstraints();
+        this.labelConstraint.anchor = GridBagConstraints.EAST;
+        this.labelConstraint.insets = JBUI.insets(5, 10);
+        this.txtConstraint = new GridBagConstraints();
+        this.txtConstraint.weightx = 2.0;
+        this.txtConstraint.fill = GridBagConstraints.HORIZONTAL;
+        this.txtConstraint.gridwidth = GridBagConstraints.REMAINDER;
 
         this.txtHostName = new JBTextField();
         this.txtHostName.setName("txtHostName");
@@ -176,7 +176,7 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
                 }
 
                 for(int i = 0; i<=cmbProjects.getItemCount()-1; i++) {
-                    if(cmbProjects.getItemAt(i).startsWith(String.valueOf(settings.getProjectID()) + ":")) {
+                    if(cmbProjects.getItemAt(i).startsWith(settings.getProjectID() + ":")) {
                         cmbProjects.setSelectedItem(cmbProjects.getItemAt(i));
                         break;
                     }
@@ -191,12 +191,7 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
         this.chkFastTrackEnabled = new JBCheckBox("Enable Fast-Track-Mode");
 
         JPanel connPanel = new JPanel(new GridBagLayout());
-        connPanel.add(lblHostName, labelConstraint);
-        connPanel.add(txtHostName, txtConstraint);
-        connPanel.add(lblUserName, labelConstraint);
-        connPanel.add(txtUserName, txtConstraint);
-        connPanel.add(lblPassword, labelConstraint);
-        connPanel.add(txtPassword, txtConstraint);
+        this.addFieldsToPanel(connPanel, Arrays.asList(lblHostName, txtHostName, lblUserName, txtUserName, lblPassword, txtPassword));
         connPanel.add(lblConnectionState, txtConstraint);
         connPanel.add(cmdTestConnection, txtConstraint);
         connPanel.setBorder(IdeBorderFactory.createTitledBorder("Connection"));
@@ -220,14 +215,8 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
         this.txtReloadTime.setEnabled(false);
 
         JPanel projectPanel = new JPanel(new GridBagLayout());
-        projectPanel.add(lblProjects, labelConstraint);
-        projectPanel.add(cmbProjects, txtConstraint);
-        projectPanel.add(lblIssuesPerPage, labelConstraint);
-        projectPanel.add(txtIssuesPerPage, txtConstraint);
-        projectPanel.add(lblProjectFastTrack, labelConstraint);
+        this.addFieldsToPanel(projectPanel, Arrays.asList(lblProjects, cmbProjects, lblIssuesPerPage, txtIssuesPerPage, lblProjectFastTrack));
         projectPanel.add(chkFastTrackEnabled, txtConstraint);
-        //projectPanel.add(this.chkReloadAutomatically, labelConstraint);
-        //projectPanel.add(this.txtReloadTime, txtConstraint);
         projectPanel.add(cmdCreateNewProject, txtConstraint);
         projectPanel.setBorder(IdeBorderFactory.createTitledBorder("Project"));
 
@@ -240,17 +229,13 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
         this.cmbNewProjectProjects = new ComboBox<>();
         this.cmbNewProjectProjects.setVisible(false);
 
+        this.lblProjectState = new Label();
+
         newProjectPanel = new JPanel(new GridBagLayout());
         newProjectPanel.setVisible(false);
-        newProjectPanel.add(lblProjectName, labelConstraint);
-        newProjectPanel.add(txtProjectName, txtConstraint);
-        newProjectPanel.add(lblProjects, labelConstraint);
-        newProjectPanel.add(cmbNewProjectProjects, txtConstraint);
-        newProjectPanel.add(lblProjectDescription, labelConstraint);
-        newProjectPanel.add(txtProjectDescription, txtConstraint);
-        newProjectPanel.add(lblProjectViewState, labelConstraint);
-        newProjectPanel.add(cmbProjectViewState, txtConstraint);
+        this.addFieldsToPanel(newProjectPanel, Arrays.asList(lblProjectName, txtProjectName, lblProjects, cmbNewProjectProjects, lblProjectDescription, txtProjectDescription, lblProjectViewState, cmbProjectViewState));
         newProjectPanel.add(chkProjectEnabled, txtConstraint);
+        newProjectPanel.add(lblProjectState, txtConstraint);
         newProjectPanel.add(cmdProjectAdd, txtConstraint);
 
         cmdProjectAdd.addActionListener(e -> {
@@ -274,8 +259,10 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
                 }
             }
 
-            if(!connection.addProject(project)) {
-                Helper.printNotification("Exception", String.format("Can't add %s", project.getName()), NotificationType.ERROR);
+            String state = connection.addProject(project);
+            if(!state.equals("true")) {
+                lblProjectState.setForeground(JBColor.RED);
+                lblProjectState.setText(state);
             } else {
                 txtProjectDescription.setText("");
                 txtProjectName.setText("");
@@ -313,6 +300,8 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
         return root;
     }
 
+
+
     private void addProjectToComboBox(MantisProject project, String splitter) {
         cmbProjects.addItem(project.getId() + splitter + project.getName());
         cmbNewProjectProjects.addItem(project.getId() + splitter + project.getName());
@@ -325,7 +314,7 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
     public boolean isModified() {
         if(this.settings!=null) {
 
-            StringBuilder buf = new StringBuilder("");
+            StringBuilder buf = new StringBuilder();
             for(char ch : txtPassword.getPassword()) {
                 buf.append(ch);
             }
@@ -345,7 +334,7 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
     }
 
     @Override
-    public void apply() throws ConfigurationException {
+    public void apply() {
         if(this.settings!=null) {
             this.component.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
             ProgressManager.getInstance().run(this.task);
@@ -407,7 +396,7 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
     }
 
     private String temporarilyChangeSettings() {
-        StringBuilder pwd = new StringBuilder("");
+        StringBuilder pwd = new StringBuilder();
         for(char ch : txtPassword.getPassword()) {
             pwd.append(ch);
         }
@@ -428,6 +417,16 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
             this.settings.setHostName(data[0].trim());
             this.settings.setUserName(data[1].trim());
             this.settings.setPassword(data[2].trim());
+        }
+    }
+
+    private void addFieldsToPanel(JPanel panel, java.util.List<Component> components) {
+        for(Component component : components) {
+            if(component instanceof java.awt.Label) {
+                panel.add(component, this.labelConstraint);
+            } else {
+                panel.add(component, this.txtConstraint);
+            }
         }
     }
 }

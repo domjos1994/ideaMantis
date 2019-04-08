@@ -219,7 +219,7 @@ public class MantisSoapAPI {
         return customFields;
     }
 
-    public boolean addProject(MantisProject project) {
+    public String addProject(MantisProject project) {
         SoapObject structRequest;
         try {
             if(project.getId()==0) {
@@ -240,7 +240,7 @@ public class MantisSoapAPI {
                 for(int i = 0; i<= project.getSubProjects().size()-1; i++) {
                     SoapObject subObject = new SoapObject(NAMESPACE, "ProjectDataArray");
                     if(project.getSubProjects().get(i).getId()==0) {
-                        if(this.addProject(project.getSubProjects().get(i))) {
+                        if(this.addProject(project.getSubProjects().get(i)).equals("true")) {
                             for(MantisProject mantisProject : this.getProjects()) {
                                 if(mantisProject.getName().equals(project.getSubProjects().get(i).getName())) {
                                     subObject.addProperty("id", mantisProject.getId());
@@ -259,11 +259,9 @@ public class MantisSoapAPI {
             structRequest.addProperty("project", projectObject);
             structEnvelope.setOutputSoapObject(structRequest);
             structTransport.call("SOAPAction", structEnvelope);
-            SoapObject obj = (SoapObject) structEnvelope.bodyIn;
-            return checkProperty(obj);
+            return this.returnResult();
         } catch (Exception ex) {
-            Helper.printException(ex);
-            return false;
+            return this.returnResult();
         }
     }
 
@@ -1247,4 +1245,17 @@ public class MantisSoapAPI {
         }
         return builder.toString();
     }
+
+    private String returnResult() {
+        if(this.structEnvelope.bodyIn instanceof SoapObject) {
+            SoapObject soapObject = (SoapObject) this.structEnvelope.bodyIn;
+            return String.valueOf(checkProperty(soapObject));
+        } else if (this.structEnvelope.bodyIn instanceof SoapFault) {
+            SoapFault soapFault = (SoapFault) this.structEnvelope.bodyIn;
+            return soapFault.faultstring;
+        } else {
+            return "";
+        }
+    }
+
 }
