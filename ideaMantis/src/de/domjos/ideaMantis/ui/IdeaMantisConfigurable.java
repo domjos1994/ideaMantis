@@ -160,7 +160,7 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
             String oldSettings = this.temporarilyChangeSettings();
 
             MantisSoapAPI connection = new MantisSoapAPI(this.settings);
-            if(this.changeConnectionLabel(connection.testConnection())) {
+            if(this.changeConnectionLabel(connection)) {
                 java.util.List<MantisProject> projects = connection.getProjects();
                 cmbProjects.removeAllItems();
                 cmbNewProjectProjects.removeAllItems();
@@ -284,13 +284,7 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
         cmdCreateNewProject.addActionListener(e -> newProjectPanel.setVisible(true));
 
         JPanel root = new JPanel(new GridBagLayout());
-        GridBagConstraints constraints = new GridBagConstraints();
-        constraints.anchor = GridBagConstraints.NORTHWEST;
-        constraints.fill = GridBagConstraints.HORIZONTAL;
-        constraints.weightx = 2.0;
-        constraints.weighty = 0.0;
-        constraints.gridwidth = GridBagConstraints.REMAINDER;
-
+        GridBagConstraints constraints = Helper.getRootConstraint();
         root.add(connPanel, constraints);
         constraints.weighty = 2.0;
         root.add(projectPanel,constraints);
@@ -372,16 +366,24 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
         UIUtil.dispose(txtReloadTime);
     }
 
-    private boolean changeConnectionLabel(MantisUser user) {
-        if(user==null) {
-            this.lblConnectionState.setText("Not connected!");
-            this.lblConnectionState.setForeground(JBColor.RED);
-            return false;
-        } else {
-            this.lblConnectionState.setText(String.format("Connected as %s!", user.getUserName()));
-            this.lblConnectionState.setForeground(JBColor.GREEN);
-            return true;
+    private boolean changeConnectionLabel(MantisSoapAPI api) {
+        if(api!=null) {
+            MantisUser user = api.testConnection();
+            if(user==null) {
+                if(api.getCurrentError()!=null) {
+                    this.lblConnectionState.setText(api.getCurrentError().faultstring);
+                } else {
+                    this.lblConnectionState.setText("Not connected!");
+                }
+                this.lblConnectionState.setForeground(JBColor.RED);
+                return false;
+            } else {
+                this.lblConnectionState.setText(String.format("Connected as %s! Version: %s", user.getUserName(), api.getVersion()));
+                this.lblConnectionState.setForeground(JBColor.GREEN);
+                return true;
+            }
         }
+        return false;
     }
 
     private MantisProject getProject(int id, java.util.List<MantisProject> projects) {

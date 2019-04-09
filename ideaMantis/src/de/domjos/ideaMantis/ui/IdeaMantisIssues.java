@@ -62,7 +62,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
     private JTextField txtIssueNoteReporterName, txtIssueNoteReporterEMail, txtIssueNoteDate, txtIssueAttachmentFileName;
     private JTextField txtIssueAttachmentSize;
 
-    private JTable tblIssues, tblIssueAttachments, tblIssueNotes, tblHistory;
+    private JTable tblIssues, tblIssueAttachments, tblIssueNotes, tblHistory, tblIssueRelationship;
 
     private JLabel lblValidation;
     private JCheckBox chkAddVCS;
@@ -79,6 +79,11 @@ public class IdeaMantisIssues implements ToolWindowFactory {
     private JComboBox<String> cmbIssueProfile;
     private JTabbedPane tbPnlMain;
     private JComboBox<String> cmbFilterStatus;
+
+    private JButton cmdIssueRelationshipAdd;
+    private JButton cmdIssueRelationshipDelete;
+    private JComboBox<String> cmbIssueRelationshipType;
+    private JTextField txtIssueRelationshipIssue;
     private boolean state = false, loadComboBoxes = false;
     private int page = 1;
 
@@ -93,10 +98,12 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         tblIssues.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tblIssueAttachments.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tblIssueNotes.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        tblIssueRelationship.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tblIssueModel = this.addColumnsToIssueTable();
         DefaultTableModel tblIssueAttachmentModel = this.addColumnsToIssueAttachmentTable();
         DefaultTableModel tblIssueNoteModel = this.addColumnsToIssueNoteTable();
         DefaultTableModel tblHistoryModel = this.addColumnsToHistoryTable();
+        DefaultTableModel tblRelationshipModel = this.addColumnsToRelationshipTable();
         if(settings==null) {
             controlIssues(false, false);
         } else {
@@ -391,15 +398,26 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                         }
                         tblHistory.setModel(tblHistoryModel);
 
+                        tblIssueRelationship.removeAll();
+                        for (int i = tblRelationshipModel.getRowCount() - 1; i >= 0; i--) {
+                            tblRelationshipModel.removeRow(i);
+                        }
+                        List<Map.Entry<String, MantisIssue>> relationships = api.getRelationships(issue.getId());
+                        tblHistoryModel.addRow(new Object[]{"Add new Item", 0, ""});
+                        for(Map.Entry<String, MantisIssue> relationship : relationships) {
+                            tblHistoryModel.addRow(new Object[]{relationship.getKey(), relationship.getValue().getId(), relationship.getValue().getSummary()});
+                        }
+
                         if(settings==null) {
                             controlIssues(true, false);
                             controlNotes(false, false);
                             controlAttachments(false, false);
-
+                            controlRelationships(false);
                         } else {
                             controlIssues(true, settings.isFastTrack());
                             controlNotes(false, settings.isFastTrack());
                             controlAttachments(false, settings.isFastTrack());
+                            controlRelationships(settings.isFastTrack());
                         }
                         checkMandatoryFieldsAreNotEmpty(true);
                     }
@@ -1276,6 +1294,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
             resetIssues();
             controlNotes(false, false);
             controlAttachments(false, false);
+            controlRelationships(false);
         }
     }
 
@@ -1296,14 +1315,17 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         txtBasicsTags.setText("");
         tblIssueNotes.removeAll();
         tblIssueAttachments.removeAll();
+        tblIssueRelationship.removeAll();
         txtIssueReporterEMail.setText("");
         txtIssueReporterName.setText("");
         Helper.resetControlsInAPanel(pnlIssueDescriptions);
         this.resetAttachments();
         this.resetNotes();
+        this.resetRelationships();
         tblIssueAttachments.setModel(addColumnsToIssueAttachmentTable());
         tblIssueNotes.setModel(addColumnsToIssueNoteTable());
         tblHistory.setModel(addColumnsToHistoryTable());
+        tblIssueRelationship.setModel(addColumnsToRelationshipTable());
     }
 
     private void controlNotes(boolean selected, boolean editMode) {
@@ -1383,6 +1405,16 @@ public class IdeaMantisIssues implements ToolWindowFactory {
     private void resetAttachments() {
         txtIssueAttachmentFileName.setText("");
         txtIssueAttachmentSize.setText("");
+    }
+
+    private void controlRelationships(boolean editMode) {
+        cmbIssueRelationshipType.setEnabled(editMode);
+        txtIssueRelationshipIssue.setEnabled(editMode);
+    }
+
+    private void resetRelationships() {
+        txtIssueRelationshipIssue.setText("");
+        cmbIssueRelationshipType.setSelectedItem(null);
     }
 
     private void loadComboBoxes() {
@@ -1467,6 +1499,11 @@ public class IdeaMantisIssues implements ToolWindowFactory {
             for(ObjectRef viewState : viewStates) {
                 cmbIssueNoteViewState.addItem(viewState.getName());
             }
+        }
+
+        cmbIssueRelationshipType.removeAllItems();
+        for(String item : api.getRelationshipTypes()) {
+            cmbIssueRelationshipType.addItem(item);
         }
 
         this.loadComboBoxes = true;
@@ -1681,6 +1718,19 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         model.addColumn("Field");
         model.addColumn("Old Value");
         model.addColumn("New Value");
+        return model;
+    }
+
+    private DefaultTableModel addColumnsToRelationshipTable() {
+        DefaultTableModel model  = new DefaultTableModel(){
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        model.addColumn("Type");
+        model.addColumn("Number");
+        model.addColumn("Summary");
         return model;
     }
 

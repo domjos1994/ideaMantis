@@ -25,7 +25,6 @@ import de.domjos.ideaMantis.utils.Helper;
 import org.ksoap2.SoapEnvelope;
 import org.ksoap2.SoapFault;
 import org.ksoap2.serialization.MarshalBase64;
-import org.ksoap2.serialization.PropertyInfo;
 import org.ksoap2.serialization.SoapObject;
 import org.ksoap2.serialization.SoapSerializationEnvelope;
 import org.ksoap2.transport.HttpTransportSE;
@@ -49,6 +48,8 @@ public class MantisSoapAPI {
     private HttpTransportSE structTransport;
     private MantisUser user;
     private int issueID;
+    private SoapFault currentError;
+    private final Map<String, Integer> RELATIONSHIP_TYPE;
 
     /**
      * Constructor with the connection-settings as param
@@ -56,6 +57,14 @@ public class MantisSoapAPI {
      * @param settings the connection-settings
      */
     public MantisSoapAPI(ConnectionSettings settings) {
+        this.RELATIONSHIP_TYPE = new LinkedHashMap<>();
+        this.RELATIONSHIP_TYPE.put("REL_NONE", -2);
+        this.RELATIONSHIP_TYPE.put("REL_ANY", -1);
+        this.RELATIONSHIP_TYPE.put("DUPLICATE", 0 );
+        this.RELATIONSHIP_TYPE.put("RELATED", 1);
+        this.RELATIONSHIP_TYPE.put("DEPENDANT", 2);
+        this.RELATIONSHIP_TYPE.put("BLOCKS", 3);
+        this.RELATIONSHIP_TYPE.put("HAS_DUPLICATE", 4);
 
         // initialize settings
         this.settings = settings;
@@ -115,6 +124,16 @@ public class MantisSoapAPI {
             Helper.printException(ex);
         }
         return null;
+    }
+
+    public List<String> getRelationshipTypes() {
+        return new LinkedList<>(this.RELATIONSHIP_TYPE.keySet());
+    }
+
+    public List<Map.Entry<String, MantisIssue>> getRelationships(int id) {
+        List<Map.Entry<String, MantisIssue>> relationships = new LinkedList<>();
+
+        return  relationships;
     }
 
     private Map<Integer, String> getAccessLevels() {
@@ -424,7 +443,7 @@ public class MantisSoapAPI {
         }
     }
 
-    public boolean addIssue(MantisIssue issue) throws Exception {
+    public boolean addIssue(MantisIssue issue) {
         SoapObject structRequest;
         if(issue.getId()!=0) {
             structRequest = new SoapObject(this.returnURL(), "mc_issue_update");
@@ -851,7 +870,6 @@ public class MantisSoapAPI {
 
     public void addTagToIssue(int issue_id, String tags) {
         try {
-            SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy HH:mm");
             String[] strTags = tags.split(", ");
             SoapObject structRequest = new SoapObject(this.returnURL(), "mc_issue_set_tags");
             structRequest.addProperty("username", this.settings.getUserName());
@@ -859,7 +877,6 @@ public class MantisSoapAPI {
             structRequest.addProperty("issue_id", issue_id);
             Vector<SoapObject> tagObjectArray = new Vector<>();
             for(String strTag : strTags) {
-                SoapObject tagObject = new SoapObject(NAMESPACE, "TagDataArray");
                 MantisTag tag = getTag(strTag);
                 if(tag==null) {
                     MantisTag mantisTag = new MantisTag();
@@ -871,20 +888,7 @@ public class MantisSoapAPI {
                 }
 
                 if (tag != null) {
-                    tagObject.addProperty("id", tag.getId());
-                    SoapObject userObject = new SoapObject(NAMESPACE, "AccountData");
-                    userObject.addProperty("name", tag.getReporter().getUserName());
-                    userObject.addProperty("id", tag.getReporter().getId());
-                    userObject.addProperty("real_name", tag.getReporter().getName());
-                    userObject.addProperty("email", tag.getReporter().getEmail());
-                    tagObject.addProperty("user_id", userObject);
-                    tagObject.addProperty("name", tag.getName());
-                    tagObject.addProperty("description", tag.getDescription());
-                    if (tag.getCreationDate() != null)
-                        tagObject.addProperty("date_created", format.format(tag.getCreationDate()));
-                    if (tag.getUpdatedDate() != null)
-                        tagObject.addProperty("date_updated", format.format(tag.getUpdatedDate()));
-                    tagObjectArray.add(tagObject);
+                    tagObjectArray.add(this.getTagObject(tag, "TagDataArray"));
                 }
             }
             structRequest.addProperty("tags", tagObjectArray);
@@ -919,12 +923,7 @@ public class MantisSoapAPI {
                         MantisTag tag = new MantisTag();
                         tag.setId(Integer.parseInt(checkAndGetProperty("id", ((SoapObject) object))));
                         if (!checkAndGetProperty("user_id", ((SoapObject) object)).isEmpty()) {
-                            SoapObject user = (SoapObject) ((SoapObject) object).getProperty("user_id");
-                            MantisUser sUser = new MantisUser(Helper.getParam(user, "name", false, 0));
-                            sUser.setName(Helper.getParam(user, "real_name", false, 0));
-                            sUser.setId(Integer.parseInt(Helper.getParam(user, "id", false, 0)));
-                            sUser.setEmail(Helper.getParam(user, "email", false, 0));
-                            tag.setReporter(sUser);
+                            tag.setReporter(this.setUser((SoapObject) ((SoapObject) object).getProperty("user_id")));
                         }
                         tag.setName(checkAndGetProperty("name", ((SoapObject) object)));
                         tag.setDescription(checkAndGetProperty("description", ((SoapObject) object)));
@@ -972,6 +971,18 @@ public class MantisSoapAPI {
         return changeLogMap;
     }
 
+    public String getVersion() {
+        SoapObject structRequest = new SoapObject(this.returnURL(), "mc_version");
+        structEnvelope.setOutputSoapObject(structRequest);
+        try {
+            structTransport.call("SOAPAction", structEnvelope);
+            SoapObject soapObject = (SoapObject) structEnvelope.bodyIn;
+            return soapObject.getProperty(0).toString();
+        } catch (Exception ex) {
+            return "";
+        }
+    }
+
     private List<MantisVersion> getVersions(int pid, String function) {
         List<MantisVersion> enumList = new LinkedList<>();
         try {
@@ -996,28 +1007,11 @@ public class MantisSoapAPI {
     }
 
     private void addTag(MantisTag tag) {
-        SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy HH:mm");
         SoapObject structRequest = new SoapObject(this.returnURL(), "mc_tag_add");
         try {
             structRequest.addProperty("username", this.settings.getUserName());
             structRequest.addProperty("password", this.settings.getPassword());
-            SoapObject tagObject = new SoapObject(NAMESPACE, "TagData");
-            tagObject.addProperty("id", tag.getId());
-            if(tag.getReporter()!=null) {
-                SoapObject userObject = new SoapObject(NAMESPACE, "AccountData");
-                userObject.addProperty("id", tag.getReporter().getId());
-                userObject.addProperty("name", tag.getReporter().getUserName());
-                userObject.addProperty("real_name", tag.getReporter().getName());
-                userObject.addProperty("email", tag.getReporter().getEmail());
-                tagObject.addProperty("user_id", userObject);
-            }
-            tagObject.addProperty("name", tag.getName());
-            tagObject.addProperty("description", tag.getDescription());
-            if(tag.getCreationDate()!=null)
-                tagObject.addProperty("date_created", format.format(tag.getCreationDate()));
-            if(tag.getUpdatedDate()!=null)
-                tagObject.addProperty("date_updated", format.format(tag.getUpdatedDate()));
-            structRequest.addProperty("tag", tagObject);
+            structRequest.addProperty("tag", this.getTagObject(tag, "TagData"));
             structEnvelope.setOutputSoapObject(structRequest);
             structTransport.call("SOAPAction", structEnvelope);
             SoapObject obj = (SoapObject) structEnvelope.bodyIn;
@@ -1052,12 +1046,7 @@ public class MantisSoapAPI {
         issue.setProfile(profile);
 
         if(!small) {
-            SoapObject user = (SoapObject) soapObjIssue.getProperty(8);
-            MantisUser sUser = new MantisUser(Helper.getParam(user, "name", false, 0));
-            sUser.setName(Helper.getParam(user, "real_name", false, 0));
-            sUser.setId(Integer.parseInt(Helper.getParam(user, "id", false, 0)));
-            sUser.setEmail(Helper.getParam(user, "email", false, 0));
-            issue.setReporter(sUser);
+            issue.setReporter(setUser((SoapObject) soapObjIssue.getProperty(8)));
         }
         issue.setSummary(Helper.getParam(soapObjIssue, "summary", false, 0));
         if(!small) {
@@ -1165,6 +1154,41 @@ public class MantisSoapAPI {
         return issue;
     }
 
+    private MantisUser setUser(SoapObject user) {
+        MantisUser sUser = new MantisUser(Helper.getParam(user, "name", false, 0));
+        sUser.setName(Helper.getParam(user, "real_name", false, 0));
+        sUser.setId(Integer.parseInt(Helper.getParam(user, "id", false, 0)));
+        sUser.setEmail(Helper.getParam(user, "email", false, 0));
+        return sUser;
+    }
+
+    private SoapObject getUserObject(MantisUser user) {
+        SoapObject userObject = new SoapObject(NAMESPACE, "AccountData");
+        userObject.addProperty("name", user.getUserName());
+        userObject.addProperty("id", user.getId());
+        userObject.addProperty("real_name", user.getName());
+        userObject.addProperty("email", user.getEmail());
+        return userObject;
+    }
+
+    private SoapObject getTagObject(MantisTag tag, String name) {
+        SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy HH:mm");
+        SoapObject tagObject = new SoapObject(NAMESPACE, name);
+        tagObject.addProperty("id", tag.getId());
+        if(tag.getReporter()!=null) {
+            tagObject.addProperty("user_id", getUserObject(tag.getReporter()));
+        }
+        tagObject.addProperty("name", tag.getName());
+        tagObject.addProperty("description", tag.getDescription());
+        if(tag.getCreationDate()!=null) {
+            tagObject.addProperty("date_created", format.format(tag.getCreationDate()));
+        }
+        if(tag.getUpdatedDate()!=null) {
+            tagObject.addProperty("date_updated", format.format(tag.getUpdatedDate()));
+        }
+        return tagObject;
+    }
+
     private boolean checkProperty(SoapObject result) {
         try {
             try {
@@ -1217,7 +1241,8 @@ public class MantisSoapAPI {
         }
     }
 
-    private SoapObject executeQueryAndGetSoapObject(String action, Object[][] furtherParams) throws Exception {
+    private SoapObject executeQueryAndGetSoapObject(String action, Object[][] furtherParams) {
+        this.currentError = null;
         SoapObject structRequest = new SoapObject(this.returnURL(), action);
         structRequest.addProperty("username", this.settings.getUserName());
         structRequest.addProperty("password", this.settings.getPassword());
@@ -1231,12 +1256,17 @@ public class MantisSoapAPI {
             structTransport.call("SOAPAction", structEnvelope);
             return (SoapObject) structEnvelope.bodyIn;
         } catch (Exception ex) {
-            return null;
+            if(structEnvelope.bodyIn instanceof SoapFault) {
+                this.currentError = (SoapFault) structEnvelope.bodyIn;
+                return null;
+            } else {
+                return null;
+            }
         }
     }
 
     private String returnURL() {
-        StringBuilder builder = new StringBuilder("");
+        StringBuilder builder = new StringBuilder();
         builder.append(this.settings.getHostName());
         if(this.settings.getHostName().endsWith("/")) {
             builder.append("api/soap/mantisconnect.php");
@@ -1258,4 +1288,7 @@ public class MantisSoapAPI {
         }
     }
 
+    public SoapFault getCurrentError() {
+        return this.currentError;
+    }
 }

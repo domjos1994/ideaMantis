@@ -9,6 +9,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vcs.changes.Change;
 import com.intellij.openapi.vcs.changes.ChangeListManager;
 import com.intellij.openapi.vcs.changes.LocalChangeList;
+import com.intellij.util.ui.JBUI;
 import de.domjos.ideaMantis.model.MantisIssue;
 import org.jetbrains.jps.cmdline.LogSetup;
 import org.ksoap2.serialization.SoapObject;
@@ -170,5 +171,30 @@ public abstract class Helper {
 
     public static Project getProject() {
         return Helper.project;
+    }
+
+    public static GridBagConstraints getRootConstraint() {
+        GridBagConstraints constraints = new GridBagConstraints();
+        constraints.anchor = GridBagConstraints.NORTHWEST;
+        constraints.fill = GridBagConstraints.HORIZONTAL;
+        constraints.weightx = 2.0;
+        constraints.weighty = 0.0;
+        constraints.gridwidth = GridBagConstraints.REMAINDER;
+        return constraints;
+    }
+
+    public static GridBagConstraints getLabelConstraint() {
+        GridBagConstraints labelConstraint = new GridBagConstraints();
+        labelConstraint.anchor = GridBagConstraints.EAST;
+        labelConstraint.insets = JBUI.insets(5, 10);
+        return labelConstraint;
+    }
+
+    public static GridBagConstraints getTextConstraint() {
+        GridBagConstraints txtConstraint = new GridBagConstraints();
+        txtConstraint.weightx = 2.0;
+        txtConstraint.fill = GridBagConstraints.HORIZONTAL;
+        txtConstraint.gridwidth = GridBagConstraints.REMAINDER;
+        return txtConstraint;
     }
 }

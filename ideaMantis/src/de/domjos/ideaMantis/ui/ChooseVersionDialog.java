@@ -7,6 +7,7 @@ import com.intellij.util.ui.JBUI;
 import de.domjos.ideaMantis.model.MantisVersion;
 import de.domjos.ideaMantis.service.ConnectionSettings;
 import de.domjos.ideaMantis.soap.MantisSoapAPI;
+import de.domjos.ideaMantis.utils.Helper;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
@@ -38,20 +39,9 @@ public class ChooseVersionDialog extends DialogWrapper {
     @Override
     protected JComponent createCenterPanel() {
         JPanel root = new JPanel(new GridBagLayout());
-        GridBagConstraints constraints = new GridBagConstraints();
-        constraints.weightx = 2.0;
-        constraints.weighty = 0.0;
-        constraints.anchor = GridBagConstraints.NORTHWEST;
-        constraints.fill = GridBagConstraints.HORIZONTAL;
-        constraints.gridwidth = GridBagConstraints.REMAINDER;
 
-        GridBagConstraints labelConstraint = new GridBagConstraints();
-        labelConstraint.anchor = GridBagConstraints.EAST;
-        labelConstraint.insets = JBUI.insets(5, 10);
-        GridBagConstraints txtConstraint = new GridBagConstraints();
-        txtConstraint.weightx = 2.0;
-        txtConstraint.fill = GridBagConstraints.HORIZONTAL;
-        txtConstraint.gridwidth = GridBagConstraints.REMAINDER;
+        GridBagConstraints labelConstraint = Helper.getLabelConstraint();
+        GridBagConstraints txtConstraint = Helper.getTextConstraint();
 
         Label lblVersion = new Label("Fixed in Version");
 

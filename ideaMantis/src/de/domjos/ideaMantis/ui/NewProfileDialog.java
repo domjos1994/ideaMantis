@@ -45,20 +45,9 @@ public class NewProfileDialog extends DialogWrapper {
     @Override
     protected JComponent createCenterPanel() {
         JPanel root = new JPanel(new GridBagLayout());
-        GridBagConstraints constraints = new GridBagConstraints();
-        constraints.anchor = GridBagConstraints.NORTHWEST;
-        constraints.fill = GridBagConstraints.HORIZONTAL;
-        constraints.weightx = 2.0;
-        constraints.weighty = 0.0;
-        constraints.gridwidth = GridBagConstraints.REMAINDER;
 
-        GridBagConstraints labelConstraint = new GridBagConstraints();
-        labelConstraint.anchor = GridBagConstraints.EAST;
-        labelConstraint.insets = JBUI.insets(5, 10);
-        GridBagConstraints txtConstraint = new GridBagConstraints();
-        txtConstraint.weightx = 2.0;
-        txtConstraint.fill = GridBagConstraints.HORIZONTAL;
-        txtConstraint.gridwidth = GridBagConstraints.REMAINDER;
+        GridBagConstraints labelConstraint = Helper.getLabelConstraint();
+        GridBagConstraints txtConstraint = Helper.getTextConstraint();
 
         txtPlatform = new JBTextField();
         txtPlatform.setName("txtPlatform");
