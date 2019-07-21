@@ -798,7 +798,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                 pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                 if(tblIssueNotes.getSelectedRow()!=-1) {
                     int id = Integer.parseInt(tblIssueNoteModel.getValueAt(tblIssueNotes.getSelectedRow(), 0).toString());
-                    if(!new MantisSoapAPI(this.settings).removeNote(id)) {
+                    if(new MantisSoapAPI(this.settings).removeNote(id)) {
                         Helper.printNotification("Exception", "Can't delete Note!", NotificationType.ERROR);
                     }
                     int nid = tblIssueNotes.getSelectedRow();
@@ -918,7 +918,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                 pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                 if(tblIssueAttachments.getSelectedRow()!=-1) {
                     int id = Integer.parseInt(tblIssueAttachmentModel.getValueAt(tblIssueAttachments.getSelectedRow(), 0).toString());
-                    if(!new MantisSoapAPI(this.settings).removeAttachment(id)) {
+                    if(new MantisSoapAPI(this.settings).removeAttachment(id)) {
                         Helper.printNotification("Exception", "Can't delete Attachment!", NotificationType.ERROR);
                     }
                     int aid = tblIssueAttachments.getSelectedRow();

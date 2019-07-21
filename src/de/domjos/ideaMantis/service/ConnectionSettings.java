@@ -12,8 +12,8 @@ import org.jetbrains.annotations.Nullable;
 @State(
     name = "ideaMantisSettings",
     storages = {
-        @Storage(file = "$PROJECT_FILE$"),
-        @Storage(file = "$PROJECT_CONFIG_DIR$/ideaMantis.xml", scheme = StorageScheme.DIRECTORY_BASED)
+        @Storage("$PROJECT_FILE$"),
+        @Storage("$PROJECT_CONFIG_DIR$/ideaMantis.xml")
     }
 )
 public class ConnectionSettings implements PersistentStateComponent<Element> {

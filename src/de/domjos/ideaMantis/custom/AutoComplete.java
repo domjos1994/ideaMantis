@@ -4,20 +4,13 @@ import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
-import java.awt.event.ActionEvent;
 import java.util.Collections;
 import java.util.List;
 
 public class AutoComplete implements DocumentListener {
 
-    private static enum Mode {
-        INSERT,
-        COMPLETION
-    };
-
     private JTextField textField;
     private final List<String> keywords;
-    private Mode mode = Mode.INSERT;
 
     public AutoComplete(JTextField textField, List<String> keywords) {
         this.textField = textField;
@@ -38,13 +31,10 @@ public class AutoComplete implements DocumentListener {
 
         int pos = ev.getOffset();
         int startPos = 0;
-        String content = null;
         try {
-            String[] array = textField.getText(0, pos + 1).split(",");
             if(textField.getText(0, pos + 1).contains(",")) {
                 startPos = textField.getText().lastIndexOf(",");
             }
-            content = array[array.length-1].trim();
         } catch (BadLocationException e) {
             e.printStackTrace();
         }
@@ -72,9 +62,6 @@ public class AutoComplete implements DocumentListener {
                 // so we submit a task that does the change later
                 SwingUtilities.invokeLater(new CompletionTask(completion, pos + 1));
             }
-        } else {
-            // Nothing found
-            mode = Mode.INSERT;
         }
     }
 
@@ -88,12 +75,11 @@ public class AutoComplete implements DocumentListener {
         }
 
         public void run() {
-            StringBuffer sb = new StringBuffer(textField.getText());
+            StringBuilder sb = new StringBuilder(textField.getText());
             sb.insert(position, completion);
             textField.setText(sb.toString());
             textField.setCaretPosition(position + completion.length());
             textField.moveCaretPosition(position);
-            mode = Mode.COMPLETION;
         }
     }
 

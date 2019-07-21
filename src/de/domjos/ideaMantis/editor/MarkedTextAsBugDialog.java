@@ -45,20 +45,20 @@ class MarkedTextAsBugDialog extends DialogWrapper {
             this.documentPath = documentPath;
             this.settings = ConnectionSettings.getInstance(project);
             this.api = new MantisSoapAPI(settings);
-            this.setTitle("Mark text as bug");
+            this.setTitle("Mark Text as Bug");
             this.setOKButtonText("Add Issue");
             this.init();
             if(this.getButton(this.getOKAction())!=null) {
-                this.getButton(this.getOKAction()).addActionListener((event) -> {
+                Objects.requireNonNull(this.getButton(this.getOKAction())).addActionListener((event) -> {
                     try {
                         MantisIssue issue = new MantisIssue();
                         issue.setDescription(txtDescription.getText());
                         issue.setSummary(txtSummary.getText());
                         issue.setDate_submitted(txtDate.getText());
-                        issue.setCategory(cmbCategory.getSelectedItem().toString());
-                        issue.setSeverity(cmbSeverity.getSelectedItem().toString());
-                        issue.setPriority(cmbPriority.getSelectedItem().toString());
-                        issue.setStatus(cmbStatus.getSelectedItem().toString());
+                        issue.setCategory(Objects.requireNonNull(cmbCategory.getSelectedItem()).toString());
+                        issue.setSeverity(Objects.requireNonNull(cmbSeverity.getSelectedItem()).toString());
+                        issue.setPriority(Objects.requireNonNull(cmbPriority.getSelectedItem()).toString());
+                        issue.setStatus(Objects.requireNonNull(cmbStatus.getSelectedItem()).toString());
                         MantisSoapAPI api = new MantisSoapAPI(settings);
                         java.util.List<MantisVersion> versions = api.getVersions(settings.getProjectID());
                         if(cmbVersion.getSelectedItem()!=null) {
