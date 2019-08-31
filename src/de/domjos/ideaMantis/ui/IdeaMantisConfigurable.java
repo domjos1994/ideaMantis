@@ -415,8 +415,8 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
         String  hostName = this.settings.getHostName(),
                 userName = this.settings.getUserName(),
                 password = this.settings.getPassword();
-        this.settings.setHostName(txtHostName.getText());
-        this.settings.setUserName(txtUserName.getText());
+        this.settings.setHostName(txtHostName.getText().trim());
+        this.settings.setUserName(txtUserName.getText().trim());
         this.settings.setPassword(pwd.toString());
 
         return String.format("%s;-;%s;-;%s", hostName, userName, password);
