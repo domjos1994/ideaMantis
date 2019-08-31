@@ -1149,60 +1149,65 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         Content content = contentFactory.createContent(this.pnlMain, "", false);
         toolWindow.getContentManager().addContent(content);
         settings = ConnectionSettings.getInstance(project);
-        MantisSoapAPI api = new MantisSoapAPI(settings);
-        controlPagination();
-        this.changeListManager = ChangeListManager.getInstance(project);
-        access = api.getRightsFromProject(settings.getProjectID());
-        checkRights();
-        cmdReload.doClick();
-        if(state) {
-            if(!loadComboBoxes)
-                this.loadComboBoxes();
-            cmdCustomFields.setVisible(!api.getCustomFields(settings.getProjectID()).isEmpty());
-        }
 
-        api.getProfiles();
-        this.addAutoCompletion(api);
+        if(!this.settings.getHostName().trim().isEmpty()) {
+            MantisSoapAPI api = new MantisSoapAPI(settings);
+            controlPagination();
+            this.changeListManager = ChangeListManager.getInstance(project);
+            access = api.getRightsFromProject(settings.getProjectID());
+            checkRights();
+            cmdReload.doClick();
+            if(state) {
+                if(!loadComboBoxes)
+                    this.loadComboBoxes();
+                cmdCustomFields.setVisible(!api.getCustomFields(settings.getProjectID()).isEmpty());
+            }
 
-        toolWindow.getContentManager().addContentManagerListener(new ContentManagerListener() {
-            @Override
-            public void contentAdded(ContentManagerEvent contentManagerEvent) {
-                for(Content content : toolWindow.getContentManager().getContents()) {
-                    if(content!=null) {
-                        if(content.getDescription()!=null) {
-                            if (content.getDescription().equals("reload comboBoxes")) {
-                                MantisSoapAPI api = new MantisSoapAPI(settings);
-                                access = api.getRightsFromProject(settings.getProjectID());
-                                checkRights();
-                                loadComboBoxes();
-                                cmdReload.doClick();
-                                cmdCustomFields.setVisible(!api.getCustomFields(settings.getProjectID()).isEmpty());
-                                toolWindow.getContentManager().removeContent(content, true);
-                                controlIssues(false, settings.isFastTrack());
-                                controlAttachments(false, settings.isFastTrack());
-                                controlNotes(false, settings.isFastTrack());
-                                initTimer(settings);
-                                break;
+            api.getProfiles();
+            this.addAutoCompletion(api);
+
+            toolWindow.getContentManager().addContentManagerListener(new ContentManagerListener() {
+                @Override
+                public void contentAdded(@NotNull ContentManagerEvent contentManagerEvent) {
+                    for(Content content : toolWindow.getContentManager().getContents()) {
+                        if(content!=null) {
+                            if(content.getDescription()!=null) {
+                                if (content.getDescription().equals("reload comboBoxes")) {
+                                    MantisSoapAPI api = new MantisSoapAPI(settings);
+                                    access = api.getRightsFromProject(settings.getProjectID());
+                                    checkRights();
+                                    loadComboBoxes();
+                                    cmdReload.doClick();
+                                    cmdCustomFields.setVisible(!api.getCustomFields(settings.getProjectID()).isEmpty());
+                                    toolWindow.getContentManager().removeContent(content, true);
+                                    controlIssues(false, settings.isFastTrack());
+                                    controlAttachments(false, settings.isFastTrack());
+                                    controlNotes(false, settings.isFastTrack());
+                                    initTimer(settings);
+                                    break;
+                                }
                             }
                         }
                     }
                 }
-            }
 
-            @Override
-            public void contentRemoved(ContentManagerEvent contentManagerEvent) {}
+                @Override
+                public void contentRemoved(ContentManagerEvent contentManagerEvent) {}
 
-            @Override
-            public void contentRemoveQuery(ContentManagerEvent contentManagerEvent) {}
+                @Override
+                public void contentRemoveQuery(ContentManagerEvent contentManagerEvent) {}
 
-            @Override
-            public void selectionChanged(ContentManagerEvent contentManagerEvent) {}
-        });
-        resetIssues();
-        controlIssues(false, settings.isFastTrack());
-        controlAttachments(false, settings.isFastTrack());
-        controlNotes(false, settings.isFastTrack());
-        this.initTimer(settings);
+                @Override
+                public void selectionChanged(ContentManagerEvent contentManagerEvent) {}
+            });
+            resetIssues();
+            controlIssues(false, settings.isFastTrack());
+            controlAttachments(false, settings.isFastTrack());
+            controlNotes(false, settings.isFastTrack());
+            this.initTimer(settings);
+        } else {
+            Helper.printNotification("No settings!", "Go To Settings and change them!", NotificationType.WARNING);
+        }
     }
 
     private void controlIssues(boolean selected, boolean editMode) {
