@@ -262,6 +262,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                                 }
                                 List<MantisIssue> mantisIssues = new MantisSoapAPI(settings).getIssues(settings.getProjectID(), page, filterID);
                                 progressIndicator.setFraction(0.0);
+                                progressIndicator.setIndeterminate(false);
                                 double factor = 100.0 / mantisIssues.size();
                                 for(MantisIssue issue : mantisIssues) {
                                     tblIssueModel.addRow(new Object[]{issue.getId(), issue.getSummary(), issue.getStatus()});
@@ -1192,13 +1193,13 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                 }
 
                 @Override
-                public void contentRemoved(ContentManagerEvent contentManagerEvent) {}
+                public void contentRemoved(@NotNull ContentManagerEvent contentManagerEvent) {}
 
                 @Override
-                public void contentRemoveQuery(ContentManagerEvent contentManagerEvent) {}
+                public void contentRemoveQuery(@NotNull ContentManagerEvent contentManagerEvent) {}
 
                 @Override
-                public void selectionChanged(ContentManagerEvent contentManagerEvent) {}
+                public void selectionChanged(@NotNull ContentManagerEvent contentManagerEvent) {}
             });
             resetIssues();
             controlIssues(false, settings.isFastTrack());

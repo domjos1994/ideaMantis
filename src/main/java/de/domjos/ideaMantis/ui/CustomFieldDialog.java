@@ -1,6 +1,5 @@
 package de.domjos.ideaMantis.ui;
 
-import com.intellij.notification.NotificationType;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
 import de.domjos.ideaMantis.model.CustomField;
@@ -18,6 +17,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Objects;
 
 public class CustomFieldDialog extends DialogWrapper {
     private MantisSoapAPI api;
@@ -25,7 +25,7 @@ public class CustomFieldDialog extends DialogWrapper {
     private String state;
     private JPanel panel;
     private java.util.List<CustomField> customFieldList = null;
-    private java.util.List<CustomFieldResult> resultList = null;
+    private java.util.List<CustomFieldResult> resultList;
     private Map<CustomField, String> customFields;
 
     CustomFieldDialog(@Nullable Project project, String state, Map<CustomField, String> customFields) {
@@ -40,7 +40,7 @@ public class CustomFieldDialog extends DialogWrapper {
             this.setOKButtonText("Finish");
             this.init();
             if(this.getButton(this.getOKAction())!=null) {
-                this.getButton(this.getOKAction()).addActionListener((event) -> {
+                Objects.requireNonNull(this.getButton(this.getOKAction())).addActionListener((event) -> {
                     for(int i = 0; i<=this.panel.getComponentCount()-1; i++) {
                         if(this.panel.getComponent(i) instanceof JPanel) {
                             CustomFieldResult result = new CustomFieldResult();

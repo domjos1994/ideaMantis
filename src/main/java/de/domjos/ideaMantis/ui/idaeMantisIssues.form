@@ -48,7 +48,9 @@
                   <component id="cf578" class="javax.swing.JTable" binding="tblIssues">
                     <constraints/>
                     <properties>
+                      <autoCreateRowSorter value="true"/>
                       <autoResizeMode value="4"/>
+                      <fillsViewportHeight value="true"/>
                     </properties>
                     <clientProperties>
                       <JTable.autoStartsEdit class="java.lang.Boolean" value="false"/>
@@ -66,18 +68,23 @@
                 <children>
                   <toolbar id="c591b">
                     <constraints>
-                      <grid row="0" column="0" row-span="1" col-span="2" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false">
+                      <grid row="0" column="0" row-span="1" col-span="2" vsize-policy="3" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false">
                         <preferred-size width="-1" height="20"/>
                       </grid>
                     </constraints>
-                    <properties/>
+                    <properties>
+                      <floatable value="false"/>
+                    </properties>
                     <border type="none"/>
                     <children>
                       <component id="d326" class="javax.swing.JButton" binding="cmdIssueNew">
                         <constraints/>
                         <properties>
+                          <borderPainted value="false"/>
                           <horizontalTextPosition value="0"/>
                           <icon value="de/domjos/ideaMantis/images/add.png"/>
+                          <maximumSize width="30" height="30"/>
+                          <minimumSize width="30" height="30"/>
                           <text value=""/>
                           <toolTipText value="New"/>
                         </properties>
@@ -85,8 +92,11 @@
                       <component id="d332e" class="javax.swing.JButton" binding="cmdIssueEdit">
                         <constraints/>
                         <properties>
+                          <borderPainted value="false"/>
                           <horizontalTextPosition value="0"/>
                           <icon value="de/domjos/ideaMantis/images/edit.png"/>
+                          <maximumSize width="30" height="30"/>
+                          <minimumSize width="30" height="30"/>
                           <text value=""/>
                           <toolTipText value="Edit"/>
                         </properties>
@@ -94,8 +104,11 @@
                       <component id="bf7f4" class="javax.swing.JButton" binding="cmdIssueDelete">
                         <constraints/>
                         <properties>
+                          <borderPainted value="false"/>
                           <horizontalTextPosition value="0"/>
                           <icon value="de/domjos/ideaMantis/images/delete.png"/>
+                          <maximumSize width="30" height="30"/>
+                          <minimumSize width="30" height="30"/>
                           <text value=""/>
                           <toolTipText value="Delete"/>
                         </properties>
@@ -103,28 +116,37 @@
                       <component id="425e5" class="javax.swing.JButton" binding="cmdIssueResolve">
                         <constraints/>
                         <properties>
+                          <borderPainted value="false"/>
                           <icon value="de/domjos/ideaMantis/images/resolve.png"/>
+                          <maximumSize width="30" height="30"/>
+                          <minimumSize width="30" height="30"/>
                           <text value=""/>
                           <toolTipText value="Resolve Issue"/>
                         </properties>
                       </component>
-                      <hspacer id="356ef">
+                      <hspacer id="5e3c1">
                         <constraints/>
                       </hspacer>
-                      <component id="21bdf" class="javax.swing.JButton" binding="cmdIssueSave">
+                      <component id="4690e" class="javax.swing.JButton" binding="cmdIssueSave">
                         <constraints/>
                         <properties>
+                          <borderPainted value="false"/>
                           <horizontalTextPosition value="0"/>
                           <icon value="de/domjos/ideaMantis/images/save.png"/>
+                          <maximumSize width="30" height="30"/>
+                          <minimumSize width="30" height="30"/>
                           <text value=""/>
                           <toolTipText value="Save"/>
                         </properties>
                       </component>
-                      <component id="252e8" class="javax.swing.JButton" binding="cmdIssueAbort">
+                      <component id="b379b" class="javax.swing.JButton" binding="cmdIssueAbort">
                         <constraints/>
                         <properties>
+                          <borderPainted value="false"/>
                           <horizontalTextPosition value="0"/>
                           <icon value="de/domjos/ideaMantis/images/cancel.png"/>
+                          <maximumSize width="30" height="30"/>
+                          <minimumSize width="30" height="30"/>
                           <text value=""/>
                           <toolTipText value="Cancel"/>
                         </properties>
@@ -137,7 +159,9 @@
                         <preferred-size width="-1" height="20"/>
                       </grid>
                     </constraints>
-                    <properties/>
+                    <properties>
+                      <floatable value="false"/>
+                    </properties>
                     <border type="none"/>
                     <children>
                       <component id="3c7d1" class="javax.swing.JCheckBox" binding="chkAddVCS">
@@ -884,22 +908,6 @@
           <text value=""/>
         </properties>
       </component>
-      <component id="e820b" class="javax.swing.JButton" binding="cmdForward">
-        <constraints>
-          <grid row="3" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
-        </constraints>
-        <properties>
-          <text value="&gt;"/>
-        </properties>
-      </component>
-      <component id="6a7e9" class="javax.swing.JButton" binding="cmdBack">
-        <constraints>
-          <grid row="3" column="0" row-span="1" col-span="2" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
-        </constraints>
-        <properties>
-          <text value="&lt;"/>
-        </properties>
-      </component>
       <component id="3da8" class="javax.swing.JComboBox" binding="cmbFilters">
         <constraints>
           <grid row="2" column="0" row-span="1" col-span="3" vsize-policy="0" hsize-policy="3" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
@@ -912,6 +920,38 @@
         </constraints>
         <properties/>
       </component>
+      <toolbar id="77cad">
+        <constraints>
+          <grid row="3" column="0" row-span="1" col-span="3" vsize-policy="0" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false">
+            <preferred-size width="-1" height="20"/>
+          </grid>
+        </constraints>
+        <properties>
+          <floatable value="false"/>
+        </properties>
+        <border type="none"/>
+        <children>
+          <component id="6a7e9" class="javax.swing.JButton" binding="cmdBack">
+            <constraints/>
+            <properties>
+              <borderPainted value="false"/>
+              <text value="&lt;"/>
+            </properties>
+          </component>
+          <hspacer id="b1910">
+            <constraints/>
+          </hspacer>
+          <component id="e820b" class="javax.swing.JButton" binding="cmdForward">
+            <constraints/>
+            <properties>
+              <borderPainted value="false"/>
+              <maximumSize width="30" height="30"/>
+              <minimumSize width="30" height="30"/>
+              <text value="&gt;"/>
+            </properties>
+          </component>
+        </children>
+      </toolbar>
     </children>
   </grid>
 </form>
