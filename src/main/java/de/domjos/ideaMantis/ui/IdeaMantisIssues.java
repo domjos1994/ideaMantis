@@ -26,6 +26,8 @@ import org.jetbrains.annotations.NotNull;
 import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumnModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.awt.datatransfer.*;
@@ -265,7 +267,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                                 progressIndicator.setIndeterminate(false);
                                 double factor = 100.0 / mantisIssues.size();
                                 for(MantisIssue issue : mantisIssues) {
-                                    tblIssueModel.addRow(new Object[]{issue.getId(), issue.getSummary(), issue.getStatus()});
+                                    tblIssueModel.addRow(new Object[]{getStringId(issue.getId()), issue.getSummary(), issue.getStatus()});
                                     progressIndicator.setFraction(progressIndicator.getFraction() + factor);
                                 }
                                 tblIssues.setModel(tblIssueModel);
@@ -1723,7 +1725,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                                 progressIndicator.setFraction(0.0);
                                 double factor = 100.0 / mantisIssues.size();
                                 for(MantisIssue issue : mantisIssues) {
-                                    tblIssueModel.addRow(new Object[]{issue.getId(), issue.getSummary(), issue.getStatus()});
+                                    tblIssueModel.addRow(new Object[]{getStringId(issue.getId()), issue.getSummary(), issue.getStatus()});
                                     progressIndicator.setFraction(progressIndicator.getFraction() + factor);
                                 }
                                 tblIssues.setModel(tblIssueModel);
@@ -1737,6 +1739,16 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                     }
                 };
         manager.run(task);
+    }
+
+    private String getStringId(int id) {
+        String idWithoutZeros = String.valueOf(id);
+
+        StringBuilder idWithZeros = new StringBuilder(idWithoutZeros);
+        for(int i = idWithoutZeros.length(); i<=7; i++) {
+            idWithZeros.insert(0, "0");
+        }
+        return idWithZeros.toString();
     }
 
     private void controlPagination() {
