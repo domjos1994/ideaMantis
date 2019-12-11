@@ -1,5 +1,11 @@
-*.class
-/Release
-/out
-/.idea
+# idea project files
+/.idea/
 *.iml
+
+# gradle files
+/gradle/
+/.gradle/
+gradlew*
+
+# build data
+/build/
