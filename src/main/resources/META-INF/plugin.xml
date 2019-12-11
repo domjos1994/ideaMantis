@@ -1,0 +1,91 @@
+<idea-plugin>
+    <id>de.domjos.ideaMantis</id>
+    <name>ideaMantis</name>
+    <vendor email="developing@domjos.de" url="https://domjos.de">Dominic Joas</vendor>
+
+    <idea-version since-build="141.0"/>
+    <depends>com.intellij.modules.lang</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <toolWindow
+                id="Show MantisBT-Issues"
+                secondary="true"
+                icon="/de/domjos/ideaMantis/images/icon.png"
+                anchor="right"
+                factoryClass="de.domjos.ideaMantis.ui.IdeaMantisIssues"/>
+
+        <projectService
+                serviceImplementation="de.domjos.ideaMantis.service.ConnectionSettings"/>
+
+        <projectConfigurable
+                id="de.domjos.ideaMantis.ui.IdeaMantisConfigurable"
+                nonDefaultProject="true"
+                groupId="tools"
+                instance="de.domjos.ideaMantis.ui.IdeaMantisConfigurable"/>
+    </extensions>
+
+    <actions>
+        <group id="ideaMantis" text="ideaMantis" popup="true" icon="/de/domjos/ideaMantis/images/icon.png">
+            <add-to-group anchor="last" group-id="EditorPopupMenu"/>
+        </group>
+
+        <action
+                id="MarkedCodeAsBug"
+                icon="/de/domjos/ideaMantis/images/icon.png"
+                class="de.domjos.ideaMantis.editor.MarkedTextAsBugEditorAction"
+                text="Mark code as bug!"
+                description="Marked selected code as Bug and send it to MantisBT">
+            <keyboard-shortcut first-keystroke="control alt C" second-keystroke="C" keymap="$default"/>
+            <add-to-group group-id="ideaMantis" anchor="first"/>
+        </action>
+
+        <action
+                id="ToDoAsBug"
+                icon="/de/domjos/ideaMantis/images/icon.png"
+                class="de.domjos.ideaMantis.editor.ToDoAsBugEditorAction"
+                text="Mark ToDo as bug"
+                description="Marked ToDo as Bug and send it to MantisBT">
+            <keyboard-shortcut first-keystroke="control alt T" second-keystroke="T" keymap="$default"/>
+            <add-to-group group-id="ideaMantis" anchor="after" relative-to-action="MarkedCodeAsBug"/>
+        </action>
+
+        <action
+                id="ResolveToDoAsBug"
+                icon="/de/domjos/ideaMantis/images/icon.png"
+                class="de.domjos.ideaMantis.editor.ResolveToDoAsBugEditorAction"
+                text="Resolve ToDo in MantisBT"
+                description="Marked ToDo as Bug and send it to MantisBT">
+            <keyboard-shortcut first-keystroke="control alt R" second-keystroke="R" keymap="$default"/>
+            <add-to-group group-id="ideaMantis" anchor="after" relative-to-action="ToDoAsBug"/>
+        </action>
+
+        <action
+                id="OpenToDoAsBug"
+                icon="/de/domjos/ideaMantis/images/icon.png"
+                class="de.domjos.ideaMantis.editor.OpenToDoAsBugEditorAction"
+                text="Open Bug in Web-Browser"
+                description="Open Bug in Web-Browser">
+            <keyboard-shortcut first-keystroke="control alt O" second-keystroke="O" keymap="$default"/>
+            <add-to-group group-id="ideaMantis" anchor="after" relative-to-action="ResolveToDoAsBug"/>
+        </action>
+
+        <action
+                id="WholeFileAsBug"
+                icon="/de/domjos/ideaMantis/images/icon.png"
+                class="de.domjos.ideaMantis.editor.WholeFileAsBugEditorAction"
+                text="Add File to new bug!"
+                description="Add File as Attachment to new Bug and send it to MantisBT">
+            <keyboard-shortcut first-keystroke="control alt F" second-keystroke="F" keymap="$default"/>
+            <add-to-group group-id="ideaMantis" anchor="after" relative-to-action="OpenToDoAsBug"/>
+        </action>
+        <action
+                id="CreateChangeLog"
+                icon="/de/domjos/ideaMantis/images/icon.png"
+                class="de.domjos.ideaMantis.editor.CreateChangeLogAction"
+                text="Create ChangeLog"
+                description="Create an ChangeLog from MantisBT">
+            <keyboard-shortcut first-keystroke="control alt L" second-keystroke="L" keymap="$default"/>
+            <add-to-group group-id="ideaMantis" anchor="last"/>
+        </action>
+    </actions>
+</idea-plugin>

@@ -46,7 +46,7 @@ public class CreateChangeLogAction extends AnAction {
         ChooseVersionDialog dialog = new ChooseVersionDialog(project);
         if(dialog.showAndGet()) {
             ProgressManager manager = ProgressManager.getInstance();
-            Task.WithResult<String, Exception> task = new Task.WithResult<>(project, "Load ChangeLog", true) {
+            Task.WithResult<String, Exception> task = new Task.WithResult<String, Exception>(project, "Load ChangeLog", true) {
                 @Override
                 protected String compute(@NotNull ProgressIndicator progressIndicator) {
                     progressIndicator.setFraction(0.0);

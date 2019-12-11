@@ -1,0 +1,27 @@
+plugins {
+    id 'java'
+    id 'org.jetbrains.intellij' version '0.4.15'
+}
+
+group 'de.domjos'
+version '1.4'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile files('lib/ksoap2-j2se-full-2.1.2.jar')
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}
+
+// See https://github.com/JetBrains/gradle-intellij-plugin/
+intellij {
+    version '2019.3'
+}
+patchPluginXml {
+    changeNotes(file("data/changeNotes.html"))
+    pluginDescription(file("data/description.html"))
+}

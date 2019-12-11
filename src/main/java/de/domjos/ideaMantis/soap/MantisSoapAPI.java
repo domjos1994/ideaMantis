@@ -42,6 +42,7 @@ import static org.ksoap2.serialization.MarshalHashtable.NAMESPACE;
  * @author domjos1994
  * @version 1.0
  */
+@SuppressWarnings("rawtypes")
 public class MantisSoapAPI {
     private ConnectionSettings settings;
     private SoapSerializationEnvelope structEnvelope;
@@ -745,6 +746,7 @@ public class MantisSoapAPI {
                         for (MantisUser tmp : userList) {
                             if (tmp.getName().equals(user.getName())) {
                                 state = false;
+                                break;
                             }
                         }
                         if (state) {
@@ -1211,7 +1213,7 @@ public class MantisSoapAPI {
         }
     }
 
-    private SoapObject executeQueryAndGetSoapObject(String action, Object[][] furtherParams) {
+    private SoapObject executeQueryAndGetSoapObject(String action, Object[][] furtherParams) throws Exception {
         SoapObject structRequest = new SoapObject(this.returnURL(), action);
         structRequest.addProperty("username", this.settings.getUserName());
         structRequest.addProperty("password", this.settings.getPassword());
@@ -1225,7 +1227,11 @@ public class MantisSoapAPI {
             structTransport.call("SOAPAction", structEnvelope);
             return (SoapObject) structEnvelope.bodyIn;
         } catch (Exception ex) {
-            return null;
+            if(structEnvelope.bodyIn instanceof SoapFault) {
+                throw new Exception(((SoapFault)structEnvelope.bodyIn).faultstring);
+            } else {
+                throw ex;
+            }
         }
     }
 
