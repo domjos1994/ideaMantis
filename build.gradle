@@ -22,6 +22,6 @@ intellij {
     version '2019.3'
 }
 patchPluginXml {
-    changeNotes(file("data/changeNotes.html"))
-    pluginDescription(file("data/description.html"))
+    changeNotes "Use Gradle"
+    pluginDescription "IntelliJ-Idea Plugin to create, edit and delete Issues from Mantis BugTracker!"
 }
