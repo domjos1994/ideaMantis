@@ -19,6 +19,7 @@ import de.domjos.ideaMantis.model.*;
 import de.domjos.ideaMantis.service.ConnectionSettings;
 import de.domjos.ideaMantis.soap.MantisSoapAPI;
 import de.domjos.ideaMantis.soap.ObjectRef;
+import de.domjos.ideaMantis.utils.FormHelper;
 import de.domjos.ideaMantis.utils.Helper;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -26,8 +27,6 @@ import org.jetbrains.annotations.NotNull;
 import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableCellRenderer;
-import javax.swing.table.TableColumnModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.awt.datatransfer.*;
@@ -95,15 +94,11 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         tblIssues.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tblIssueAttachments.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tblIssueNotes.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tblIssueModel = this.addColumnsToIssueTable();
-        DefaultTableModel tblIssueAttachmentModel = this.addColumnsToIssueAttachmentTable();
-        DefaultTableModel tblIssueNoteModel = this.addColumnsToIssueNoteTable();
-        DefaultTableModel tblHistoryModel = this.addColumnsToHistoryTable();
-        if(settings==null) {
-            controlIssues(false, false);
-        } else {
-            controlIssues(false, settings.isFastTrack());
-        }
+        tblIssueModel = FormHelper.addColumnsToTable("ID", "Summary", "Status");
+        DefaultTableModel tblIssueAttachmentModel = FormHelper.addColumnsToTable("ID", "File-Name");
+        DefaultTableModel tblIssueNoteModel = FormHelper.addColumnsToTable("ID", "Text", "View");
+        DefaultTableModel tblHistoryModel = FormHelper.addColumnsToTable("Date", "User", "Field", "Old Value", "New Value");
+        controlIssues(false, false);
         cmdIssueNew.setEnabled(false);
         tblIssueAttachments.setDragEnabled(true);
         txtVCSComment.setEnabled(false);
@@ -231,7 +226,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                 pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                 ProgressManager manager = ProgressManager.getInstance();
                 Task task =
-                    new Task.Backgroundable(Helper.getProject(), "Load Issues...") {
+                    new Task.Backgroundable(Helper.getProject(), "Load Issues...", true) {
                     @Override
                     public void run(@NotNull ProgressIndicator progressIndicator) {
                         try {
@@ -302,109 +297,112 @@ public class IdeaMantisIssues implements ToolWindowFactory {
             public void mouseReleased(MouseEvent e) {
                 try {
                     if(tblIssues.getSelectedRow()!=-1) {
-                        if(!loadComboBoxes)
-                            loadComboBoxes();
-                        pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-                        int id = Integer.parseInt(tblIssueModel.getValueAt(tblIssues.getSelectedRow(), 0).toString());
-                        MantisSoapAPI api = new MantisSoapAPI(settings);
-                        MantisIssue issue = api.getIssue(id);
-                        currentIssue = issue;
-                        cmdCustomFields.setVisible(!api.getCustomFields(settings.getProjectID()).isEmpty());
-                        cmdIssueEdit.setEnabled(true);
-                        cmdIssueDelete.setEnabled(true);
-                        txtIssueSummary.setText(issue.getSummary());
-                        txtIssueDate.setText(issue.getDate_submitted());
-                        txtIssueAdditionalInformation.setText(issue.getAdditional_information());
-                        txtIssueDescription.setText(issue.getDescription());
-                        txtIssueStepsToReproduce.setText(issue.getSteps_to_reproduce());
-                        txtBasicsTags.setText(issue.getTags());
-                        if(issue.getReporter()!=null) {
-                            if(cmbIssueReporterName.getItemCount()==0) {
-                                cmbIssueReporterName.addItem(issue.getReporter().getUserName());
+                        String strId = tblIssueModel.getValueAt(tblIssues.getSelectedRow(), 0).toString();
+                        if(!strId.trim().isEmpty()) {
+                            if(!loadComboBoxes)
+                                loadComboBoxes();
+                            pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                            int id = Integer.parseInt(tblIssueModel.getValueAt(tblIssues.getSelectedRow(), 0).toString());
+                            MantisSoapAPI api = new MantisSoapAPI(settings);
+                            MantisIssue issue = api.getIssue(id);
+                            currentIssue = issue;
+                            cmdCustomFields.setVisible(!api.getCustomFields(settings.getProjectID()).isEmpty());
+                            cmdIssueEdit.setEnabled(true);
+                            cmdIssueDelete.setEnabled(true);
+                            txtIssueSummary.setText(issue.getSummary());
+                            txtIssueDate.setText(issue.getDate_submitted());
+                            txtIssueAdditionalInformation.setText(issue.getAdditional_information());
+                            txtIssueDescription.setText(issue.getDescription());
+                            txtIssueStepsToReproduce.setText(issue.getSteps_to_reproduce());
+                            txtBasicsTags.setText(issue.getTags());
+                            if(issue.getReporter()!=null) {
+                                if(cmbIssueReporterName.getItemCount()==0) {
+                                    cmbIssueReporterName.addItem(issue.getReporter().getUserName());
+                                }
+                                cmbIssueReporterName.setSelectedItem(issue.getReporter().getUserName());
+                                txtIssueReporterName.setText(issue.getReporter().getName());
+                                txtIssueReporterEMail.setText(issue.getReporter().getEmail());
                             }
-                            cmbIssueReporterName.setSelectedItem(issue.getReporter().getUserName());
-                            txtIssueReporterName.setText(issue.getReporter().getName());
-                            txtIssueReporterEMail.setText(issue.getReporter().getEmail());
-                        }
-                        if(issue.getProfile()!=null) {
-                            cmbIssueProfile.setSelectedItem(null);
-                            cmbIssueProfile.firePopupMenuWillBecomeVisible();
-                            for(int i = 0; i<=cmbIssueProfile.getItemCount()-1; i++) {
-                                if(cmbIssueProfile.getItemAt(i).contains(": ")) {
-                                    String item = cmbIssueProfile.getItemAt(i).split(": ")[1];
-                                    if(String.format("%s %s %s", issue.getProfile().getPlatform(), issue.getProfile().getOs(), issue.getProfile().getOsBuild()).equals(item)) {
-                                        cmbIssueProfile.setSelectedIndex(i);
+                            if(issue.getProfile()!=null) {
+                                cmbIssueProfile.setSelectedItem(null);
+                                cmbIssueProfile.firePopupMenuWillBecomeVisible();
+                                for(int i = 0; i<=cmbIssueProfile.getItemCount()-1; i++) {
+                                    if(cmbIssueProfile.getItemAt(i).contains(": ")) {
+                                        String item = cmbIssueProfile.getItemAt(i).split(": ")[1];
+                                        if(String.format("%s %s %s", issue.getProfile().getPlatform(), issue.getProfile().getOs(), issue.getProfile().getOsBuild()).equals(item)) {
+                                            cmbIssueProfile.setSelectedIndex(i);
+                                        }
                                     }
                                 }
-                            }
 
-                            if(cmbIssueProfile.getSelectedItem()==null) {
-                                MantisProfile profile = issue.getProfile();
-                                String item = String.format("%s: %s, %s, %s", profile.getId(), profile.getPlatform(), profile.getOs(), profile.getOsBuild());
-                                cmbIssueProfile.addItem(item);
-                                cmbIssueProfile.setSelectedItem(item);
-                            } else {
-                                if(cmbIssueProfile.getSelectedItem().toString().equals("")) {
+                                if(cmbIssueProfile.getSelectedItem()==null) {
                                     MantisProfile profile = issue.getProfile();
-                                    if(profile.getId()!=0) {
-                                        String item = String.format("%s: %s, %s, %s", profile.getId(), profile.getPlatform(), profile.getOs(), profile.getOsBuild());
-                                        cmbIssueProfile.addItem(item);
-                                        cmbIssueProfile.setSelectedItem(item);
+                                    String item = String.format("%s: %s, %s, %s", profile.getId(), profile.getPlatform(), profile.getOs(), profile.getOsBuild());
+                                    cmbIssueProfile.addItem(item);
+                                    cmbIssueProfile.setSelectedItem(item);
+                                } else {
+                                    if(cmbIssueProfile.getSelectedItem().toString().equals("")) {
+                                        MantisProfile profile = issue.getProfile();
+                                        if(profile.getId()!=0) {
+                                            String item = String.format("%s: %s, %s, %s", profile.getId(), profile.getPlatform(), profile.getOs(), profile.getOsBuild());
+                                            cmbIssueProfile.addItem(item);
+                                            cmbIssueProfile.setSelectedItem(item);
+                                        }
                                     }
                                 }
+                            } else {
+                                cmbIssueProfile.setSelectedItem(null);
                             }
-                        } else {
-                            cmbIssueProfile.setSelectedItem(null);
-                        }
-                        cmbIssueCategory.setSelectedItem(issue.getCategory());
-                        selectVersion(cmbIssueVersion, issue.getVersion());
-                        selectVersion(cmbIssueTargetVersion, issue.getTarget_version());
-                        selectVersion(cmbIssueFixedInVersion, issue.getFixed_in_version());
-                        cmbIssuePriority.setSelectedItem(issue.getPriority());
-                        cmbIssueSeverity.setSelectedItem(issue.getSeverity());
-                        cmbIssueStatus.setSelectedItem(issue.getStatus());
+                            cmbIssueCategory.setSelectedItem(issue.getCategory());
+                            selectVersion(cmbIssueVersion, issue.getVersion());
+                            selectVersion(cmbIssueTargetVersion, issue.getTarget_version());
+                            selectVersion(cmbIssueFixedInVersion, issue.getFixed_in_version());
+                            cmbIssuePriority.setSelectedItem(issue.getPriority());
+                            cmbIssueSeverity.setSelectedItem(issue.getSeverity());
+                            cmbIssueStatus.setSelectedItem(issue.getStatus());
 
-                        tblIssueNotes.removeAll();
-                        for (int i = tblIssueNoteModel.getRowCount() - 1; i >= 0; i--) {
-                            tblIssueNoteModel.removeRow(i);
-                        }
-                        for(IssueNote note : issue.getIssueNoteList()) {
-                            tblIssueNoteModel.addRow(new Object[]{note.getId(), note.getText(), note.getView_state()});
-                        }
-                        tblIssueNotes.setModel(tblIssueNoteModel);
+                            tblIssueNotes.removeAll();
+                            for (int i = tblIssueNoteModel.getRowCount() - 1; i >= 0; i--) {
+                                tblIssueNoteModel.removeRow(i);
+                            }
+                            for(IssueNote note : issue.getIssueNoteList()) {
+                                tblIssueNoteModel.addRow(new Object[]{note.getId(), note.getText(), note.getView_state()});
+                            }
+                            tblIssueNotes.setModel(tblIssueNoteModel);
 
-                        tblIssueAttachments.removeAll();
-                        for (int i = tblIssueAttachmentModel.getRowCount() - 1; i >= 0; i--) {
-                            tblIssueAttachmentModel.removeRow(i);
-                        }
-                        for(IssueAttachment attachment : issue.getIssueAttachmentList()) {
-                            tblIssueAttachmentModel.addRow(new Object[]{attachment.getId(), attachment.getFilename()});
-                        }
-                        tblIssueAttachments.setModel(tblIssueAttachmentModel);
+                            tblIssueAttachments.removeAll();
+                            for (int i = tblIssueAttachmentModel.getRowCount() - 1; i >= 0; i--) {
+                                tblIssueAttachmentModel.removeRow(i);
+                            }
+                            for(IssueAttachment attachment : issue.getIssueAttachmentList()) {
+                                tblIssueAttachmentModel.addRow(new Object[]{attachment.getId(), attachment.getFilename()});
+                            }
+                            tblIssueAttachments.setModel(tblIssueAttachmentModel);
 
-                        tblHistory.removeAll();
-                        for (int i = tblHistoryModel.getRowCount() - 1; i >= 0; i--) {
-                            tblHistoryModel.removeRow(i);
-                        }
-                        List<HistoryItem> historyItems = api.getHistory(issue.getId());
-                        for(HistoryItem historyItem : historyItems) {
-                            String date = new SimpleDateFormat("yyyy.MM.dd HH:mm").format(historyItem.getChangedAt());
-                            String user = historyItem.getUser().getUserName();
-                            tblHistoryModel.addRow(new Object[]{date, user, historyItem.getField(), historyItem.getOldValue(), historyItem.getNewValue()});
-                        }
-                        tblHistory.setModel(tblHistoryModel);
+                            tblHistory.removeAll();
+                            for (int i = tblHistoryModel.getRowCount() - 1; i >= 0; i--) {
+                                tblHistoryModel.removeRow(i);
+                            }
+                            List<HistoryItem> historyItems = api.getHistory(issue.getId());
+                            for(HistoryItem historyItem : historyItems) {
+                                String date = new SimpleDateFormat("yyyy.MM.dd HH:mm").format(historyItem.getChangedAt());
+                                String user = historyItem.getUser().getUserName();
+                                tblHistoryModel.addRow(new Object[]{date, user, historyItem.getField(), historyItem.getOldValue(), historyItem.getNewValue()});
+                            }
+                            tblHistory.setModel(tblHistoryModel);
 
-                        if(settings==null) {
-                            controlIssues(true, false);
-                            controlNotes(false, false);
-                            controlAttachments(false, false);
+                            if(settings==null) {
+                                controlIssues(true, false);
+                                controlNotes(false, false);
+                                controlAttachments(false, false);
 
-                        } else {
-                            controlIssues(true, settings.isFastTrack());
-                            controlNotes(false, settings.isFastTrack());
-                            controlAttachments(false, settings.isFastTrack());
+                            } else {
+                                controlIssues(true, settings.isFastTrack());
+                                controlNotes(false, settings.isFastTrack());
+                                controlAttachments(false, settings.isFastTrack());
+                            }
+                            checkMandatoryFieldsAreNotEmpty(true);
                         }
-                        checkMandatoryFieldsAreNotEmpty(true);
                     }
                 } catch (Exception ex) {
                     Helper.printException(ex);
@@ -1309,9 +1307,9 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         Helper.resetControlsInAPanel(pnlIssueDescriptions);
         this.resetAttachments();
         this.resetNotes();
-        tblIssueAttachments.setModel(addColumnsToIssueAttachmentTable());
-        tblIssueNotes.setModel(addColumnsToIssueNoteTable());
-        tblHistory.setModel(addColumnsToHistoryTable());
+        tblIssueAttachments.setModel(FormHelper.addColumnsToTable("ID", "File-Name"));
+        tblIssueNotes.setModel(FormHelper.addColumnsToTable("ID", "Text", "View"));
+        tblHistory.setModel(FormHelper.addColumnsToTable("Date", "User", "Field", "Old Value", "New Value"));
     }
 
     private void controlNotes(boolean selected, boolean editMode) {
@@ -1624,78 +1622,9 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         }
     }
 
-    private DefaultTableModel addColumnsToIssueTable() {
-        DefaultTableModel model = new DefaultTableModel(){
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-
-            @Override
-            public Class getColumnClass(int column) {
-                switch (column) {
-                    case 0:
-                        return Integer.class;
-                    case 1:
-                        return String.class;
-                    case 2:
-                        return Integer.class;
-                    default:
-                        return String.class;
-                }
-            }
-
-        };
-        model.addColumn("ID");
-        model.addColumn("Summary");
-        model.addColumn("Status");
-        return model;
-    }
-
-    private DefaultTableModel addColumnsToIssueNoteTable() {
-        DefaultTableModel model = new DefaultTableModel(){
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
-        model.addColumn("ID");
-        model.addColumn("Text");
-        model.addColumn("View");
-        return model;
-    }
-
-    private DefaultTableModel addColumnsToIssueAttachmentTable() {
-        DefaultTableModel model = new DefaultTableModel(){
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
-        model.addColumn("ID");
-        model.addColumn("File-Name");
-        return model;
-    }
-
-    private DefaultTableModel addColumnsToHistoryTable() {
-        DefaultTableModel model  = new DefaultTableModel(){
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
-        model.addColumn("Date");
-        model.addColumn("User");
-        model.addColumn("Field");
-        model.addColumn("Old Value");
-        model.addColumn("New Value");
-        return model;
-    }
-
     private void loadList(DefaultTableModel tblIssueModel, ProgressManager manager) {
         pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-        Task task =
-                new Task.Backgroundable(Helper.getProject(), "Load Issues...", true) {
+        Task task = new Task.Backgroundable(Helper.getProject(), "Load Issues...", true) {
                     @Override
                     public void run(@NotNull ProgressIndicator progressIndicator) {
                         try {
@@ -1708,7 +1637,6 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                                     tblIssueModel.removeRow(i);
                                 }
                             } else {
-
                                 state = true;
                                 tblIssues.removeAll();
                                 for (int i = tblIssueModel.getRowCount() - 1; i >= 0; i--) {
@@ -1739,6 +1667,10 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                     }
                 };
         manager.run(task);
+        if(tblIssues.getColumnCount()>=1) {
+            tblIssues.getColumnModel().getColumn(0).setWidth(40);
+            tblIssues.getColumnModel().getColumn(0).setMaxWidth(100);
+        }
     }
 
     private String getStringId(int id) {
