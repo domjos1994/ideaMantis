@@ -1,12 +1,18 @@
 package de.domjos.ideaMantis.ui;
 
+import com.intellij.icons.AllIcons;
 import com.intellij.notification.NotificationType;
+import com.intellij.openapi.actionSystem.ActionManager;
+import com.intellij.openapi.actionSystem.ActionToolbar;
+import com.intellij.openapi.actionSystem.DefaultActionGroup;
+import com.intellij.openapi.actionSystem.impl.ActionToolbarImpl;
 import com.intellij.openapi.fileChooser.FileChooser;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.IconLoader;
 import com.intellij.openapi.vcs.changes.*;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
@@ -17,10 +23,12 @@ import com.intellij.ui.content.ContentManagerListener;
 import de.domjos.ideaMantis.custom.AutoComplete;
 import de.domjos.ideaMantis.model.*;
 import de.domjos.ideaMantis.service.ConnectionSettings;
+import de.domjos.ideaMantis.soap.IssueLoadingTask;
 import de.domjos.ideaMantis.soap.MantisSoapAPI;
 import de.domjos.ideaMantis.soap.ObjectRef;
 import de.domjos.ideaMantis.utils.FormHelper;
 import de.domjos.ideaMantis.utils.Helper;
+import icons.IdeaMantisIcons;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
@@ -80,13 +88,16 @@ public class IdeaMantisIssues implements ToolWindowFactory {
     private JComboBox<String> cmbIssueProfile;
     private JTabbedPane tbPnlMain;
     private JComboBox<String> cmbFilterStatus;
+    private JToolBar toolMain;
+
+
     private boolean state = false, loadComboBoxes = false;
     private int page = 1;
 
     private ChangeListManager changeListManager;
     private Map.Entry<Integer, String> access;
     private ObjectRef resolved = null;
-    private DefaultTableModel tblIssueModel;
+    private final DefaultTableModel tblIssueModel;
 
 
     public IdeaMantisIssues() {
@@ -155,12 +166,12 @@ public class IdeaMantisIssues implements ToolWindowFactory {
             if(this.page!=1) {
                 this.page = this.page-1;
             }
-            this.loadList(tblIssueModel, ProgressManager.getInstance());
+            this.loadList(ProgressManager.getInstance());
         });
 
         cmdForward.addActionListener(e -> {
             this.page = this.page+1;
-            this.loadList(tblIssueModel, ProgressManager.getInstance());
+            this.loadList(ProgressManager.getInstance());
         });
 
         cmdVersionAdd.addActionListener(e -> {
@@ -1146,6 +1157,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
     @Override
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
         Helper.setProject(project);
+        this.setIcons();
         ContentFactory contentFactory = ContentFactory.SERVICE.getInstance();
         Content content = contentFactory.createContent(this.pnlMain, "", false);
         toolWindow.getContentManager().addContent(content);
@@ -1357,14 +1369,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
 
     private void controlAttachments(boolean selected, boolean editMode) {
         cmdIssueAttachmentSearch.setEnabled(editMode);
-
-        if(settings==null) {
-            tblIssueAttachments.setEnabled(!editMode);
-        } else {
-            if(settings.isFastTrack()) {
-                tblIssueAttachments.setEnabled(true);
-            }
-        }
+        tblIssueAttachments.setEnabled(this.settings==null?!editMode: this.settings.isFastTrack() || tblIssueAttachments.isEnabled());
 
         if(cmdIssueSave.isEnabled()) {
             cmdIssueAttachmentNew.setEnabled(!editMode);
@@ -1622,51 +1627,16 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         }
     }
 
-    private void loadList(DefaultTableModel tblIssueModel, ProgressManager manager) {
+    private void loadList(ProgressManager manager) {
         pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-        Task task = new Task.Backgroundable(Helper.getProject(), "Load Issues...", true) {
-                    @Override
-                    public void run(@NotNull ProgressIndicator progressIndicator) {
-                        try {
-                            controlPagination();
-                            if(!settings.validateSettings()) {
-                                Helper.printNotification("Wrong settings!", "The connection-settings are incorrect!", NotificationType.WARNING);
-                                state = false;
-                                tblIssues.removeAll();
-                                for (int i = tblIssueModel.getRowCount() - 1; i >= 0; i--) {
-                                    tblIssueModel.removeRow(i);
-                                }
-                            } else {
-                                state = true;
-                                tblIssues.removeAll();
-                                for (int i = tblIssueModel.getRowCount() - 1; i >= 0; i--) {
-                                    tblIssueModel.removeRow(i);
-                                }
-                                tblIssues.setModel(tblIssueModel);
-                                String filterID = "";
-                                if(cmbFilters.getSelectedItem()!=null) {
-                                    if(!cmbFilters.getSelectedItem().toString().equals("")) {
-                                        filterID = cmbFilters.getSelectedItem().toString().split(":")[0].trim();
-                                    }
-                                }
-                                List<MantisIssue> mantisIssues = new MantisSoapAPI(settings).getIssues(settings.getProjectID(), page, filterID);
-                                progressIndicator.setFraction(0.0);
-                                double factor = 100.0 / mantisIssues.size();
-                                for(MantisIssue issue : mantisIssues) {
-                                    tblIssueModel.addRow(new Object[]{getStringId(issue.getId()), issue.getSummary(), issue.getStatus()});
-                                    progressIndicator.setFraction(progressIndicator.getFraction() + factor);
-                                }
-                                tblIssues.setModel(tblIssueModel);
-                                cmdIssueNew.setEnabled(true);
-                            }
-                        } catch (Exception ex) {
-                            Helper.printException(ex);
-                        } finally {
-                            pnlMain.setCursor(Cursor.getDefaultCursor());
-                        }
-                    }
-                };
-        manager.run(task);
+        IssueLoadingTask issueLoadingTask = new IssueLoadingTask(this.settings, this.tblIssues, this.tblIssueModel, this.cmbFilters, this.page);
+        issueLoadingTask.before(this::controlPagination);
+        issueLoadingTask.after(() -> {
+            cmdIssueNew.setEnabled(true);
+            pnlMain.setCursor(Cursor.getDefaultCursor());
+        });
+        manager.run(issueLoadingTask);
+        this.state = issueLoadingTask.getState();
         if(tblIssues.getColumnCount()>=1) {
             tblIssues.getColumnModel().getColumn(0).setWidth(40);
             tblIssues.getColumnModel().getColumn(0).setMaxWidth(100);
@@ -1742,5 +1712,10 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         tags.forEach(tag -> autoCompletion.add(tag.getName()));
         AutoComplete autoComplete = new AutoComplete(this.txtBasicsTags, autoCompletion);
         this.txtBasicsTags.getDocument().addDocumentListener(autoComplete);
+    }
+
+    private void setIcons() {
+        this.cmdBack.setIcon(IdeaMantisIcons.BACK);
+        //this.cmdForward.setIcon(AllIcons.Actions.Forward);
     }
 }

@@ -12,7 +12,8 @@
                 secondary="true"
                 icon="/de/domjos/ideaMantis/images/icon.png"
                 anchor="right"
-                factoryClass="de.domjos.ideaMantis.ui.IdeaMantisIssues"/>
+                factoryClass="de.domjos.ideaMantis.ui.IdeaMantisIssues">
+        </toolWindow>
 
         <projectService
                 serviceImplementation="de.domjos.ideaMantis.service.ConnectionSettings"/>
@@ -25,7 +26,7 @@
     </extensions>
 
     <actions>
-        <group id="ideaMantis" text="ideaMantis" popup="true" icon="/de/domjos/ideaMantis/images/icon.png">
+        <group id="ideaMantis" text="IdeaMantis" popup="true" icon="/de/domjos/ideaMantis/images/icon.png">
             <add-to-group anchor="last" group-id="EditorPopupMenu"/>
         </group>
 
@@ -33,7 +34,7 @@
                 id="MarkedCodeAsBug"
                 icon="/de/domjos/ideaMantis/images/icon.png"
                 class="de.domjos.ideaMantis.editor.MarkedTextAsBugEditorAction"
-                text="Mark code as bug!"
+                text="Mark Code as Bug!"
                 description="Marked selected code as Bug and send it to MantisBT">
             <keyboard-shortcut first-keystroke="control alt C" second-keystroke="C" keymap="$default"/>
             <add-to-group group-id="ideaMantis" anchor="first"/>
@@ -43,7 +44,7 @@
                 id="ToDoAsBug"
                 icon="/de/domjos/ideaMantis/images/icon.png"
                 class="de.domjos.ideaMantis.editor.ToDoAsBugEditorAction"
-                text="Mark ToDo as bug"
+                text="Mark ToDo as Bug"
                 description="Marked ToDo as Bug and send it to MantisBT">
             <keyboard-shortcut first-keystroke="control alt T" second-keystroke="T" keymap="$default"/>
             <add-to-group group-id="ideaMantis" anchor="after" relative-to-action="MarkedCodeAsBug"/>
@@ -64,7 +65,7 @@
                 icon="/de/domjos/ideaMantis/images/icon.png"
                 class="de.domjos.ideaMantis.editor.OpenToDoAsBugEditorAction"
                 text="Open Bug in Web-Browser"
-                description="Open Bug in Web-Browser">
+                description="Open bug in web-browser">
             <keyboard-shortcut first-keystroke="control alt O" second-keystroke="O" keymap="$default"/>
             <add-to-group group-id="ideaMantis" anchor="after" relative-to-action="ResolveToDoAsBug"/>
         </action>
@@ -73,7 +74,7 @@
                 id="WholeFileAsBug"
                 icon="/de/domjos/ideaMantis/images/icon.png"
                 class="de.domjos.ideaMantis.editor.WholeFileAsBugEditorAction"
-                text="Add File to new bug!"
+                text="Add File to New Bug!"
                 description="Add File as Attachment to new Bug and send it to MantisBT">
             <keyboard-shortcut first-keystroke="control alt F" second-keystroke="F" keymap="$default"/>
             <add-to-group group-id="ideaMantis" anchor="after" relative-to-action="OpenToDoAsBug"/>
