@@ -9,3 +9,5 @@ gradlew*
 
 # build data
 /build/
+
+jetbrains.properties

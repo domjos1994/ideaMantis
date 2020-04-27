@@ -29,3 +29,6 @@ patchPluginXml {
     """
     pluginDescription "IntelliJ-Idea Plugin to create, edit and delete Issues from Mantis BugTracker!"
 }
+publishPlugin {
+    token 'ZG9tam9zOTQ=.OTItMjA0NQ==.rSqG9EuaLFf9q5vpG34nxxwHo4gXZp'
+}
