@@ -6,9 +6,7 @@ import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.editor.colors.TextAttributesKey;
 import com.intellij.openapi.project.Project;
-import org.jdom.Element;
 
 import java.io.File;
 
@@ -24,13 +22,16 @@ public class ToDoAsBugEditorAction extends AnAction {
 
         // Get Caret-Model
         if(editor.getCaretModel().getCaretCount()>=1) {
-            int pos = editor.getCaretModel().getCurrentCaret().getSelectionStart();
-            String text = editor.getDocument().getText().substring(pos);
-            this.content = text.substring(0, text.indexOf("\n"));
-            this.originalContent = this.content;
+            if(this.content!=null) {
+                int pos = editor.getCaretModel().getCurrentCaret().getSelectionStart();
+                String text = editor.getDocument().getText().substring(pos);
+                if(this.content.contains("\n")) {
+                    this.content = text.substring(0, text.indexOf("\n"));
+                }
+                this.originalContent = this.content;
+                e.getPresentation().setVisible(content.toLowerCase().contains("todo") && !content.toLowerCase().contains("mantis#"));
+            }
         }
-
-        e.getPresentation().setVisible(content.toLowerCase().contains("todo") && !content.toLowerCase().contains("mantis#"));
     }
 
     @Override
@@ -41,7 +42,7 @@ public class ToDoAsBugEditorAction extends AnAction {
         //Making the replacement
         final String[] pathToDocument = new String[1];
         WriteCommandAction.runWriteCommandAction(project,()->{
-            String pathToDocumentArray[] = document.toString().split("file://");
+            String[] pathToDocumentArray = document.toString().split("file://");
             if(pathToDocumentArray.length==2) {
                 pathToDocument[0] = pathToDocumentArray[1].replace("]", "").trim();
             } else {
@@ -69,8 +70,6 @@ public class ToDoAsBugEditorAction extends AnAction {
         String newContent = sub + " Mantis#" + id + " " + this.originalContent.replace(sub, "");
 
         String text = editor.getDocument().getText().replace(this.originalContent, newContent);
-        WriteCommandAction.runWriteCommandAction(project, () -> {
-            editor.getDocument().setText(text);
-        });
+        WriteCommandAction.runWriteCommandAction(project, () -> editor.getDocument().setText(text));
     }
 }

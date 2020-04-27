@@ -27,12 +27,19 @@ public class ResolveToDoAsBugEditorAction extends AnAction {
 
         // Get Caret-Model
         if(editor.getCaretModel().getCaretCount()>=1) {
-            int pos = editor.getCaretModel().getCurrentCaret().getSelectionStart();
-            String text = editor.getDocument().getText().substring(pos);
-            this.content = text.substring(0, text.indexOf("\n"));
+            if(content!=null) {
+                int pos = editor.getCaretModel().getCurrentCaret().getSelectionStart();
+                String text = editor.getDocument().getText().substring(pos);
+
+                if(text.contains("\n")) {
+                    this.content = text.substring(0, text.indexOf("\n"));
+
+                    e.getPresentation().setVisible(content.contains("Mantis#"));
+                }
+            }
         }
 
-        e.getPresentation().setVisible(content.contains("Mantis#"));
+
     }
 
     @Override

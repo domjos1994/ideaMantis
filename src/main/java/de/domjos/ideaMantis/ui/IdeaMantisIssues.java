@@ -94,6 +94,8 @@ public class IdeaMantisIssues implements ToolWindowFactory {
     private ObjectRef resolved = null;
     private final DefaultTableModel tblIssueModel;
 
+    private final static SimpleDateFormat MANTIS_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+    private final static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     public IdeaMantisIssues() {
         tblHistory.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -316,7 +318,9 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                             cmdIssueEdit.setEnabled(true);
                             cmdIssueDelete.setEnabled(true);
                             txtIssueSummary.setText(issue.getSummary());
-                            txtIssueDate.setText(issue.getDate_submitted());
+
+                            Date dt = IdeaMantisIssues.MANTIS_DATE_FORMAT.parse(issue.getDate_submitted());
+                            txtIssueDate.setText(IdeaMantisIssues.DATE_FORMAT.format(dt));
                             txtIssueAdditionalInformation.setText(issue.getAdditional_information());
                             txtIssueDescription.setText(issue.getDescription());
                             txtIssueStepsToReproduce.setText(issue.getSteps_to_reproduce());
