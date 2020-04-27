@@ -4,7 +4,7 @@ plugins {
 }
 
 group 'de.domjos'
-version '1.4'
+version '1.5'
 
 sourceCompatibility = 1.8
 
@@ -22,6 +22,10 @@ intellij {
     version '2020.1'
 }
 patchPluginXml {
-    changeNotes "Use Gradle"
+    changeNotes """
+        Version 1.5<br>
+        - use System-Icons
+        - Update UI
+    """
     pluginDescription "IntelliJ-Idea Plugin to create, edit and delete Issues from Mantis BugTracker!"
 }
