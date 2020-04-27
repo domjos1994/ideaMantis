@@ -2,17 +2,12 @@ package de.domjos.ideaMantis.ui;
 
 import com.intellij.icons.AllIcons;
 import com.intellij.notification.NotificationType;
-import com.intellij.openapi.actionSystem.ActionManager;
-import com.intellij.openapi.actionSystem.ActionToolbar;
-import com.intellij.openapi.actionSystem.DefaultActionGroup;
-import com.intellij.openapi.actionSystem.impl.ActionToolbarImpl;
 import com.intellij.openapi.fileChooser.FileChooser;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.IconLoader;
 import com.intellij.openapi.vcs.changes.*;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
@@ -28,7 +23,6 @@ import de.domjos.ideaMantis.soap.MantisSoapAPI;
 import de.domjos.ideaMantis.soap.ObjectRef;
 import de.domjos.ideaMantis.utils.FormHelper;
 import de.domjos.ideaMantis.utils.Helper;
-import icons.IdeaMantisIcons;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
@@ -88,7 +82,6 @@ public class IdeaMantisIssues implements ToolWindowFactory {
     private JComboBox<String> cmbIssueProfile;
     private JTabbedPane tbPnlMain;
     private JComboBox<String> cmbFilterStatus;
-    private JToolBar toolMain;
 
 
     private boolean state = false, loadComboBoxes = false;
@@ -237,7 +230,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                 pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                 ProgressManager manager = ProgressManager.getInstance();
                 Task task =
-                    new Task.Backgroundable(Helper.getProject(), "Load Issues...", true) {
+                    new Task.Backgroundable(Helper.getProject(), "Load issues...", true) {
                     @Override
                     public void run(@NotNull ProgressIndicator progressIndicator) {
                         try {
@@ -1715,7 +1708,27 @@ public class IdeaMantisIssues implements ToolWindowFactory {
     }
 
     private void setIcons() {
-        this.cmdBack.setIcon(IdeaMantisIcons.BACK);
-        //this.cmdForward.setIcon(AllIcons.Actions.Forward);
+        this.cmdBack.setIcon(AllIcons.Actions.Back);
+        this.cmdForward.setIcon(AllIcons.Actions.Forward);
+        this.cmdReload.setIcon(AllIcons.Actions.Refresh);
+
+        this.cmdIssueNew.setIcon(AllIcons.General.Add);
+        this.cmdIssueEdit.setIcon(AllIcons.Actions.Edit);
+        this.cmdIssueDelete.setIcon(AllIcons.General.Remove);
+        this.cmdIssueResolve.setIcon(AllIcons.Actions.Commit);
+        this.cmdIssueSave.setIcon(AllIcons.Actions.Menu_saveall);
+        this.cmdIssueAbort.setIcon(AllIcons.Actions.Cancel);
+
+        this.cmdIssueNoteNew.setIcon(AllIcons.General.Add);
+        this.cmdIssueNoteEdit.setIcon(AllIcons.Actions.Edit);
+        this.cmdIssueNoteDelete.setIcon(AllIcons.General.Remove);
+        this.cmdIssueNoteSave.setIcon(AllIcons.Actions.Menu_saveall);
+        this.cmdIssueNoteAbort.setIcon(AllIcons.Actions.Cancel);
+
+        this.cmdIssueAttachmentNew.setIcon(AllIcons.General.Add);
+        this.cmdIssueAttachmentEdit.setIcon(AllIcons.Actions.Edit);
+        this.cmdIssueAttachmentDelete.setIcon(AllIcons.General.Remove);
+        this.cmdIssueAttachmentSave.setIcon(AllIcons.Actions.Menu_saveall);
+        this.cmdIssueAttachmentAbort.setIcon(AllIcons.Actions.Cancel);
     }
 }

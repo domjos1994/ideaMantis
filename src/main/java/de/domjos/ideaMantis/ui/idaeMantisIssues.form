@@ -13,7 +13,6 @@
           <grid row="0" column="0" row-span="1" col-span="3" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
-          <icon value="de/domjos/ideaMantis/images/refresh.png"/>
           <text value=""/>
           <toolTipText value="Refresh"/>
         </properties>
@@ -66,7 +65,7 @@
                 <properties/>
                 <border type="none"/>
                 <children>
-                  <toolbar id="c591b" binding="toolMain">
+                  <toolbar id="c591b">
                     <constraints>
                       <grid row="0" column="0" row-span="1" col-span="2" vsize-policy="3" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false">
                         <preferred-size width="-1" height="20"/>
@@ -576,19 +575,19 @@
                                           <component id="4d234" class="javax.swing.JButton" binding="cmdIssueNoteNew">
                                             <constraints/>
                                             <properties>
-                                              <text value="New"/>
+                                              <text value=""/>
                                             </properties>
                                           </component>
                                           <component id="f45ee" class="javax.swing.JButton" binding="cmdIssueNoteEdit">
                                             <constraints/>
                                             <properties>
-                                              <text value="Edit"/>
+                                              <text value=""/>
                                             </properties>
                                           </component>
                                           <component id="811ee" class="javax.swing.JButton" binding="cmdIssueNoteDelete">
                                             <constraints/>
                                             <properties>
-                                              <text value="Delete"/>
+                                              <text value=""/>
                                             </properties>
                                           </component>
                                           <hspacer id="9fdae">
@@ -597,13 +596,13 @@
                                           <component id="9fe26" class="javax.swing.JButton" binding="cmdIssueNoteSave">
                                             <constraints/>
                                             <properties>
-                                              <text value="Save"/>
+                                              <text value=""/>
                                             </properties>
                                           </component>
                                           <component id="e22f1" class="javax.swing.JButton" binding="cmdIssueNoteAbort">
                                             <constraints/>
                                             <properties>
-                                              <text value="Abort"/>
+                                              <text value=""/>
                                             </properties>
                                           </component>
                                         </children>
@@ -783,19 +782,19 @@
                                           <component id="f08fa" class="javax.swing.JButton" binding="cmdIssueAttachmentNew">
                                             <constraints/>
                                             <properties>
-                                              <text value="New"/>
+                                              <text value=""/>
                                             </properties>
                                           </component>
                                           <component id="88d8c" class="javax.swing.JButton" binding="cmdIssueAttachmentEdit">
                                             <constraints/>
                                             <properties>
-                                              <text value="Edit"/>
+                                              <text value=""/>
                                             </properties>
                                           </component>
                                           <component id="de68" class="javax.swing.JButton" binding="cmdIssueAttachmentDelete">
                                             <constraints/>
                                             <properties>
-                                              <text value="Delete"/>
+                                              <text value=""/>
                                             </properties>
                                           </component>
                                           <hspacer id="f38d2">
@@ -804,13 +803,13 @@
                                           <component id="18208" class="javax.swing.JButton" binding="cmdIssueAttachmentSave">
                                             <constraints/>
                                             <properties>
-                                              <text value="Save"/>
+                                              <text value=""/>
                                             </properties>
                                           </component>
                                           <component id="57fc7" class="javax.swing.JButton" binding="cmdIssueAttachmentAbort">
                                             <constraints/>
                                             <properties>
-                                              <text value="Abort"/>
+                                              <text value=""/>
                                             </properties>
                                           </component>
                                         </children>
@@ -932,9 +931,9 @@
               <text value=""/>
             </properties>
           </component>
-          <vspacer id="6c4d4">
+          <hspacer id="8828b">
             <constraints/>
-          </vspacer>
+          </hspacer>
           <component id="e820b" class="javax.swing.JButton" binding="cmdForward">
             <constraints/>
             <properties>
@@ -944,9 +943,6 @@
               <text value=""/>
             </properties>
           </component>
-          <hspacer id="8828b">
-            <constraints/>
-          </hspacer>
         </children>
       </toolbar>
     </children>

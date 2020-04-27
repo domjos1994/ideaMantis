@@ -27,7 +27,9 @@ public class OpenToDoAsBugEditorAction extends AnAction {
         if(editor.getCaretModel().getCaretCount()>=1) {
             int pos = editor.getCaretModel().getCurrentCaret().getSelectionStart();
             String text = editor.getDocument().getText().substring(pos);
-            this.content = text.substring(0, text.indexOf("\n"));
+            if(!text.isEmpty()) {
+                this.content = text.substring(0, text.indexOf("\n"));
+            }
         }
 
         e.getPresentation().setVisible(content.contains("Mantis#"));

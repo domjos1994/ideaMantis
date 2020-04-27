@@ -10,7 +10,7 @@
         <toolWindow
                 id="Show MantisBT-Issues"
                 secondary="true"
-                icon="/de/domjos/ideaMantis/images/icon.png"
+                icon="/icons/pluginIcon.svg"
                 anchor="right"
                 factoryClass="de.domjos.ideaMantis.ui.IdeaMantisIssues">
         </toolWindow>
@@ -26,13 +26,13 @@
     </extensions>
 
     <actions>
-        <group id="ideaMantis" text="IdeaMantis" popup="true" icon="/de/domjos/ideaMantis/images/icon.png">
+        <group id="ideaMantis" text="IdeaMantis" popup="true" icon="IdeaMantisIcons.ICON">
             <add-to-group anchor="last" group-id="EditorPopupMenu"/>
         </group>
 
         <action
                 id="MarkedCodeAsBug"
-                icon="/de/domjos/ideaMantis/images/icon.png"
+                icon="IdeaMantisIcons.ICON"
                 class="de.domjos.ideaMantis.editor.MarkedTextAsBugEditorAction"
                 text="Mark Code as Bug!"
                 description="Marked selected code as Bug and send it to MantisBT">
@@ -42,7 +42,7 @@
 
         <action
                 id="ToDoAsBug"
-                icon="/de/domjos/ideaMantis/images/icon.png"
+                icon="IdeaMantisIcons.ICON"
                 class="de.domjos.ideaMantis.editor.ToDoAsBugEditorAction"
                 text="Mark ToDo as Bug"
                 description="Marked ToDo as Bug and send it to MantisBT">
@@ -52,7 +52,7 @@
 
         <action
                 id="ResolveToDoAsBug"
-                icon="/de/domjos/ideaMantis/images/icon.png"
+                icon="IdeaMantisIcons.ICON"
                 class="de.domjos.ideaMantis.editor.ResolveToDoAsBugEditorAction"
                 text="Resolve ToDo in MantisBT"
                 description="Marked ToDo as Bug and send it to MantisBT">
@@ -62,7 +62,7 @@
 
         <action
                 id="OpenToDoAsBug"
-                icon="/de/domjos/ideaMantis/images/icon.png"
+                icon="IdeaMantisIcons.ICON"
                 class="de.domjos.ideaMantis.editor.OpenToDoAsBugEditorAction"
                 text="Open Bug in Web-Browser"
                 description="Open bug in web-browser">
@@ -72,7 +72,7 @@
 
         <action
                 id="WholeFileAsBug"
-                icon="/de/domjos/ideaMantis/images/icon.png"
+                icon="IdeaMantisIcons.ICON"
                 class="de.domjos.ideaMantis.editor.WholeFileAsBugEditorAction"
                 text="Add File to New Bug!"
                 description="Add File as Attachment to new Bug and send it to MantisBT">
@@ -81,7 +81,7 @@
         </action>
         <action
                 id="CreateChangeLog"
-                icon="/de/domjos/ideaMantis/images/icon.png"
+                icon="IdeaMantisIcons.ICON"
                 class="de.domjos.ideaMantis.editor.CreateChangeLogAction"
                 text="Create ChangeLog"
                 description="Create an ChangeLog from MantisBT">
