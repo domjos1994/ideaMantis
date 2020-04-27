@@ -52,7 +52,7 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
     public IdeaMantisConfigurable(@NotNull Project project) {
         this.settings = ConnectionSettings.getInstance(project);
         this.manager = ToolWindowManager.getInstance(project);
-        this.task = new Task.Backgroundable(project, "Load Data...") {
+        this.task = new Task.Backgroundable(project, "Load data...") {
             @Override
             public void run(@NotNull ProgressIndicator progressIndicator) {
                 try {
@@ -74,8 +74,8 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
                     ApplicationManager.getApplication().invokeLater(()->{
                         ToolWindow window = manager.getToolWindow("Show MantisBT-Issues");
                         ContentImpl content = new ContentImpl(null, "", true);
-                        content.setDescription("reload comboBoxes");
-                        window.getContentManager().addContent(content);
+                        content.setDescription("Reload comboBoxes");
+                        Objects.requireNonNull(window).getContentManager().addContent(content);
                     });
                     settings.setFastTrack(chkFastTrackEnabled.isSelected());
                     settings.setReload(chkReloadAutomatically.isSelected());
@@ -153,35 +153,47 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
 
         this.cmdTestConnection = new JButton("Test Connection");
         this.cmdTestConnection.addActionListener(e -> {
-            String oldSettings = this.temporarilyChangeSettings();
+            Task.Modal task = new Task.Modal(Helper.getProject(), "Test Connection!", false) {
+                @Override
+                public void run(@NotNull ProgressIndicator indicator) {
+                    try {
+                        String oldSettings = temporarilyChangeSettings();
 
-            MantisSoapAPI connection = new MantisSoapAPI(this.settings);
-            if(this.changeConnectionLabel(connection.testConnection())) {
-                java.util.List<MantisProject> projects = connection.getProjects();
-                cmbProjects.removeAllItems();
-                cmbNewProjectProjects.removeAllItems();
-                for(MantisProject project : projects) {
-                    this.addProjectToComboBox(project, ": ");
-                }
-                cmbNewProjectProjects.addItem("");
-                cmbNewProjectProjects.setSelectedItem("");
+                        MantisSoapAPI connection = new MantisSoapAPI(settings);
+                        if(changeConnectionLabel(connection.testConnection())) {
+                            java.util.List<MantisProject> projects = connection.getProjects();
+                            cmbProjects.removeAllItems();
+                            cmbNewProjectProjects.removeAllItems();
+                            for(MantisProject project : projects) {
+                                addProjectToComboBox(project, ": ");
+                            }
+                            cmbNewProjectProjects.addItem("");
+                            cmbNewProjectProjects.setSelectedItem("");
 
-                cmbProjectViewState.removeAllItems();
-                for(ObjectRef item : connection.getEnum("view_states")) {
-                    this.cmbProjectViewState.addItem(item.getName());
-                }
+                            cmbProjectViewState.removeAllItems();
+                            for(ObjectRef item : connection.getEnum("view_states")) {
+                                cmbProjectViewState.addItem(item.getName());
+                            }
 
-                for(int i = 0; i<=cmbProjects.getItemCount()-1; i++) {
-                    if(cmbProjects.getItemAt(i).startsWith(settings.getProjectID() + ":")) {
-                        cmbProjects.setSelectedItem(cmbProjects.getItemAt(i));
-                        break;
+                            for(int i = 0; i<=cmbProjects.getItemCount()-1; i++) {
+                                if(cmbProjects.getItemAt(i).startsWith(settings.getProjectID() + ":")) {
+                                    cmbProjects.setSelectedItem(cmbProjects.getItemAt(i));
+                                    break;
+                                }
+                            }
+                        } else {
+                            cmbProjects.removeAllItems();
+                        }
+
+                        temporarilyChangeSettingsBack(oldSettings);
+                    } finally {
+                        cmdTestConnection.getRootPane().setCursor(Cursor.getDefaultCursor());
                     }
                 }
-            } else {
-                cmbProjects.removeAllItems();
-            }
+            };
 
-            this.temporarilyChangeSettingsBack(oldSettings);
+            this.cmdTestConnection.getRootPane().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+            ProgressManager.getInstance().run(task);
         });
 
         this.chkFastTrackEnabled = new JBCheckBox("Enable Fast-Track-Mode");
