@@ -2,6 +2,7 @@ package de.domjos.ideaMantis.ui;
 
 import com.intellij.icons.AllIcons;
 import com.intellij.notification.NotificationType;
+import com.intellij.openapi.actionSystem.*;
 import com.intellij.openapi.fileChooser.FileChooser;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.progress.ProgressIndicator;
@@ -82,6 +83,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
     private JComboBox<String> cmbIssueProfile;
     private JTabbedPane tbPnlMain;
     private JComboBox<String> cmbFilterStatus;
+    private JPanel pnlNotes;
 
 
     private boolean state = false, loadComboBoxes = false;
@@ -1708,8 +1710,8 @@ public class IdeaMantisIssues implements ToolWindowFactory {
     }
 
     private void setIcons() {
-        this.cmdBack.setIcon(AllIcons.Actions.Back);
-        this.cmdForward.setIcon(AllIcons.Actions.Forward);
+        this.cmdBack.setIcon(AllIcons.Actions.Forward);
+        this.cmdForward.setIcon(AllIcons.Actions.Back);
         this.cmdReload.setIcon(AllIcons.Actions.Refresh);
 
         this.cmdIssueNew.setIcon(AllIcons.General.Add);
