@@ -1,21 +1,17 @@
 package de.domjos.ideaMantis.ui;
 
 import com.intellij.notification.NotificationType;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.options.SearchableConfigurable;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
-import com.intellij.openapi.wm.ToolWindow;
-import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.ui.IdeBorderFactory;
 import com.intellij.ui.JBColor;
 import com.intellij.ui.components.JBCheckBox;
 import com.intellij.ui.components.JBPasswordField;
 import com.intellij.ui.components.JBTextField;
-import com.intellij.ui.content.impl.ContentImpl;
 import com.intellij.util.ui.UIUtil;
 import de.domjos.ideaMantis.model.MantisProject;
 import de.domjos.ideaMantis.model.MantisUser;
@@ -46,12 +42,10 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
     private int projectID = 0;
 
     private final ConnectionSettings settings;
-    private final ToolWindowManager manager;
     private final Task.Backgroundable task;
 
     public IdeaMantisConfigurable(@NotNull Project project) {
         this.settings = ConnectionSettings.getInstance(project);
-        this.manager = ToolWindowManager.getInstance(project);
         this.task = new Task.Backgroundable(project, "Load data...") {
             @Override
             public void run(@NotNull ProgressIndicator progressIndicator) {
@@ -71,12 +65,7 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
                     }
                     settings.setItemsPerPage(itemsPerPage);
                     settings.setProjectID(projectID);
-                    ApplicationManager.getApplication().invokeLater(()->{
-                        ToolWindow window = manager.getToolWindow("Show MantisBT-Issues");
-                        ContentImpl content = new ContentImpl(null, "", true);
-                        content.setDescription("Reload comboBoxes");
-                        Objects.requireNonNull(window).getContentManager().addContent(content);
-                    });
+                    FormHelper.reloadToolWindow(IdeaMantisIssues.RELOAD_COMBOBOXES);
                     settings.setFastTrack(chkFastTrackEnabled.isSelected());
                     settings.setReload(chkReloadAutomatically.isSelected());
 

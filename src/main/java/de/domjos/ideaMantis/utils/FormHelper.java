@@ -1,12 +1,17 @@
 package de.domjos.ideaMantis.utils;
 
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.wm.ToolWindow;
+import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.ui.components.JBTextField;
+import com.intellij.ui.content.impl.ContentImpl;
 import com.intellij.util.ui.JBUI;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.List;
+import java.util.Objects;
 
 public class FormHelper {
 
@@ -61,5 +66,15 @@ public class FormHelper {
             }
         }
         return jPanel;
+    }
+
+    public static void reloadToolWindow(String description) {
+        ToolWindowManager manager = ToolWindowManager.getInstance(Helper.getProject());
+        ApplicationManager.getApplication().invokeLater(()->{
+            ToolWindow window = manager.getToolWindow("Show MantisBT-Issues");
+            ContentImpl content = new ContentImpl(null, "", true);
+            content.setDescription(description);
+            Objects.requireNonNull(window).getContentManager().addContent(content);
+        });
     }
 }

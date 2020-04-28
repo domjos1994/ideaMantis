@@ -2,7 +2,6 @@ package de.domjos.ideaMantis.ui;
 
 import com.intellij.icons.AllIcons;
 import com.intellij.notification.NotificationType;
-import com.intellij.openapi.actionSystem.*;
 import com.intellij.openapi.fileChooser.FileChooser;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.progress.ProgressIndicator;
@@ -16,7 +15,6 @@ import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
 import com.intellij.ui.content.ContentManagerEvent;
 import com.intellij.ui.content.ContentManagerListener;
-import com.intellij.util.concurrency.AppExecutorUtil;
 import de.domjos.ideaMantis.custom.AutoComplete;
 import de.domjos.ideaMantis.model.*;
 import de.domjos.ideaMantis.service.ConnectionSettings;
@@ -43,6 +41,9 @@ import java.util.List;
 import java.util.Timer;
 
 public class IdeaMantisIssues implements ToolWindowFactory {
+    public static final String RELOAD_COMBOBOXES = "Reload comboBoxes";
+    public static final String RELOAD_ISSUES = "Reload issues";
+
     private Timer timer;
     private ConnectionSettings settings;
     private MantisIssue currentIssue;
@@ -84,7 +85,6 @@ public class IdeaMantisIssues implements ToolWindowFactory {
     private JComboBox<String> cmbIssueProfile;
     private JTabbedPane tbPnlMain;
     private JComboBox<String> cmbFilterStatus;
-    private JPanel pnlNotes;
 
 
     private boolean state = false, loadComboBoxes = false;
@@ -1185,7 +1185,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                     for(Content content : toolWindow.getContentManager().getContents()) {
                         if(content!=null) {
                             if(content.getDescription()!=null) {
-                                if (content.getDescription().equals("reload comboBoxes")) {
+                                if (content.getDescription().equals(IdeaMantisIssues.RELOAD_COMBOBOXES)) {
                                     MantisSoapAPI api = new MantisSoapAPI(settings);
                                     access = api.getRightsFromProject(settings.getProjectID());
                                     checkRights();
@@ -1198,6 +1198,8 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                                     controlNotes(false, settings.isFastTrack());
                                     initTimer(settings);
                                     break;
+                                } else if(content.getDescription().equals(IdeaMantisIssues.RELOAD_ISSUES)) {
+                                    cmdReload.doClick();
                                 }
                             }
                         }
