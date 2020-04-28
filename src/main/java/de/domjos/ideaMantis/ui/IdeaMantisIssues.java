@@ -16,6 +16,7 @@ import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
 import com.intellij.ui.content.ContentManagerEvent;
 import com.intellij.ui.content.ContentManagerListener;
+import com.intellij.util.concurrency.AppExecutorUtil;
 import de.domjos.ideaMantis.custom.AutoComplete;
 import de.domjos.ideaMantis.model.*;
 import de.domjos.ideaMantis.service.ConnectionSettings;
@@ -1640,6 +1641,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
             tblIssues.getColumnModel().getColumn(0).setWidth(40);
             tblIssues.getColumnModel().getColumn(0).setMaxWidth(100);
         }
+        //AppExecutorUtil.getAppScheduledExecutorService().scheduleAtFixedRate()
     }
 
     private String getStringId(int id) {

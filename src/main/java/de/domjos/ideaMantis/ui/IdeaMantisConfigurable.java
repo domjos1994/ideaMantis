@@ -122,6 +122,7 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
 
     public JComponent createComponent() {
         GridBagConstraints txtConstraint = FormHelper.getTextConstraint();
+        GridBagConstraints lblConstraint = FormHelper.getLabelConstraint();
 
         this.txtHostName = new JBTextField();
         this.txtHostName.setName("txtHostName");
@@ -234,8 +235,8 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
                     lblProjectFastTrack, chkFastTrackEnabled
                 )
         );
-        //projectPanel.add(this.chkReloadAutomatically, labelConstraint);
-        //projectPanel.add(this.txtReloadTime, txtConstraint);
+        projectPanel.add(this.chkReloadAutomatically, lblConstraint);
+        projectPanel.add(this.txtReloadTime, txtConstraint);
         projectPanel.add(cmdCreateNewProject, txtConstraint);
         projectPanel.setBorder(IdeBorderFactory.createTitledBorder("Project"));
 

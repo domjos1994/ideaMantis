@@ -30,9 +30,12 @@ patchPluginXml {
     pluginDescription "IntelliJ-Idea Plugin to create, edit and delete Issues from Mantis BugTracker!"
 }
 
-def jetBrainsProperties = new Properties()
-jetBrainsProperties.load(new FileInputStream(new File("jetbrains.properties")))
+def file = new File("jetbrains.properties")
+if(file.exists()) {
+    def jetBrainsProperties = new Properties()
+    jetBrainsProperties.load(new FileInputStream(file))
 
-publishPlugin {
-    token jetBrainsProperties['token']
+    publishPlugin {
+        token jetBrainsProperties['token']
+    }
 }
