@@ -185,14 +185,18 @@ public abstract class Helper {
         }
     }
 
-    public static void setPassword(String password) {
-        CredentialAttributes attributes = new CredentialAttributes(de.domjos.ideaMantis.service.ConnectionSettings.class.getName());
-        PasswordSafe safe = PasswordSafe.getInstance();
-        safe.setPassword(attributes, password);
+    public static void setPassword(String password, String userName) {
+        if(password != null) {
+            if(!password.trim().isEmpty()) {
+                CredentialAttributes attributes = new CredentialAttributes("IdeaMantis", userName, Helper.class, false);
+                PasswordSafe safe = PasswordSafe.getInstance();
+                safe.setPassword(attributes, password);
+            }
+        }
     }
 
-    public static String getPassword() {
-        CredentialAttributes attributes = new CredentialAttributes(de.domjos.ideaMantis.service.ConnectionSettings.class.getName());
+    public static String getPassword(String userName) {
+        CredentialAttributes attributes = new CredentialAttributes("IdeaMantis", userName, Helper.class, false);
         PasswordSafe safe = PasswordSafe.getInstance();
         return safe.getPassword(attributes);
     }

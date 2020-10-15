@@ -21,6 +21,11 @@ dependencies {
 intellij {
     version '2020.1'
 }
+
+runIde {
+
+}
+
 patchPluginXml {
     changeNotes """
         Version 1.5<br>

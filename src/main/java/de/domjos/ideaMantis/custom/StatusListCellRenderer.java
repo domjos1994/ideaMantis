@@ -6,6 +6,7 @@ import javax.swing.*;
 import javax.swing.plaf.basic.BasicComboBoxRenderer;
 import java.awt.*;
 
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class StatusListCellRenderer extends BasicComboBoxRenderer {
     private final ListCellRenderer defaultRenderer;
 

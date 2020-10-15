@@ -37,7 +37,7 @@ public class ConnectionSettings implements PersistentStateComponent<Element> {
         Element connection = new Element("connection");
         connection.setAttribute("hostName", this.hostName);
         connection.setAttribute("userName", this.userName);
-        Helper.setPassword(this.getPassword());
+        Helper.setPassword(this.getPassword(), this.userName);
         connection.setAttribute("itemsPerPage", String.valueOf(this.itemsPerPage));
         connection.setAttribute("projectID", String.valueOf(this.getProjectID()));
         connection.setAttribute("fastTrack", String.valueOf(this.fastTrack));
@@ -50,7 +50,7 @@ public class ConnectionSettings implements PersistentStateComponent<Element> {
     public void loadState(Element element) {
         this.hostName = element.getAttributeValue("hostName");
         this.userName = element.getAttributeValue("userName");
-        this.password = Helper.getPassword();
+        this.password = Helper.getPassword(this.userName);
         this.itemsPerPage = Integer.parseInt(element.getAttributeValue("itemsPerPage", "-1"));
         if(element.getAttributeValue("projectID")!=null) {
             String content = element.getAttributeValue("projectID");

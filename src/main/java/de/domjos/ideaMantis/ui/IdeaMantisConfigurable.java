@@ -177,11 +177,19 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
 
                         temporarilyChangeSettingsBack(oldSettings);
                     } finally {
-                        cmdTestConnection.getRootPane().setCursor(Cursor.getDefaultCursor());
+                        if(cmdTestConnection != null) {
+                            if(cmdTestConnection.getRootPane() != null) {
+                                cmdTestConnection.getRootPane().setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+                            }
+                        }
                     }
                 }
             };
-            this.cmdTestConnection.getRootPane().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+            if(this.cmdTestConnection != null) {
+                if(this.cmdTestConnection.getRootPane() != null) {
+                    this.cmdTestConnection.getRootPane().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                }
+            }
             ProgressManager.getInstance().run(task);
         });
 
