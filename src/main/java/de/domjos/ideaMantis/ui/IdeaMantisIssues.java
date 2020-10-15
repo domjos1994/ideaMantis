@@ -16,12 +16,13 @@ import com.intellij.ui.content.ContentFactory;
 import com.intellij.ui.content.ContentManagerEvent;
 import com.intellij.ui.content.ContentManagerListener;
 import de.domjos.ideaMantis.custom.AutoComplete;
+import de.domjos.ideaMantis.custom.IssueTableCellRenderer;
+import de.domjos.ideaMantis.custom.StatusListCellRenderer;
 import de.domjos.ideaMantis.model.*;
 import de.domjos.ideaMantis.service.ConnectionSettings;
 import de.domjos.ideaMantis.soap.IssueLoadingTask;
 import de.domjos.ideaMantis.soap.MantisSoapAPI;
 import de.domjos.ideaMantis.soap.ObjectRef;
-import de.domjos.ideaMantis.utils.FormHelper;
 import de.domjos.ideaMantis.utils.Helper;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -103,10 +104,10 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         tblIssues.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tblIssueAttachments.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tblIssueNotes.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tblIssueModel = FormHelper.addColumnsToTable("ID", "Summary", "Status");
-        DefaultTableModel tblIssueAttachmentModel = FormHelper.addColumnsToTable("ID", "File-Name");
-        DefaultTableModel tblIssueNoteModel = FormHelper.addColumnsToTable("ID", "Text", "View");
-        DefaultTableModel tblHistoryModel = FormHelper.addColumnsToTable("Date", "User", "Field", "Old Value", "New Value");
+        tblIssueModel = Helper.addColumnsToTable("ID", "Summary", "Status");
+        DefaultTableModel tblIssueAttachmentModel = Helper.addColumnsToTable("ID", "File-Name");
+        DefaultTableModel tblIssueNoteModel = Helper.addColumnsToTable("ID", "Text", "View");
+        DefaultTableModel tblHistoryModel = Helper.addColumnsToTable("Date", "User", "Field", "Old Value", "New Value");
         controlIssues(false, false);
         cmdIssueNew.setEnabled(false);
         tblIssueAttachments.setDragEnabled(true);
@@ -122,6 +123,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         this.cmdIssueSave.setPreferredSize(new Dimension(30, 20));
         this.cmdIssueAbort.setPreferredSize(new Dimension(30, 20));
         this.cmdIssueResolve.setPreferredSize(new Dimension(30, 20));
+        this.cmbIssueStatus.setRenderer(new StatusListCellRenderer(this.cmbIssueStatus.getRenderer()));
 
         cmdCustomFields.addActionListener(e -> {
             String state = "report";
@@ -255,8 +257,9 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                                     tblIssueModel.removeRow(i);
                                 }
                                 tblIssues.setModel(tblIssueModel);
-                                if(!loadComboBoxes)
+                                if(!loadComboBoxes) {
                                     loadComboBoxes();
+                                }
                                 if(settings.getItemsPerPage()==-1) {
                                     page = 1;
                                 }
@@ -269,12 +272,18 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                                 List<MantisIssue> mantisIssues = new MantisSoapAPI(settings).getIssues(settings.getProjectID(), page, filterID);
                                 progressIndicator.setFraction(0.0);
                                 progressIndicator.setIndeterminate(false);
+
+                                Map<Integer, Color> colorMap = new LinkedHashMap<>();
                                 double factor = 100.0 / mantisIssues.size();
+                                int row = 0;
                                 for(MantisIssue issue : mantisIssues) {
+                                    colorMap.put(row, Helper.getColorOfStatus(issue.getStatus()));
                                     tblIssueModel.addRow(new Object[]{getStringId(issue.getId()), issue.getSummary(), issue.getStatus()});
                                     progressIndicator.setFraction(progressIndicator.getFraction() + factor);
+                                    row++;
                                 }
                                 tblIssues.setModel(tblIssueModel);
+                                tblIssues.setDefaultRenderer(Object.class, new IssueTableCellRenderer(colorMap));
                                 cmdIssueNew.setEnabled(true);
                             }
                         } catch (Exception ex) {
@@ -1321,9 +1330,9 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         Helper.resetControlsInAPanel(pnlIssueDescriptions);
         this.resetAttachments();
         this.resetNotes();
-        tblIssueAttachments.setModel(FormHelper.addColumnsToTable("ID", "File-Name"));
-        tblIssueNotes.setModel(FormHelper.addColumnsToTable("ID", "Text", "View"));
-        tblHistory.setModel(FormHelper.addColumnsToTable("Date", "User", "Field", "Old Value", "New Value"));
+        tblIssueAttachments.setModel(Helper.addColumnsToTable("ID", "File-Name"));
+        tblIssueNotes.setModel(Helper.addColumnsToTable("ID", "Text", "View"));
+        tblHistory.setModel(Helper.addColumnsToTable("Date", "User", "Field", "Old Value", "New Value"));
     }
 
     private void controlNotes(boolean selected, boolean editMode) {
@@ -1643,7 +1652,6 @@ public class IdeaMantisIssues implements ToolWindowFactory {
             tblIssues.getColumnModel().getColumn(0).setWidth(40);
             tblIssues.getColumnModel().getColumn(0).setMaxWidth(100);
         }
-        //AppExecutorUtil.getAppScheduledExecutorService().scheduleAtFixedRate()
     }
 
     private String getStringId(int id) {

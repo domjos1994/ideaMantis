@@ -19,7 +19,6 @@ import de.domjos.ideaMantis.model.MantisUser;
 import de.domjos.ideaMantis.service.ConnectionSettings;
 import de.domjos.ideaMantis.soap.MantisSoapAPI;
 import de.domjos.ideaMantis.soap.ObjectRef;
-import de.domjos.ideaMantis.utils.FormHelper;
 import de.domjos.ideaMantis.utils.Helper;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
@@ -66,7 +65,7 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
                     }
                     settings.setItemsPerPage(itemsPerPage);
                     settings.setProjectID(projectID);
-                    FormHelper.reloadToolWindow(IdeaMantisIssues.RELOAD_COMBOBOXES);
+                    Helper.reloadToolWindow(IdeaMantisIssues.RELOAD_COMBOBOXES);
                     settings.setFastTrack(chkFastTrackEnabled.isSelected());
                     settings.setReload(chkReloadAutomatically.isSelected());
 
@@ -182,7 +181,6 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
                     }
                 }
             };
-
             this.cmdTestConnection.getRootPane().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
             ProgressManager.getInstance().run(task);
         });

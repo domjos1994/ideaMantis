@@ -5,16 +5,22 @@ import com.intellij.ide.passwordSafe.PasswordSafe;
 import com.intellij.notification.Notification;
 import com.intellij.notification.NotificationType;
 import com.intellij.notification.Notifications;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vcs.changes.Change;
 import com.intellij.openapi.vcs.changes.ChangeListManager;
 import com.intellij.openapi.vcs.changes.LocalChangeList;
+import com.intellij.openapi.wm.ToolWindow;
+import com.intellij.openapi.wm.ToolWindowManager;
+import com.intellij.ui.JBColor;
+import com.intellij.ui.content.impl.ContentImpl;
 import de.domjos.ideaMantis.model.MantisIssue;
 import org.ksoap2.serialization.SoapObject;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.*;
 
@@ -184,7 +190,7 @@ public abstract class Helper {
         PasswordSafe safe = PasswordSafe.getInstance();
         safe.setPassword(attributes, password);
     }
-    
+
     public static String getPassword() {
         CredentialAttributes attributes = new CredentialAttributes(de.domjos.ideaMantis.service.ConnectionSettings.class.getName());
         PasswordSafe safe = PasswordSafe.getInstance();
@@ -197,5 +203,56 @@ public abstract class Helper {
 
     public static Project getProject() {
         return Helper.project;
+    }
+
+    public static DefaultTableModel addColumnsToTable(String... columns) {
+        DefaultTableModel model = new DefaultTableModel(){
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        for(String column : columns) {
+            model.addColumn(column);
+        }
+        return model;
+    }
+
+    public static void reloadToolWindow(String description) {
+        ToolWindowManager manager = ToolWindowManager.getInstance(getProject());
+        ApplicationManager.getApplication().invokeLater(()->{
+            ToolWindow window = manager.getToolWindow("Show MantisBT-Issues");
+            ContentImpl content = new ContentImpl(null, "", true);
+            content.setDescription(description);
+            Objects.requireNonNull(window).getContentManager().addContent(content);
+        });
+    }
+
+    public static Color getColorOfStatus(String status) {
+        try {
+            if(status != null) {
+                if(!status.trim().isEmpty()) {
+                    status = status.trim().toLowerCase();
+
+                    switch (status) {
+                        case "new":
+                            return Color.decode("#fcbdbd".toUpperCase());
+                        case "feedback":
+                            return Color.decode("#e3b7eb".toUpperCase());
+                        case "acknowledged":
+                            return Color.decode("#ffcd85".toUpperCase());
+                        case "confirmed":
+                            return Color.decode("#fff494".toUpperCase());
+                        case "assigned":
+                            return Color.decode("#c2dfff".toUpperCase());
+                        case "resolved":
+                            return Color.decode("#d2f5b0".toUpperCase());
+                        case "closed":
+                            return Color.decode("#c9ccc4".toUpperCase());
+                    }
+                }
+            }
+        } catch (Exception ignored) {}
+        return JBColor.WHITE;
     }
 }

@@ -12,7 +12,6 @@ import de.domjos.ideaMantis.model.MantisVersion;
 import de.domjos.ideaMantis.service.ConnectionSettings;
 import de.domjos.ideaMantis.soap.MantisSoapAPI;
 import de.domjos.ideaMantis.ui.IdeaMantisIssues;
-import de.domjos.ideaMantis.utils.FormHelper;
 import de.domjos.ideaMantis.utils.Helper;
 import de.domjos.ideaMantis.utils.PanelCreator;
 import org.jetbrains.annotations.Nullable;
@@ -91,7 +90,7 @@ class MarkedTextAsBugDialog extends DialogWrapper {
                         issue.addAttachment(attachment);
                         api.addIssue(issue);
                         this.id = api.getIssueID();
-                        FormHelper.reloadToolWindow(IdeaMantisIssues.RELOAD_ISSUES);
+                        Helper.reloadToolWindow(IdeaMantisIssues.RELOAD_ISSUES);
                     } catch (Exception ex) {
                         Helper.printException(ex);
                     }
