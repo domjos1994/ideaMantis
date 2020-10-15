@@ -1496,6 +1496,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
 
     private void loadVersions(MantisSoapAPI api) {
         List<MantisVersion> versions = api.getVersions(this.settings.getProjectID());
+        List<MantisVersion> unreleased = api.getVersions(this.settings.getProjectID(), "mc_project_get_unreleased_versions");
 
         if(versions!=null) {
             cmbIssueVersion.removeAllItems();
@@ -1504,6 +1505,8 @@ public class IdeaMantisIssues implements ToolWindowFactory {
             for(MantisVersion version : versions) {
                 cmbIssueVersion.addItem(version);
                 cmbIssueFixedInVersion.addItem(version);
+            }
+            for(MantisVersion version : unreleased) {
                 cmbIssueTargetVersion.addItem(version);
             }
             cmbIssueVersion.addItem(new MantisVersion());

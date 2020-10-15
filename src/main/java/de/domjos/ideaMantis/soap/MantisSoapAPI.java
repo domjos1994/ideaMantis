@@ -966,7 +966,7 @@ public class MantisSoapAPI {
         return changeLogMap;
     }
 
-    private List<MantisVersion> getVersions(int pid, String function) {
+    public List<MantisVersion> getVersions(int pid, String function) {
         List<MantisVersion> enumList = new LinkedList<>();
         try {
             SoapObject obj = this.executeQueryAndGetSoapObject(function, new Object[][]{{"project_id", pid}});
@@ -1228,7 +1228,9 @@ public class MantisSoapAPI {
             return (SoapObject) structEnvelope.bodyIn;
         } catch (Exception ex) {
             if(structEnvelope.bodyIn instanceof SoapFault) {
-                throw new Exception(((SoapFault)structEnvelope.bodyIn).faultstring);
+                Logger logger = Logger.getInstance(this.getClass());
+                logger.warn(((SoapFault)structEnvelope.bodyIn).faultstring);
+                return null;
             } else {
                 throw ex;
             }
