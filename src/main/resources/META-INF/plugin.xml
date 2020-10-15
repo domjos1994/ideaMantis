@@ -1,9 +1,9 @@
 <idea-plugin>
     <id>de.domjos.ideaMantis</id>
-    <name>ideaMantis</name>
+    <name>IdeaMantis</name>
     <vendor email="developing@domjos.de" url="https://domjos.de">Dominic Joas</vendor>
 
-    <idea-version since-build="141.0"/>
+    <idea-version since-build="171"/>
     <depends>com.intellij.modules.lang</depends>
 
     <extensions defaultExtensionNs="com.intellij">

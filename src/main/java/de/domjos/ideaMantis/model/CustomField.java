@@ -1,19 +1,15 @@
 package de.domjos.ideaMantis.model;
 
-import com.intellij.openapi.ui.ValidationInfo;
 import com.intellij.ui.DocumentAdapter;
 import com.intellij.ui.components.*;
-import com.intellij.util.ui.JBUI;
+import de.domjos.ideaMantis.utils.PanelCreator;
 import org.apache.commons.lang.math.NumberUtils;
 
+import javax.annotation.Nonnull;
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
-import javax.swing.event.UndoableEditEvent;
-import javax.swing.event.UndoableEditListener;
 import java.awt.*;
-import java.util.AbstractMap;
 import java.util.Arrays;
-import java.util.Map;
 
 public class CustomField {
     private int id, typeId, min, max, readAccessID, writeAccessID;
@@ -205,13 +201,8 @@ public class CustomField {
     }
 
     public JPanel buildFieldPanel(String state, String value) {
-        GridBagConstraints labelConstraint = new GridBagConstraints();
-        labelConstraint.anchor = GridBagConstraints.EAST;
-        labelConstraint.insets = JBUI.insets(5, 10);
-        GridBagConstraints txtConstraint = new GridBagConstraints();
-        txtConstraint.weightx = 2.0;
-        txtConstraint.fill = GridBagConstraints.HORIZONTAL;
-        txtConstraint.gridwidth = GridBagConstraints.REMAINDER;
+        GridBagConstraints labelConstraint = PanelCreator.getLabelConstraint();
+        GridBagConstraints txtConstraint = PanelCreator.getTxtConstraint();
         JBList<String> list = new JBList<>();
         DefaultListModel<String> listModel = new DefaultListModel<>();
         JPanel panel = new JPanel(new GridBagLayout());
@@ -276,32 +267,29 @@ public class CustomField {
                 }
                 field.getDocument().addDocumentListener(new DocumentAdapter() {
                     @Override
-                    protected void textChanged(DocumentEvent documentEvent) {
-                        documentEvent.getDocument().addUndoableEditListener(new UndoableEditListener() {
-                            @Override
-                            public void undoableEditHappened(UndoableEditEvent e) {
-                                if(getTypeId()==1) {
-                                    if(!field.getText().isEmpty()) {
-                                        if(!NumberUtils.isDigits(field.getText())) {
-                                            field.setText(getDefaultValue());
-                                        }
-                                    }
-                                }
-                                if(getTypeId()==2) {
-                                    try {
-                                        Double.parseDouble(field.getText());
-                                    } catch (Exception ex) {
+                    protected void textChanged(@Nonnull DocumentEvent documentEvent) {
+                        documentEvent.getDocument().addUndoableEditListener(e -> {
+                            if(getTypeId()==1) {
+                                if(!field.getText().isEmpty()) {
+                                    if(!NumberUtils.isDigits(field.getText())) {
                                         field.setText(getDefaultValue());
                                     }
                                 }
-                                if(getTypeId()==8) {
-                                    java.util.List<String> allowed = Arrays.asList("0","1","2","3","4","5","6","7", "8","9","-",".");
-                                    char[] chars = field.getText().toCharArray();
-                                    for(char ch : chars) {
-                                        String strDigit = String.valueOf(ch);
-                                        if(!allowed.contains(strDigit)) {
-                                            field.setText(getDefaultValue());
-                                        }
+                            }
+                            if(getTypeId()==2) {
+                                try {
+                                    Double.parseDouble(field.getText());
+                                } catch (Exception ex) {
+                                    field.setText(getDefaultValue());
+                                }
+                            }
+                            if(getTypeId()==8) {
+                                java.util.List<String> allowed = Arrays.asList("0","1","2","3","4","5","6","7", "8","9","-",".");
+                                char[] chars = field.getText().toCharArray();
+                                for(char ch : chars) {
+                                    String strDigit = String.valueOf(ch);
+                                    if(!allowed.contains(strDigit)) {
+                                        field.setText(getDefaultValue());
                                     }
                                 }
                             }
@@ -311,6 +299,7 @@ public class CustomField {
                 panel.add(field, txtConstraint);
                 break;
             case 3:
+            case 6:
                 if(!this.getPossibleValues().contains("|")) {
                     listModel.addElement(this.getPossibleValues());
                 } else {
@@ -331,35 +320,17 @@ public class CustomField {
             case 5:
                 if(!this.getPossibleValues().contains("|")) {
                     JBCheckBox checkBox = new JBCheckBox(this.getPossibleValues());
-                    checkBox = this.selectCheckbox(checkBox, value);
+                    this.selectCheckbox(checkBox, value);
                     panel.add(checkBox, txtConstraint);
                 } else {
                     JPanel pnlGroup = new JPanel(new GridBagLayout());
                     for(String item : this.getPossibleValues().split("\\|")) {
                         JBCheckBox checkBox = new JBCheckBox(item);
-                        checkBox = this.selectCheckbox(checkBox, value);
+                        this.selectCheckbox(checkBox, value);
                         pnlGroup.add(checkBox, txtConstraint);
                     }
                     panel.add(pnlGroup, txtConstraint);
                 }
-                break;
-            case 6:
-                if(!this.getPossibleValues().contains("|")) {
-                    listModel.addElement(this.getPossibleValues());
-                } else {
-                    for(String item : this.getPossibleValues().split("\\|")) {
-                        listModel.addElement(item);
-                    }
-                }
-                list.setModel(listModel);
-                if(value.isEmpty()) {
-                    if(!this.getDefaultValue().isEmpty()) {
-                        list.setSelectedIndex(listModel.indexOf(this.getDefaultValue()));
-                    }
-                } else {
-                    list.setSelectedIndex(listModel.indexOf(value));
-                }
-                panel.add(list, txtConstraint);
                 break;
             case 7:
                 if(!this.getPossibleValues().contains("|")) {
@@ -455,25 +426,23 @@ public class CustomField {
         return panel;
     }
 
-    private JBCheckBox selectCheckbox(JBCheckBox checkBox, String value) {
+    private void selectCheckbox(JBCheckBox checkBox, String value) {
         if(value.isEmpty()) {
             if(!this.getDefaultValue().isEmpty()) {
-                checkBox = setCheckBox(checkBox, this.getDefaultValue());
+                setCheckBox(checkBox, this.getDefaultValue());
             }
         } else {
             if(value.contains("|")) {
                 for(String text : value.split("\\|")) {
-                    checkBox = setCheckBox(checkBox, text.trim());
+                    setCheckBox(checkBox, text.trim());
                 }
             }
         }
-        return checkBox;
     }
 
-    private JBCheckBox setCheckBox(JBCheckBox checkBox, String value) {
+    private void setCheckBox(JBCheckBox checkBox, String value) {
         if(value.equals(checkBox.getText())) {
             checkBox.setSelected(true);
         }
-        return checkBox;
     }
 }

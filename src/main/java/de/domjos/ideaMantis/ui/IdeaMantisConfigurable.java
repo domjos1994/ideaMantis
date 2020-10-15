@@ -13,6 +13,7 @@ import com.intellij.ui.components.JBCheckBox;
 import com.intellij.ui.components.JBPasswordField;
 import com.intellij.ui.components.JBTextField;
 import com.intellij.util.ui.UIUtil;
+import de.domjos.ideaMantis.utils.PanelCreator;
 import de.domjos.ideaMantis.model.MantisProject;
 import de.domjos.ideaMantis.model.MantisUser;
 import de.domjos.ideaMantis.service.ConnectionSettings;
@@ -110,8 +111,8 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
     }
 
     public JComponent createComponent() {
-        GridBagConstraints txtConstraint = FormHelper.getTextConstraint();
-        GridBagConstraints lblConstraint = FormHelper.getLabelConstraint();
+        GridBagConstraints txtConstraint = PanelCreator.getTxtConstraint();
+        GridBagConstraints lblConstraint = PanelCreator.getLabelConstraint();
 
         this.txtHostName = new JBTextField();
         this.txtHostName.setName("txtHostName");
@@ -188,7 +189,7 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
 
         this.chkFastTrackEnabled = new JBCheckBox("Enable Fast-Track-Mode");
 
-        JPanel connPanel = FormHelper.createPanel(
+        JPanel connPanel = PanelCreator.createPanel(
                 Arrays.asList(
                     lblHostName, txtHostName,
                     lblUserName, txtUserName,
@@ -217,7 +218,7 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
         this.txtReloadTime.setText("300");
         this.txtReloadTime.setEnabled(false);
 
-        JPanel projectPanel = FormHelper.createPanel(
+        JPanel projectPanel = PanelCreator.createPanel(
                 Arrays.asList(
                     lblProjects, cmbProjects,
                     lblIssuesPerPage, txtIssuesPerPage,
@@ -238,7 +239,7 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
         this.cmbNewProjectProjects = new ComboBox<>();
         this.cmbNewProjectProjects.setVisible(false);
 
-        newProjectPanel = FormHelper.createPanel(
+        newProjectPanel = PanelCreator.createPanel(
                 Arrays.asList(
                         lblProjectName, txtProjectName,
                         lblProjects, cmbNewProjectProjects,
@@ -294,7 +295,7 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
         cmdCreateNewProject.addActionListener(e -> newProjectPanel.setVisible(true));
 
         JPanel root = new JPanel(new GridBagLayout());
-        GridBagConstraints constraints = FormHelper.getRootConstraint();
+        GridBagConstraints constraints = PanelCreator.getRootConstraint();
 
         root.add(connPanel, constraints);
         constraints.weighty = 2.0;

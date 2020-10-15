@@ -136,7 +136,7 @@ public class ConnectionSettings implements PersistentStateComponent<Element> {
     public boolean validateSettings() {
         MantisSoapAPI api = new MantisSoapAPI(this);
         MantisUser user = api.testConnection();
-        return user != null && projectID != 0;
+        return user == null || projectID == 0;
     }
 }
 

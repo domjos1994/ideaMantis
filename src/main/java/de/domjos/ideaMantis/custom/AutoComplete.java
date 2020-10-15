@@ -9,7 +9,7 @@ import java.util.List;
 
 public class AutoComplete implements DocumentListener {
 
-    private JTextField textField;
+    private final JTextField textField;
     private final List<String> keywords;
 
     public AutoComplete(JTextField textField, List<String> keywords) {
@@ -66,8 +66,8 @@ public class AutoComplete implements DocumentListener {
     }
 
     private class CompletionTask implements Runnable {
-        private String completion;
-        private int position;
+        private final String completion;
+        private final int position;
 
         CompletionTask(String completion, int position) {
             this.completion = completion;

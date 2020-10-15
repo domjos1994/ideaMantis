@@ -21,8 +21,8 @@ public class MantisIssue {
     private MantisVersion target_version;
     private MantisUser reporter;
     private String date_submitted;
-    private List<IssueAttachment> issueAttachmentList;
-    private List<IssueNote> issueNoteList;
+    private final List<IssueAttachment> issueAttachmentList;
+    private final List<IssueNote> issueNoteList;
     private Map<CustomField, String> customFields;
     private MantisProfile profile;
 
@@ -175,20 +175,12 @@ public class MantisIssue {
         this.issueAttachmentList.add(issueAttachment);
     }
 
-    public void setIssueAttachmentList(List<IssueAttachment> issueAttachmentList) {
-        this.issueAttachmentList = issueAttachmentList;
-    }
-
     public List<IssueNote> getIssueNoteList() {
         return issueNoteList;
     }
 
     public void addNote(IssueNote issueNote) {
         this.issueNoteList.add(issueNote);
-    }
-
-    public void setIssueNoteList(List<IssueNote> issueNoteList) {
-        this.issueNoteList = issueNoteList;
     }
 
     public String getTags() {

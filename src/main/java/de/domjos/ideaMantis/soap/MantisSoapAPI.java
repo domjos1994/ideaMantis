@@ -44,9 +44,9 @@ import static org.ksoap2.serialization.MarshalHashtable.NAMESPACE;
  */
 @SuppressWarnings("rawtypes")
 public class MantisSoapAPI {
-    private ConnectionSettings settings;
-    private SoapSerializationEnvelope structEnvelope;
-    private HttpTransportSE structTransport;
+    private final ConnectionSettings settings;
+    private final SoapSerializationEnvelope structEnvelope;
+    private final HttpTransportSE structTransport;
     private MantisUser user;
     private int issueID;
 

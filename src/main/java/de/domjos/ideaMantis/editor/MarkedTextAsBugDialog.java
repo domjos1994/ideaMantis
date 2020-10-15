@@ -6,7 +6,6 @@ import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.ValidationInfo;
 import com.intellij.ui.IdeBorderFactory;
 import com.intellij.ui.components.JBTextField;
-import com.intellij.util.ui.JBUI;
 import de.domjos.ideaMantis.model.IssueAttachment;
 import de.domjos.ideaMantis.model.MantisIssue;
 import de.domjos.ideaMantis.model.MantisVersion;
@@ -15,12 +14,11 @@ import de.domjos.ideaMantis.soap.MantisSoapAPI;
 import de.domjos.ideaMantis.ui.IdeaMantisIssues;
 import de.domjos.ideaMantis.utils.FormHelper;
 import de.domjos.ideaMantis.utils.Helper;
+import de.domjos.ideaMantis.utils.PanelCreator;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.*;
 
@@ -130,23 +128,11 @@ class MarkedTextAsBugDialog extends DialogWrapper {
     @Nullable
     @Override
     protected JComponent createCenterPanel() {
-
-
         JPanel root = new JPanel(new GridBagLayout());
-        GridBagConstraints constraints = new GridBagConstraints();
-        constraints.anchor = GridBagConstraints.NORTHWEST;
-        constraints.fill = GridBagConstraints.HORIZONTAL;
-        constraints.weightx = 2.0;
-        constraints.weighty = 0.0;
-        constraints.gridwidth = GridBagConstraints.REMAINDER;
+        GridBagConstraints constraints = PanelCreator.getRootConstraint();
+        GridBagConstraints txtConstraint = PanelCreator.getTxtConstraint();
+        GridBagConstraints labelConstraint = PanelCreator.getLabelConstraint();
 
-        GridBagConstraints labelConstraint = new GridBagConstraints();
-        labelConstraint.anchor = GridBagConstraints.EAST;
-        labelConstraint.insets = JBUI.insets(5, 10);
-        GridBagConstraints txtConstraint = new GridBagConstraints();
-        txtConstraint.weightx = 2.0;
-        txtConstraint.fill = GridBagConstraints.HORIZONTAL;
-        txtConstraint.gridwidth = GridBagConstraints.REMAINDER;
 
         txtSummary = new JBTextField();
         txtSummary.setName("txtSummary");
@@ -167,16 +153,12 @@ class MarkedTextAsBugDialog extends DialogWrapper {
         java.awt.Label lblCategory = new java.awt.Label("Category");
 
 
-        JPanel basicsPanel = new JPanel(new GridBagLayout());
-        basicsPanel.add(lblSummary, labelConstraint);
-        basicsPanel.add(txtSummary, txtConstraint);
-        basicsPanel.add(lblDate, labelConstraint);
-        basicsPanel.add(txtDate, txtConstraint);
-        basicsPanel.add(lblDescription, labelConstraint);
-        basicsPanel.add(txtDescription, txtConstraint);
-        basicsPanel.add(lblCategory, labelConstraint);
-        basicsPanel.add(cmbCategory, txtConstraint);
-
+        JPanel basicsPanel =
+            PanelCreator.createPanel(
+                Arrays.asList(
+                    lblSummary, txtSummary, lblDate, txtDate, lblDescription, txtDescription, lblCategory, cmbCategory
+                )
+            );
         basicsPanel.setBorder(IdeBorderFactory.createTitledBorder("Basics"));
         root.add(basicsPanel, constraints);
 
@@ -194,14 +176,12 @@ class MarkedTextAsBugDialog extends DialogWrapper {
         java.awt.Label lblFixedInVersion = new java.awt.Label("Fixed in Version");
         java.awt.Label lblTargetVersion = new java.awt.Label("Target Version");
 
-        JPanel versionPanel = new JPanel(new GridBagLayout());
-        versionPanel.add(lblVersion, labelConstraint);
-        versionPanel.add(cmbVersion, txtConstraint);
-        versionPanel.add(lblTargetVersion, labelConstraint);
-        versionPanel.add(cmbTargetVersion, txtConstraint);
-        versionPanel.add(lblFixedInVersion, labelConstraint);
-        versionPanel.add(cmbFixedInVersion, txtConstraint);
-
+        JPanel versionPanel =
+            PanelCreator.createPanel(
+                Arrays.asList(
+                    lblVersion, cmbVersion, lblTargetVersion, cmbTargetVersion, lblFixedInVersion, cmbFixedInVersion
+                )
+            );
         versionPanel.setBorder(IdeBorderFactory.createTitledBorder("Version"));
         root.add(versionPanel, constraints);
 
@@ -217,14 +197,12 @@ class MarkedTextAsBugDialog extends DialogWrapper {
         java.awt.Label lblSeverity = new java.awt.Label("Severity");
         java.awt.Label lblStatus = new java.awt.Label("Status");
 
-        JPanel statePanel = new JPanel(new GridBagLayout());
-        statePanel.add(lblPriority, labelConstraint);
-        statePanel.add(cmbPriority, txtConstraint);
-        statePanel.add(lblSeverity, labelConstraint);
-        statePanel.add(cmbSeverity, txtConstraint);
-        statePanel.add(lblStatus, labelConstraint);
-        statePanel.add(cmbStatus, txtConstraint);
-
+        JPanel statePanel =
+            PanelCreator.createPanel(
+                Arrays.asList(
+                    lblPriority, cmbPriority, lblSeverity, cmbSeverity, lblStatus, cmbStatus
+                )
+            );
         statePanel.setBorder(IdeBorderFactory.createTitledBorder("View-State"));
         root.add(statePanel, constraints);
 

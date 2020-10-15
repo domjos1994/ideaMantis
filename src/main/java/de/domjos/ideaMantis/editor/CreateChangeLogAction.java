@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 public class CreateChangeLogAction extends AnAction {
-    private StringBuilder builder;
+    private final StringBuilder builder;
 
     public CreateChangeLogAction() {
         this.builder = new StringBuilder();
@@ -38,7 +38,7 @@ public class CreateChangeLogAction extends AnAction {
         final Document document = editor.getDocument();
 
         ConnectionSettings connectionSettings = ConnectionSettings.getInstance(project);
-        if(!connectionSettings.validateSettings()) {
+        if(connectionSettings.validateSettings()) {
             Helper.printNotification("Wrong settings!", "The connection-settings are incorrect!", NotificationType.WARNING);
             return;
         }
@@ -54,15 +54,14 @@ public class CreateChangeLogAction extends AnAction {
                     Map<MantisVersion, List<MantisIssue>> resortedMap = new LinkedHashMap<>();
                     double factor = 1.0 / changeLog.entrySet().size();
                     for(Map.Entry<MantisIssue, MantisVersion> entry : changeLog.entrySet()) {
+                        List<MantisIssue> issueList;
                         if(resortedMap.containsKey(entry.getValue())) {
-                            List<MantisIssue> issueList = resortedMap.get(entry.getValue());
-                            issueList.add(entry.getKey());
-                            resortedMap.put(entry.getValue(), issueList);
+                            issueList = resortedMap.get(entry.getValue());
                         } else {
-                            List<MantisIssue> issueList = new LinkedList<>();
-                            issueList.add(entry.getKey());
-                            resortedMap.put(entry.getValue(), issueList);
+                            issueList = new LinkedList<>();
                         }
+                        issueList.add(entry.getKey());
+                        resortedMap.put(entry.getValue(), issueList);
                         progressIndicator.setFraction(progressIndicator.getFraction() + factor);
                     }
                     progressIndicator.setFraction(0.0);

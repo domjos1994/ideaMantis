@@ -239,7 +239,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                     @Override
                     public void run(@NotNull ProgressIndicator progressIndicator) {
                         try {
-                            if(!settings.validateSettings()) {
+                            if(settings.validateSettings()) {
                                 Helper.printNotification("Wrong settings!", "The connection-settings are incorrect!", NotificationType.WARNING);
                                 state = false;
                                 tblIssues.removeAll();

@@ -21,12 +21,12 @@ import java.util.Objects;
 
 public class CustomFieldDialog extends DialogWrapper {
     private MantisSoapAPI api;
-    private Project project;
-    private String state;
+    private final Project project;
+    private final String state;
     private JPanel panel;
     private java.util.List<CustomField> customFieldList = null;
-    private java.util.List<CustomFieldResult> resultList;
-    private Map<CustomField, String> customFields;
+    private final java.util.List<CustomFieldResult> resultList;
+    private final Map<CustomField, String> customFields;
 
     CustomFieldDialog(@Nullable Project project, String state, Map<CustomField, String> customFields) {
         super(project);
@@ -81,13 +81,13 @@ public class CustomFieldDialog extends DialogWrapper {
                                     result.addResult(value);
                                 }
                                 if(child.getComponent(j) instanceof JList) {
-                                    JList<String> list = (JList<String>) child.getComponent(j);
-                                    if(list.getSelectionMode()== ListSelectionModel.MULTIPLE_INTERVAL_SELECTION) {
-                                        for(String selection : list.getSelectedValuesList()) {
-                                            result.addResult(selection);
+                                    JList<?> list = (JList<?>) child.getComponent(j);
+                                    if(list.getSelectionMode() == ListSelectionModel.MULTIPLE_INTERVAL_SELECTION) {
+                                        for(Object selection : list.getSelectedValuesList()) {
+                                            result.addResult((String) selection);
                                         }
                                     } else {
-                                        result.addResult(list.getSelectedValue());
+                                        result.addResult(list.getSelectedValue().toString());
                                     }
                                 }
                                 if(child.getComponent(j) instanceof JPanel) {

@@ -15,7 +15,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class VersionDialog extends DialogWrapper {
-    private MantisSoapAPI api;
+    private final MantisSoapAPI api;
     private JBTextField txtName, txtDateOrder;
     private JTextArea txtDescription;
     private JCheckBox chkObsolete, chkReleased;
@@ -29,14 +29,17 @@ public class VersionDialog extends DialogWrapper {
         cmdDelete.setVisible(version.getId()!=0);
         this.setTitle("Version-Name");
         if(this.getButton(this.getOKAction())!=null) {
-            this.getButton(this.getOKAction()).addActionListener((event) -> {
-                version.setName(txtName.getText());
-                version.setDate(txtDateOrder.getText());
-                version.setDescription(txtDescription.getText());
-                version.setObsolete(chkObsolete.isSelected());
-                version.setReleased(chkReleased.isSelected());
-                api.addVersion(version, project_id);
-            });
+            JButton button = this.getButton(this.getOKAction());
+            if(button != null) {
+                button.addActionListener((event) -> {
+                    version.setName(txtName.getText());
+                    version.setDate(txtDateOrder.getText());
+                    version.setDescription(txtDescription.getText());
+                    version.setObsolete(chkObsolete.isSelected());
+                    version.setReleased(chkReleased.isSelected());
+                    api.addVersion(version, project_id);
+                });
+            }
         }
     }
 
@@ -93,8 +96,12 @@ public class VersionDialog extends DialogWrapper {
         cmdDelete.setName("cmdDelete");
         cmdDelete.addActionListener(e -> {
             api.deleteVersion(version.getId());
-            if(this.getButton(this.getOKAction())!=null)
-                this.getButton(this.getOKAction()).doClick();
+            if(this.getButton(this.getOKAction())!=null) {
+                JButton button = this.getButton(this.getOKAction());
+                if(button != null) {
+                    button.doClick();
+                }
+            }
         });
 
         java.awt.Label lblName = new java.awt.Label("Name");

@@ -5,6 +5,8 @@ import com.intellij.ide.passwordSafe.PasswordSafe;
 import com.intellij.notification.Notification;
 import com.intellij.notification.NotificationType;
 import com.intellij.notification.Notifications;
+import com.intellij.openapi.command.WriteCommandAction;
+import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vcs.changes.Change;
 import com.intellij.openapi.vcs.changes.ChangeListManager;
@@ -18,6 +20,33 @@ import java.util.*;
 
 public abstract class Helper {
     private static Project project;
+
+    public static String getPathToDocument(Document document) {
+        final String[] pathToDocument = new String[1];
+        WriteCommandAction.runWriteCommandAction(project,()->{
+            String[] pathToDocumentArray = document.toString().split("file://");
+            if(pathToDocumentArray.length==2) {
+                pathToDocument[0] = pathToDocumentArray[1].replace("]", "").trim();
+            } else {
+                pathToDocument[0] = document.toString();
+            }
+        });
+        return pathToDocument[0];
+    }
+
+    public static int getId(String content) {
+        final int[] id = new int[1];
+        final String[] finalContent = new String[]{content};
+        WriteCommandAction.runWriteCommandAction(project,()->{
+            try {
+                finalContent[0] = finalContent[0].substring(finalContent[0].indexOf("Mantis#")+7);
+                id[0] = Integer.parseInt(finalContent[0].split(" ")[0]);
+            } catch (Exception ex) {
+                id[0] = 0;
+            }
+        });
+        return id[0];
+    }
 
     public static void printNotification(String header, String content, NotificationType type) {
         Notification notification = new Notification(Helper.class.getName(), header, content, type);
@@ -79,10 +108,10 @@ public abstract class Helper {
                 ((JTextArea)cmp).setText("");
             }
             if(cmp instanceof JComboBox) {
-                ((JComboBox)cmp).setSelectedItem(null);
+                ((JComboBox<?>)cmp).setSelectedItem(null);
             }
             if(cmp instanceof JList) {
-                ((JList)cmp).setSelectedValue(null, false);
+                ((JList<?>)cmp).setSelectedValue(null, false);
             }
             if(cmp instanceof JTable) {
                 ((JTable)cmp).getSelectionModel().clearSelection();
@@ -143,8 +172,7 @@ public abstract class Helper {
 
     @SuppressWarnings("deprecation")
     public static void commitAllFiles(String comment, ChangeListManager changeListManager) {
-        java.util.List<Change> changeList = new LinkedList<>();
-        changeList.addAll(changeListManager.getAllChanges());
+        java.util.List<Change> changeList = new LinkedList<>(changeListManager.getAllChanges());
         for(LocalChangeList localChangeList : changeListManager.getChangeLists()) {
             localChangeList.setComment(comment);
             changeListManager.commitChanges(localChangeList, changeList);
@@ -156,7 +184,7 @@ public abstract class Helper {
         PasswordSafe safe = PasswordSafe.getInstance();
         safe.setPassword(attributes, password);
     }
-
+    
     public static String getPassword() {
         CredentialAttributes attributes = new CredentialAttributes(de.domjos.ideaMantis.service.ConnectionSettings.class.getName());
         PasswordSafe safe = PasswordSafe.getInstance();

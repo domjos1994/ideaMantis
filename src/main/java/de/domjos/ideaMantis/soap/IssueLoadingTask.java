@@ -22,7 +22,7 @@ public class IssueLoadingTask extends Task.Backgroundable {
     private final int page;
 
     public IssueLoadingTask(ConnectionSettings settings, JTable tblIssues, DefaultTableModel tblIssueModel, JComboBox<String> cmbFilters, int page) {
-        super(Helper.getProject(), "Reload Issues...", true);
+        super(Helper.getProject(), "Reload issues...", true);
 
         this.settings = settings;
         this.tblIssues = tblIssues;
@@ -51,7 +51,7 @@ public class IssueLoadingTask extends Task.Backgroundable {
                 this.before.execute();
             }
 
-            if(!settings.validateSettings()) {
+            if(settings.validateSettings()) {
                 Helper.printNotification("Wrong settings!", "The connection-settings are incorrect!", NotificationType.WARNING);
                 state = false;
                 tblIssues.removeAll();

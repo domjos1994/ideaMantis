@@ -3,17 +3,17 @@ package de.domjos.ideaMantis.ui;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.openapi.ui.DialogWrapper;
-import com.intellij.util.ui.JBUI;
 import de.domjos.ideaMantis.model.MantisVersion;
 import de.domjos.ideaMantis.service.ConnectionSettings;
 import de.domjos.ideaMantis.soap.MantisSoapAPI;
+import de.domjos.ideaMantis.utils.PanelCreator;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.*;
 
 public class ChooseVersionDialog extends DialogWrapper {
-    private Project project;
+    private final Project project;
     private ComboBox<String> cmbVersions;
     public static MantisVersion currentVersion = null;
 
@@ -23,14 +23,17 @@ public class ChooseVersionDialog extends DialogWrapper {
         this.init();
         this.setTitle("Version-Name");
         if(this.getButton(this.getOKAction())!=null) {
-            this.getButton(this.getOKAction()).addActionListener((event) -> {
-                for(MantisVersion version : new MantisSoapAPI(ConnectionSettings.getInstance(project)).getVersions(ConnectionSettings.getInstance(project).getProjectID())) {
-                    if(version.getName().equals(cmbVersions.getSelectedItem())) {
-                        currentVersion = version;
-                        break;
+            JButton button = this.getButton(this.getOKAction());
+            if(button != null) {
+                button.addActionListener((event) -> {
+                    for(MantisVersion version : new MantisSoapAPI(ConnectionSettings.getInstance(project)).getVersions(ConnectionSettings.getInstance(project).getProjectID())) {
+                        if(version.getName().equals(cmbVersions.getSelectedItem())) {
+                            currentVersion = version;
+                            break;
+                        }
                     }
-                }
-            });
+                });
+            }
         }
     }
 
@@ -38,20 +41,8 @@ public class ChooseVersionDialog extends DialogWrapper {
     @Override
     protected JComponent createCenterPanel() {
         JPanel root = new JPanel(new GridBagLayout());
-        GridBagConstraints constraints = new GridBagConstraints();
-        constraints.weightx = 2.0;
-        constraints.weighty = 0.0;
-        constraints.anchor = GridBagConstraints.NORTHWEST;
-        constraints.fill = GridBagConstraints.HORIZONTAL;
-        constraints.gridwidth = GridBagConstraints.REMAINDER;
-
-        GridBagConstraints labelConstraint = new GridBagConstraints();
-        labelConstraint.anchor = GridBagConstraints.EAST;
-        labelConstraint.insets = JBUI.insets(5, 10);
-        GridBagConstraints txtConstraint = new GridBagConstraints();
-        txtConstraint.weightx = 2.0;
-        txtConstraint.fill = GridBagConstraints.HORIZONTAL;
-        txtConstraint.gridwidth = GridBagConstraints.REMAINDER;
+        GridBagConstraints labelConstraint = PanelCreator.getLabelConstraint();
+        GridBagConstraints txtConstraint = PanelCreator.getTxtConstraint();
 
         Label lblVersion = new Label("Fixed in Version");
 

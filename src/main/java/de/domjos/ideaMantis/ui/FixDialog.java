@@ -1,6 +1,5 @@
 package de.domjos.ideaMantis.ui;
 
-import com.intellij.notification.NotificationType;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.openapi.ui.DialogWrapper;
@@ -10,16 +9,18 @@ import de.domjos.ideaMantis.service.ConnectionSettings;
 import de.domjos.ideaMantis.soap.MantisSoapAPI;
 import de.domjos.ideaMantis.soap.ObjectRef;
 import de.domjos.ideaMantis.utils.Helper;
+import de.domjos.ideaMantis.utils.PanelCreator;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.Objects;
 
 public class FixDialog extends DialogWrapper {
     private JBTextField txtFixed;
     private ComboBox<String> cmbState;
     private MantisSoapAPI api;
-    private Project project;
+    private final Project project;
 
     public FixDialog(@Nullable Project project, int id) {
         super(project);
@@ -30,13 +31,16 @@ public class FixDialog extends DialogWrapper {
             this.setOKButtonText("Resolve Issue");
             this.init();
             if(this.getButton(this.getOKAction())!=null) {
-                this.getButton(this.getOKAction()).addActionListener((event) -> {
-                    try {
-                        api.checkInIssue(id, txtFixed.getText(), cmbState.getSelectedItem().toString());
-                    } catch (Exception ex) {
-                        Helper.printException(ex);
-                    }
-                });
+                JButton button = this.getButton(this.getOKAction());
+                if(button != null) {
+                    button.addActionListener((event) -> {
+                        try {
+                            api.checkInIssue(id, txtFixed.getText(), Objects.requireNonNull(cmbState.getSelectedItem()).toString());
+                        } catch (Exception ex) {
+                            Helper.printException(ex);
+                        }
+                    });
+                }
             }
         }catch (Exception ex) {
             Helper.printException(ex);
@@ -47,20 +51,8 @@ public class FixDialog extends DialogWrapper {
     @Override
     protected JComponent createCenterPanel() {
         JPanel root = new JPanel(new GridBagLayout());
-        GridBagConstraints constraints = new GridBagConstraints();
-        constraints.anchor = GridBagConstraints.NORTHWEST;
-        constraints.fill = GridBagConstraints.HORIZONTAL;
-        constraints.weightx = 2.0;
-        constraints.weighty = 0.0;
-        constraints.gridwidth = GridBagConstraints.REMAINDER;
-
-        GridBagConstraints labelConstraint = new GridBagConstraints();
-        labelConstraint.anchor = GridBagConstraints.EAST;
-        labelConstraint.insets = JBUI.insets(5, 10);
-        GridBagConstraints txtConstraint = new GridBagConstraints();
-        txtConstraint.weightx = 2.0;
-        txtConstraint.fill = GridBagConstraints.HORIZONTAL;
-        txtConstraint.gridwidth = GridBagConstraints.REMAINDER;
+        GridBagConstraints labelConstraint = PanelCreator.getLabelConstraint();
+        GridBagConstraints txtConstraint = PanelCreator.getTxtConstraint();
 
         txtFixed = new JBTextField();
         txtFixed.setName("txtSummary");
