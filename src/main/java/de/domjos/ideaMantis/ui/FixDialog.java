@@ -170,6 +170,7 @@ public class FixDialog extends DialogWrapper {
         basicsPanel.add(this.txtFixed, txtConstraint);
         basicsPanel.add(lblVisibility, labelConstraint);
         basicsPanel.add(this.cmbVisibility, txtConstraint);
+        basicsPanel.add(cmdCustomFields, txtConstraint);
 
         root.add(basicsPanel);
         return root;

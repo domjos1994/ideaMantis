@@ -285,6 +285,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                                 tblIssues.setModel(tblIssueModel);
                                 tblIssues.setDefaultRenderer(Object.class, new IssueTableCellRenderer(colorMap));
                                 cmdIssueNew.setEnabled(true);
+                                tblIssues.updateUI();
                             }
                         } catch (Exception ex) {
                             Helper.printException(ex);
