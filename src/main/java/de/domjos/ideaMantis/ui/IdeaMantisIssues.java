@@ -93,7 +93,6 @@ public class IdeaMantisIssues implements ToolWindowFactory {
 
     private ChangeListManager changeListManager;
     private Map.Entry<Integer, String> access;
-    private ObjectRef resolved = null;
     private final DefaultTableModel tblIssueModel;
 
     private final static SimpleDateFormat MANTIS_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
@@ -124,6 +123,21 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         this.cmdIssueAbort.setPreferredSize(new Dimension(30, 20));
         this.cmdIssueResolve.setPreferredSize(new Dimension(30, 20));
         this.cmbIssueStatus.setRenderer(new StatusListCellRenderer(this.cmbIssueStatus.getRenderer()));
+
+        // add menu
+        JPopupMenu popupMenu = new JPopupMenu();
+        JMenuItem duplicateIssue = new JMenuItem("Duplicate Issue");
+        duplicateIssue.addActionListener(e -> {
+            if(this.currentIssue != null) {
+                MantisIssue issue = this.currentIssue;
+                issue.setId(0);
+                issue.setSummary(issue.getSummary() + " - Copy");
+                new MantisSoapAPI(settings).addIssue(issue);
+                this.cmdReload.doClick();
+            }
+        });
+        popupMenu.add(duplicateIssue);
+        this.tblIssues.setComponentPopupMenu(popupMenu);
 
         cmdCustomFields.addActionListener(e -> {
             String state = "report";
@@ -1490,9 +1504,6 @@ public class IdeaMantisIssues implements ToolWindowFactory {
             for(ObjectRef status : states) {
                 cmbIssueStatus.addItem(status.getName());
                 cmbFilterStatus.addItem(status.getName());
-                if(status.getId()==80) {
-                    resolved = status;
-                }
             }
             cmbFilterStatus.setSelectedIndex(0);
         }
