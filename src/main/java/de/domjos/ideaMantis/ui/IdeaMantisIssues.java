@@ -100,7 +100,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
 
     public IdeaMantisIssues() {
         tblHistory.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tblIssues.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        tblIssues.getSelectionModel().setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         tblIssueAttachments.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tblIssueNotes.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tblIssueModel = Helper.addColumnsToTable("ID", "Summary", "Status");
@@ -137,6 +137,42 @@ public class IdeaMantisIssues implements ToolWindowFactory {
             }
         });
         popupMenu.add(duplicateIssue);
+        JMenuItem changeVersion = new JMenuItem(ChangeVersionDialog.VERSION);
+        changeVersion.addActionListener(e -> {
+            int[] sids = new int[this.tblIssues.getSelectedRowCount()];
+            for(int i = 0; i<=this.tblIssues.getSelectedRowCount()-1; i++) {
+                String field = this.tblIssueModel.getValueAt(this.tblIssues.getSelectedRows()[i], 0).toString();
+                sids[i] = Integer.parseInt(field);
+            }
+            ChangeVersionDialog changeVersionDialog = new ChangeVersionDialog(Helper.getProject(), settings.getProjectID(), sids, ChangeVersionDialog.VERSION);
+            changeVersionDialog.show();
+            this.cmdReload.doClick();
+        });
+        popupMenu.add(changeVersion);
+        JMenuItem changeTargetVersion = new JMenuItem(ChangeVersionDialog.TARGET_VERSION);
+        changeTargetVersion.addActionListener(e -> {
+            int[] sids = new int[this.tblIssues.getSelectedRowCount()];
+            for(int i = 0; i<=this.tblIssues.getSelectedRowCount()-1; i++) {
+                String field = this.tblIssueModel.getValueAt(this.tblIssues.getSelectedRows()[i], 0).toString();
+                sids[i] = Integer.parseInt(field);
+            }
+            ChangeVersionDialog changeVersionDialog = new ChangeVersionDialog(Helper.getProject(), settings.getProjectID(), sids, ChangeVersionDialog.TARGET_VERSION);
+            changeVersionDialog.show();
+            this.cmdReload.doClick();
+        });
+        popupMenu.add(changeTargetVersion);
+        JMenuItem changeFixedInVersion = new JMenuItem(ChangeVersionDialog.FIXED_IN_VERSION);
+        changeFixedInVersion.addActionListener(e -> {
+            int[] sids = new int[this.tblIssues.getSelectedRowCount()];
+            for(int i = 0; i<=this.tblIssues.getSelectedRowCount()-1; i++) {
+                String field = this.tblIssueModel.getValueAt(this.tblIssues.getSelectedRows()[i], 0).toString();
+                sids[i] = Integer.parseInt(field);
+            }
+            ChangeVersionDialog changeVersionDialog = new ChangeVersionDialog(Helper.getProject(), settings.getProjectID(), sids, ChangeVersionDialog.FIXED_IN_VERSION);
+            changeVersionDialog.show();
+            this.cmdReload.doClick();
+        });
+        popupMenu.add(changeFixedInVersion);
         this.tblIssues.setComponentPopupMenu(popupMenu);
 
         cmdCustomFields.addActionListener(e -> {
