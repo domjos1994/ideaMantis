@@ -173,6 +173,18 @@ public class IdeaMantisIssues implements ToolWindowFactory {
             this.cmdReload.doClick();
         });
         popupMenu.add(changeFixedInVersion);
+        JMenuItem addTags = new JMenuItem(ChangeVersionDialog.TAGS);
+        addTags.addActionListener(e -> {
+            int[] sids = new int[this.tblIssues.getSelectedRowCount()];
+            for(int i = 0; i<=this.tblIssues.getSelectedRowCount()-1; i++) {
+                String field = this.tblIssueModel.getValueAt(this.tblIssues.getSelectedRows()[i], 0).toString();
+                sids[i] = Integer.parseInt(field);
+            }
+            ChangeVersionDialog changeVersionDialog = new ChangeVersionDialog(Helper.getProject(), settings.getProjectID(), sids, ChangeVersionDialog.TAGS);
+            changeVersionDialog.show();
+            this.cmdReload.doClick();
+        });
+        popupMenu.add(addTags);
         this.tblIssues.setComponentPopupMenu(popupMenu);
 
         cmdCustomFields.addActionListener(e -> {
