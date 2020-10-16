@@ -317,8 +317,9 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                     if(tblIssues.getSelectedRow()!=-1) {
                         String strId = tblIssueModel.getValueAt(tblIssues.getSelectedRow(), 0).toString();
                         if(!strId.trim().isEmpty()) {
-                            if(!loadComboBoxes)
+                            if(!loadComboBoxes) {
                                 loadComboBoxes();
+                            }
                             pnlMain.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                             int id = Integer.parseInt(tblIssueModel.getValueAt(tblIssues.getSelectedRow(), 0).toString());
                             MantisSoapAPI api = new MantisSoapAPI(settings);
@@ -422,6 +423,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                                 controlAttachments(false, settings.isFastTrack());
                             }
                             checkMandatoryFieldsAreNotEmpty(true);
+                            changeFixButton(issue.getStatus());
                         }
                     }
                 } catch (Exception ex) {
@@ -598,10 +600,8 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         cmdIssueEdit.addActionListener(e -> controlIssues(true, true));
         cmdIssueResolve.addActionListener(e -> {
             try {
-                FixDialog fixDialog = new FixDialog(Helper.getProject(), currentIssue.getId());
+                FixDialog fixDialog = new FixDialog(Helper.getProject(), currentIssue.getId(), currentIssue.getStatus());
                 fixDialog.show();
-                currentIssue.setStatus(resolved.getName());
-                new MantisSoapAPI(settings).addIssue(currentIssue);
                 cmdReload.doClick();
             } catch (Exception ex) {
                 Helper.printException(ex);
@@ -729,7 +729,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                        MantisIssue mantisIssue = api.getIssue(issue.getId());
                        if(mantisIssue!=null) {
                            if(!mantisIssue.getStatus().equals(issue.getStatus())) {
-                               FixDialog dialog = new FixDialog(Helper.getProject(), issue.getId());
+                               FixDialog dialog = new FixDialog(Helper.getProject(), issue.getId(), issue.getStatus());
                                dialog.show();
                            }
                        }
@@ -1163,6 +1163,22 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         return "";
     }
 
+    private void changeFixButton(String status) {
+        if(status != null) {
+            if(!status.trim().isEmpty()) {
+                status = status.trim().toLowerCase();
+
+                if(status.equals("resolved") || status.equals("closed")) {
+                    this.cmdIssueResolve.setIcon(AllIcons.Actions.Cancel);
+                    this.cmdIssueResolve.setToolTipText("Reopen Issue");
+                } else {
+                    this.cmdIssueResolve.setIcon(AllIcons.Actions.Commit);
+                    this.cmdIssueResolve.setToolTipText("Resolve Issue");
+                }
+            }
+        }
+    }
+
     @Override
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
         Helper.setProject(project);
@@ -1192,24 +1208,22 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                 @Override
                 public void contentAdded(@NotNull ContentManagerEvent contentManagerEvent) {
                     for(Content content : toolWindow.getContentManager().getContents()) {
-                        if(content!=null) {
-                            if(content.getDescription()!=null) {
-                                if (content.getDescription().equals(IdeaMantisIssues.RELOAD_COMBOBOXES)) {
-                                    MantisSoapAPI api = new MantisSoapAPI(settings);
-                                    access = api.getRightsFromProject(settings.getProjectID());
-                                    checkRights();
-                                    loadComboBoxes();
-                                    cmdReload.doClick();
-                                    cmdCustomFields.setVisible(!api.getCustomFields(settings.getProjectID()).isEmpty());
-                                    toolWindow.getContentManager().removeContent(content, true);
-                                    controlIssues(false, settings.isFastTrack());
-                                    controlAttachments(false, settings.isFastTrack());
-                                    controlNotes(false, settings.isFastTrack());
-                                    initTimer(settings);
-                                    break;
-                                } else if(content.getDescription().equals(IdeaMantisIssues.RELOAD_ISSUES)) {
-                                    cmdReload.doClick();
-                                }
+                        if(content.getDescription()!=null) {
+                            if (content.getDescription().equals(IdeaMantisIssues.RELOAD_COMBOBOXES)) {
+                                MantisSoapAPI api = new MantisSoapAPI(settings);
+                                access = api.getRightsFromProject(settings.getProjectID());
+                                checkRights();
+                                loadComboBoxes();
+                                cmdReload.doClick();
+                                cmdCustomFields.setVisible(!api.getCustomFields(settings.getProjectID()).isEmpty());
+                                toolWindow.getContentManager().removeContent(content, true);
+                                controlIssues(false, settings.isFastTrack());
+                                controlAttachments(false, settings.isFastTrack());
+                                controlNotes(false, settings.isFastTrack());
+                                initTimer(settings);
+                                break;
+                            } else if(content.getDescription().equals(IdeaMantisIssues.RELOAD_ISSUES)) {
+                                cmdReload.doClick();
                             }
                         }
                     }

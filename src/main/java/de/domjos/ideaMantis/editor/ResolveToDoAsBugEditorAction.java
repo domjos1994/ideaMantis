@@ -49,20 +49,8 @@ public class ResolveToDoAsBugEditorAction extends AnAction {
             MantisIssue issue = api.getIssue(id);
 
             if(issue!=null) {
-                FixDialog fixDialog = new FixDialog(project, issue.getId());
+                FixDialog fixDialog = new FixDialog(project, issue.getId(), issue.getStatus());
                 fixDialog.show();
-
-                for(ObjectRef ref : api.getEnum("status")) {
-                    if(ref.getId()==80) {
-                        issue.setStatus(ref.getName());
-                        try {
-                            api.addIssue(issue);
-                        } catch (Exception ex) {
-                            System.out.println(ex.getMessage());
-                        }
-                        break;
-                    }
-                }
             }
         }
     }

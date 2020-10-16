@@ -413,14 +413,31 @@ public class MantisSoapAPI {
         }
     }
 
-    public void checkInIssue(int sid, String comment, String state) {
+    public void checkInIssue(int sid, String comment, String visibility, String status, String version, int pid) {
         try {
-            IssueNote note = new IssueNote();
-            note.setReporter(user);
-            note.setText(comment);
-            note.setView_state(state);
-            note.setDate(new SimpleDateFormat("dd.MM.yyyy HH:mm").format(new Date()));
-            this.addNote(sid, note);
+            if(!comment.trim().isEmpty()) {
+                IssueNote note = new IssueNote();
+                note.setReporter(user);
+                note.setText(comment);
+                note.setView_state(visibility);
+                note.setDate(new SimpleDateFormat("dd.MM.yyyy HH:mm").format(new Date()));
+                this.addNote(sid, note);
+            }
+
+            List<MantisVersion> versions = this.getVersions(pid);
+            MantisIssue issue = this.getIssue(sid);
+            if(version != null) {
+                if(!version.trim().isEmpty()) {
+                    for(MantisVersion mantisVersion : versions) {
+                        if(mantisVersion.getName().trim().toLowerCase().equals(version.trim().toLowerCase())) {
+                            issue.setFixed_in_version(mantisVersion);
+                            break;
+                        }
+                    }
+                }
+            }
+            issue.setStatus(status);
+            this.addIssue(issue);
         } catch (Exception ex) {
             Helper.printException(ex);
         }
