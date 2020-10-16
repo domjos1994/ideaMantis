@@ -19,6 +19,7 @@ package de.domjos.ideaMantis.soap;
 
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.util.text.StringUtil;
 import de.domjos.ideaMantis.model.*;
 import de.domjos.ideaMantis.service.ConnectionSettings;
 import de.domjos.ideaMantis.utils.Helper;
@@ -161,7 +162,7 @@ public class MantisSoapAPI {
         return right;
     }
 
-    public List<CustomField> getCustomFields(int pid) {
+    public List<CustomField> getCustomFields(int pid, boolean resolved) {
         List<CustomField> customFields = new LinkedList<>();
         List<ObjectRef> custom_types = getEnum("custom_field_types");
         List<ObjectRef> objectRefList = new LinkedList<>();
@@ -210,7 +211,13 @@ public class MantisSoapAPI {
                     customField.setRequireReport(checkAndGetBooleanProperty("require_report", customFieldObject));
                     customField.setRequireResolved(checkAndGetBooleanProperty("require_resolved", customFieldObject));
                     customField.setRequireClosed(checkAndGetBooleanProperty("require_closed", customFieldObject));
-                    customFields.add(customField);
+                    if(resolved) {
+                        if(customField.isDisplayResolved()) {
+                            customFields.add(customField);
+                        }
+                    } else {
+                        customFields.add(customField);
+                    }
                 }
             }
         } catch (Exception ex) {
@@ -413,7 +420,7 @@ public class MantisSoapAPI {
         }
     }
 
-    public void checkInIssue(int sid, String comment, String visibility, String status, String version, int pid) {
+    public void checkInIssue(int sid, String comment, String visibility, String status, String version, int pid, List<CustomFieldResult> results) {
         try {
             if(!comment.trim().isEmpty()) {
                 IssueNote note = new IssueNote();
@@ -433,6 +440,13 @@ public class MantisSoapAPI {
                             issue.setFixed_in_version(mantisVersion);
                             break;
                         }
+                    }
+                }
+            }
+            if(results != null) {
+                if(!results.isEmpty()) {
+                    for(CustomFieldResult result : results) {
+                        issue.addCustomField(result.getField(), StringUtil.join(result.getResult(), ", "));
                     }
                 }
             }
@@ -1156,7 +1170,7 @@ public class MantisSoapAPI {
             }
             try {
                 if(soapObjIssue.getProperty("custom_fields") != null) {
-                    List<CustomField> fields = this.getCustomFields(settings.getProjectID());
+                    List<CustomField> fields = this.getCustomFields(settings.getProjectID(), false);
                     for (Object object : (Vector) soapObjIssue.getProperty("custom_fields")) {
                         SoapObject soapObject = (SoapObject) object;
                         String value = checkAndGetProperty("value", soapObject);

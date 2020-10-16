@@ -4,6 +4,8 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.ui.components.JBTextField;
+import de.domjos.ideaMantis.model.CustomField;
+import de.domjos.ideaMantis.model.CustomFieldResult;
 import de.domjos.ideaMantis.model.MantisVersion;
 import de.domjos.ideaMantis.service.ConnectionSettings;
 import de.domjos.ideaMantis.soap.MantisSoapAPI;
@@ -14,16 +16,23 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.Map;
 
 public class FixDialog extends DialogWrapper {
     private JBTextField txtFixed;
     private ComboBox<String> cmbVisibility, cmbStatus, cmbVersion;
     private java.awt.Label lblVersion;
     private MantisSoapAPI api;
+    private final Project project;
     private int pid;
+    private java.util.List<CustomFieldResult> results;
 
     public FixDialog(@Nullable Project project, int id, String status) {
         super(project);
+        this.project = project;
+        this.results = new LinkedList<>();
 
         try {
             ConnectionSettings connectionSettings = ConnectionSettings.getInstance(project);
@@ -54,7 +63,7 @@ public class FixDialog extends DialogWrapper {
                                 version = this.cmbVersion.getSelectedItem().toString().trim();
                             }
 
-                            api.checkInIssue(id, summary, visibility, state, version, this.pid);
+                            api.checkInIssue(id, summary, visibility, state, version, this.pid, this.results);
                         } catch (Exception ex) {
                             Helper.printException(ex);
                         }
@@ -91,6 +100,22 @@ public class FixDialog extends DialogWrapper {
         JPanel root = new JPanel(new GridBagLayout());
         GridBagConstraints labelConstraint = PanelCreator.getLabelConstraint();
         GridBagConstraints txtConstraint = PanelCreator.getTxtConstraint();
+
+        JButton cmdCustomFields = new JButton();
+        cmdCustomFields.setName("cmdCustomFields");
+        cmdCustomFields.setText("Custom Fields");
+        cmdCustomFields.addActionListener(event -> {
+            if(this.cmbStatus.getSelectedItem() != null) {
+                String status = this.cmbStatus.getSelectedItem().toString().trim();
+                Map<CustomField, String> fieldStringMap = new LinkedHashMap<>();
+                for(CustomField customField : api.getCustomFields(this.pid, true)) {
+                    fieldStringMap.put(customField, "");
+                }
+                CustomFieldDialog customFieldDialog = new CustomFieldDialog(this.project, status, fieldStringMap);
+                customFieldDialog.show();
+                this.results = customFieldDialog.getResults();
+            }
+        });
 
         this.cmbVersion = new ComboBox<>();
         this.cmbVersion.setName("cmbVersion");

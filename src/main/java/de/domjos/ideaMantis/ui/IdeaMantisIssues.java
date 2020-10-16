@@ -325,7 +325,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                             MantisSoapAPI api = new MantisSoapAPI(settings);
                             MantisIssue issue = api.getIssue(id);
                             currentIssue = issue;
-                            cmdCustomFields.setVisible(!api.getCustomFields(settings.getProjectID()).isEmpty());
+                            cmdCustomFields.setVisible(!api.getCustomFields(settings.getProjectID(), false).isEmpty());
                             cmdIssueEdit.setEnabled(true);
                             cmdIssueDelete.setEnabled(true);
                             txtIssueSummary.setText(issue.getSummary());
@@ -1198,7 +1198,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
             if(state) {
                 if(!loadComboBoxes)
                     this.loadComboBoxes();
-                cmdCustomFields.setVisible(!api.getCustomFields(settings.getProjectID()).isEmpty());
+                cmdCustomFields.setVisible(!api.getCustomFields(settings.getProjectID(), false).isEmpty());
             }
 
             api.getProfiles();
@@ -1215,7 +1215,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                                 checkRights();
                                 loadComboBoxes();
                                 cmdReload.doClick();
-                                cmdCustomFields.setVisible(!api.getCustomFields(settings.getProjectID()).isEmpty());
+                                cmdCustomFields.setVisible(!api.getCustomFields(settings.getProjectID(), false).isEmpty());
                                 toolWindow.getContentManager().removeContent(content, true);
                                 controlIssues(false, settings.isFastTrack());
                                 controlAttachments(false, settings.isFastTrack());

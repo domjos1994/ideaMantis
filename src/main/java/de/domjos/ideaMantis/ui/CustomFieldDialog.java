@@ -131,7 +131,7 @@ public class CustomFieldDialog extends DialogWrapper {
         constraints.weightx = 2.0;
         constraints.weighty = 0.0;
         constraints.gridwidth = GridBagConstraints.REMAINDER;
-        this.customFieldList = api.getCustomFields(ConnectionSettings.getInstance(project).getProjectID());
+        this.customFieldList = api.getCustomFields(ConnectionSettings.getInstance(project).getProjectID(), false);
         for(CustomField field : customFieldList) {
             String entry = "";
             for(Map.Entry<CustomField, String> valueEntry : this.customFields.entrySet()) {
