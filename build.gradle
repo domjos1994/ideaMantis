@@ -28,9 +28,15 @@ runIde {
 
 patchPluginXml {
     changeNotes """
-        Version 1.5<br>
-        - use System-Icons
-        - Update UI
+        Version 2.0<br>
+        - automatic reloading of bugs<br>
+        - issue-list colored by status<br>
+        - target-version: hide released versions<br>
+        - add version and customfields to fix-screen<br>
+        - duplicat an issue<br>
+        - move multiple issues to other versions<br>
+        - add tags to multiple issues<br>
+        - solve several bugs and update ui
     """
     pluginDescription "IntelliJ-Idea Plugin to create, edit and delete Issues from Mantis BugTracker!"
 }

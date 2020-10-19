@@ -9,9 +9,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.ui.IdeBorderFactory;
 import com.intellij.ui.JBColor;
-import com.intellij.ui.components.JBCheckBox;
-import com.intellij.ui.components.JBPasswordField;
-import com.intellij.ui.components.JBTextField;
+import com.intellij.ui.components.*;
 import com.intellij.util.ui.UIUtil;
 import de.domjos.ideaMantis.utils.PanelCreator;
 import de.domjos.ideaMantis.model.MantisProject;
@@ -26,8 +24,6 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.Arrays;
-import java.util.Objects;
 
 public class IdeaMantisConfigurable implements SearchableConfigurable {
     private JComponent component;
@@ -35,10 +31,10 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
     private JTextArea txtProjectDescription;
     private JBPasswordField txtPassword;
     private JBCheckBox chkProjectEnabled, chkFastTrackEnabled, chkReloadAutomatically;
-    private java.awt.Label lblConnectionState;
+    private JBLabel lblConnectionState;
     private JButton cmdTestConnection;
-    private JPanel newProjectPanel;
-    private ComboBox<String> cmbProjects, cmbNewProjectProjects, cmbProjectViewState;
+    private JBPanelWithEmptyText newProjectPanel;
+    private ComboBox<String> cmbProjects, cmbProjectViewState;
     private int projectID = 0;
 
     private final ConnectionSettings settings;
@@ -110,9 +106,6 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
     }
 
     public JComponent createComponent() {
-        GridBagConstraints txtConstraint = PanelCreator.getTxtConstraint();
-        GridBagConstraints lblConstraint = PanelCreator.getLabelConstraint();
-
         this.txtHostName = new JBTextField();
         this.txtHostName.setName("txtHostName");
         this.txtUserName = new JBTextField();
@@ -128,16 +121,16 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
         this.txtIssuesPerPage.setName("txtIssuesPerPage");
         this.txtIssuesPerPage.setText("-1");
 
-        java.awt.Label lblHostName = new java.awt.Label("Host-Name");
-        java.awt.Label lblUserName = new java.awt.Label("User-Name");
-        java.awt.Label lblPassword = new java.awt.Label("Password");
-        java.awt.Label lblProjects = new java.awt.Label("Choose Project");
-        java.awt.Label lblIssuesPerPage = new java.awt.Label("Issues per page (-1 for all)");
-        java.awt.Label lblProjectName = new java.awt.Label("Name" + "*");
-        java.awt.Label lblProjectDescription = new java.awt.Label("Description");
-        java.awt.Label lblProjectFastTrack = new java.awt.Label("Copy and Paste Bugs faster");
-        java.awt.Label lblProjectViewState = new java.awt.Label("State");
-        this.lblConnectionState = new Label("Not Connected");
+        JBLabel lblHostName = new JBLabel("Host-Name");
+        JBLabel lblUserName = new JBLabel("User-Name");
+        JBLabel lblPassword = new JBLabel("Password");
+        JBLabel lblProjects = new JBLabel("Choose Project");
+        JBLabel lblIssuesPerPage = new JBLabel("Issues per page (-1 for all)");
+        JBLabel lblProjectName = new JBLabel("Name" + "*");
+        JBLabel lblProjectDescription = new JBLabel("Description");
+        JBLabel lblProjectFastTrack = new JBLabel("Copy and Paste Bugs faster");
+        JBLabel lblProjectViewState = new JBLabel("State");
+        this.lblConnectionState = new JBLabel("Not Connected");
         this.changeConnectionLabel(null);
 
 
@@ -153,13 +146,9 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
                         if(changeConnectionLabel(connection.testConnection())) {
                             java.util.List<MantisProject> projects = connection.getProjects();
                             cmbProjects.removeAllItems();
-                            cmbNewProjectProjects.removeAllItems();
                             for(MantisProject project : projects) {
                                 addProjectToComboBox(project, ": ");
                             }
-                            cmbNewProjectProjects.addItem("");
-                            cmbNewProjectProjects.setSelectedItem("");
-
                             cmbProjectViewState.removeAllItems();
                             for(ObjectRef item : connection.getEnum("view_states")) {
                                 cmbProjectViewState.addItem(item.getName());
@@ -195,15 +184,15 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
 
         this.chkFastTrackEnabled = new JBCheckBox("Enable Fast-Track-Mode");
 
-        JPanel connPanel = PanelCreator.createPanel(
-                Arrays.asList(
-                    lblHostName, txtHostName,
-                    lblUserName, txtUserName,
-                    lblPassword, txtPassword
-                )
-        );
-        connPanel.add(lblConnectionState, txtConstraint);
-        connPanel.add(cmdTestConnection, txtConstraint);
+        JBPanelWithEmptyText connPanel = new JBPanelWithEmptyText(new GridBagLayout());
+        connPanel.add(lblHostName, PanelCreator.getCustomConstraint(0, 0, 0.2f, -1));
+        connPanel.add(this.txtHostName, PanelCreator.getCustomConstraint(0, 1, 0.8f, -1));
+        connPanel.add(lblUserName, PanelCreator.getCustomConstraint(1, 0, 0.2f, -1));
+        connPanel.add(this.txtUserName, PanelCreator.getCustomConstraint(1, 1, 0.8f, -1));
+        connPanel.add(lblPassword, PanelCreator.getCustomConstraint(2, 0, 0.2f, -1));
+        connPanel.add(this.txtPassword, PanelCreator.getCustomConstraint(2, 1, 0.8f, -1));
+        connPanel.add(this.lblConnectionState, PanelCreator.getCustomConstraint(3, 0, 1.0f, 3));
+        connPanel.add(this.cmdTestConnection, PanelCreator.getCustomConstraint(4, 0, 1.0f, 3));
         connPanel.setBorder(IdeBorderFactory.createTitledBorder("Connection"));
 
         JButton cmdCreateNewProject = new JButton("New Project");
@@ -224,16 +213,18 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
         this.txtReloadTime.setText("300");
         this.txtReloadTime.setEnabled(false);
 
-        JPanel projectPanel = PanelCreator.createPanel(
-                Arrays.asList(
-                    lblProjects, cmbProjects,
-                    lblIssuesPerPage, txtIssuesPerPage,
-                    lblProjectFastTrack, chkFastTrackEnabled
-                )
-        );
-        projectPanel.add(this.chkReloadAutomatically, lblConstraint);
-        projectPanel.add(this.txtReloadTime, txtConstraint);
-        projectPanel.add(cmdCreateNewProject, txtConstraint);
+
+
+        JBPanelWithEmptyText projectPanel = new JBPanelWithEmptyText(new GridBagLayout());
+        projectPanel.add(lblProjects, PanelCreator.getCustomConstraint(0, 0, 0.2f, -1));
+        projectPanel.add(this.cmbProjects, PanelCreator.getCustomConstraint(0, 1, 0.8f, -1));
+        projectPanel.add(lblIssuesPerPage, PanelCreator.getCustomConstraint(1, 0, 0.2f, -1));
+        projectPanel.add(this.txtIssuesPerPage, PanelCreator.getCustomConstraint(1, 1, 0.8f, -1));
+        projectPanel.add(lblProjectFastTrack, PanelCreator.getCustomConstraint(2, 0, 0.2f, -1));
+        projectPanel.add(this.chkFastTrackEnabled, PanelCreator.getCustomConstraint(2, 1, 0.8f, -1));
+        projectPanel.add(this.chkReloadAutomatically, PanelCreator.getCustomConstraint(3, 0, 0.2f, -1));
+        projectPanel.add(this.txtReloadTime, PanelCreator.getCustomConstraint(3, 1, 0.8f, -1));
+        projectPanel.add(cmdCreateNewProject, PanelCreator.getCustomConstraint(4, 0, 1.0f, 2));
         projectPanel.setBorder(IdeBorderFactory.createTitledBorder("Project"));
 
         JButton cmdProjectAdd = new JButton(("Add Project"));
@@ -242,20 +233,16 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
         this.cmbProjectViewState = new ComboBox<>();
         this.chkProjectEnabled = new JBCheckBox("enabled");
 
-        this.cmbNewProjectProjects = new ComboBox<>();
-        this.cmbNewProjectProjects.setVisible(false);
-
-        newProjectPanel = PanelCreator.createPanel(
-                Arrays.asList(
-                        lblProjectName, txtProjectName,
-                        lblProjects, cmbNewProjectProjects,
-                        lblProjectDescription, txtProjectDescription,
-                        lblProjectViewState, cmbProjectViewState
-                )
-        );
-        newProjectPanel.setVisible(false);
-        newProjectPanel.add(chkProjectEnabled, txtConstraint);
-        newProjectPanel.add(cmdProjectAdd, txtConstraint);
+        this.newProjectPanel = new JBPanelWithEmptyText(new GridBagLayout());
+        this.newProjectPanel.add(lblProjectName, PanelCreator.getCustomConstraint(0, 0, 0.2f, -1));
+        this.newProjectPanel.add(this.txtProjectName, PanelCreator.getCustomConstraint(0, 1, 0.8f, -1));
+        this.newProjectPanel.add(lblProjectDescription, PanelCreator.getCustomConstraint(1, 0, 0.2f, -1));
+        this.newProjectPanel.add(this.txtProjectDescription, PanelCreator.getCustomConstraint(1, 1, 0.8f, -1));
+        this.newProjectPanel.add(lblProjectViewState, PanelCreator.getCustomConstraint(2, 0, 0.2f, -1));
+        this.newProjectPanel.add(this.cmbProjectViewState, PanelCreator.getCustomConstraint(2, 1, 0.8f, -1));
+        this.newProjectPanel.add(this.chkProjectEnabled, PanelCreator.getCustomConstraint(3, 0, .0f, 2));
+        this.newProjectPanel.add(cmdProjectAdd, PanelCreator.getCustomConstraint(4, 0, 1.0f, 2));
+        this.newProjectPanel.setVisible(false);
 
         cmdProjectAdd.addActionListener(e -> {
             String oldSettings = this.temporarilyChangeSettings();
@@ -266,17 +253,6 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
                 project.setView_state(cmbProjectViewState.getSelectedItem().toString());
             project.setEnabled(chkProjectEnabled.isSelected());
             MantisSoapAPI connection = new MantisSoapAPI(this.settings);
-            int id = 0;
-            if(!Objects.requireNonNull(cmbNewProjectProjects.getSelectedItem()).toString().equals("")) {
-                if(cmbNewProjectProjects.getSelectedItem()!=null)
-                    id = Integer.parseInt(cmbNewProjectProjects.getSelectedItem().toString().split(": ")[0].trim());
-
-                MantisProject parent = getProject(id, connection.getProjects());
-                if(parent!=null) {
-                    parent.addSubProject(project);
-                    project = parent;
-                }
-            }
 
             if(!connection.addProject(project)) {
                 Helper.printNotification("Exception", String.format("Can't add %s", project.getName()), NotificationType.ERROR);
@@ -314,7 +290,6 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
 
     private void addProjectToComboBox(MantisProject project, String splitter) {
         cmbProjects.addItem(project.getId() + splitter + project.getName());
-        cmbNewProjectProjects.addItem(project.getId() + splitter + project.getName());
         for(MantisProject subProject : project.getSubProjects()) {
             this.addProjectToComboBox(subProject, splitter + "-> ");
         }
@@ -391,17 +366,6 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
             this.lblConnectionState.setText(String.format("Connected as %s!", user.getUserName()));
             this.lblConnectionState.setForeground(JBColor.GREEN);
             return true;
-        }
-    }
-
-    private MantisProject getProject(int id, java.util.List<MantisProject> projects) {
-        if(projects.isEmpty()) {
-            return null;
-        } else {
-            if(projects.get(0).getId()==id) {
-                return projects.get(0);
-            }
-            return getProject(id, projects.get(0).getSubProjects());
         }
     }
 

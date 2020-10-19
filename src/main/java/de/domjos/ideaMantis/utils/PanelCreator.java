@@ -33,6 +33,18 @@ public abstract class PanelCreator {
         return txtConstraint;
     }
 
+    public static GridBagConstraints getCustomConstraint(int row, int column, float weight, int width) {
+        GridBagConstraints gridBagConstraints = new GridBagConstraints();
+        gridBagConstraints.gridx = column;
+        gridBagConstraints.gridy = row;
+        gridBagConstraints.weightx = weight;
+        if(width != -1) {
+            gridBagConstraints.gridwidth = width;
+        }
+        gridBagConstraints.fill = GridBagConstraints.HORIZONTAL;
+        return gridBagConstraints;
+    }
+
     public static JPanel createPanel(List<Component> components) {
         GridBagConstraints lblConstraint = getLabelConstraint();
         GridBagConstraints txtConstraint = getTxtConstraint();
