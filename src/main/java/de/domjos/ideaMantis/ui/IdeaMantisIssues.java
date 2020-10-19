@@ -335,17 +335,13 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                                 progressIndicator.setFraction(0.0);
                                 progressIndicator.setIndeterminate(false);
 
-                                Map<Integer, Color> colorMap = new LinkedHashMap<>();
                                 double factor = 100.0 / mantisIssues.size();
-                                int row = 0;
                                 for(MantisIssue issue : mantisIssues) {
-                                    colorMap.put(row, Helper.getColorOfStatus(issue.getStatus()));
                                     tblIssueModel.addRow(new Object[]{getStringId(issue.getId()), issue.getSummary(), issue.getStatus()});
                                     progressIndicator.setFraction(progressIndicator.getFraction() + factor);
-                                    row++;
                                 }
                                 tblIssues.setModel(tblIssueModel);
-                                tblIssues.setDefaultRenderer(Object.class, new IssueTableCellRenderer(colorMap));
+                                tblIssues.setDefaultRenderer(Object.class, new IssueTableCellRenderer());
                                 cmdIssueNew.setEnabled(true);
                                 tblIssues.updateUI();
                             }
@@ -1135,6 +1131,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                         cmbFilters.addItem(String.format("%4s: %s", filter.getId(), filter.getName()));
                     }
                 }
+                cmdReload.doClick();
             }
 
             @Override
@@ -1147,6 +1144,8 @@ public class IdeaMantisIssues implements ToolWindowFactory {
 
             }
         });
+
+        cmbFilters.addActionListener(e -> this.cmdReload.doClick());
 
         cmbIssueProfile.addPopupMenuListener(new PopupMenuListener() {
             @Override
@@ -1190,15 +1189,13 @@ public class IdeaMantisIssues implements ToolWindowFactory {
 
         cmbFilterStatus.addActionListener(e -> {
             TableRowSorter<DefaultTableModel> rowSorter = new TableRowSorter<>(tblIssueModel);
-            String filter = "";
             if(cmbFilterStatus.getSelectedItem()!=null) {
                 if(!cmbFilterStatus.getSelectedItem().toString().isEmpty()) {
-                    filter = cmbFilterStatus.getSelectedItem().toString();
                     rowSorter.setRowFilter(RowFilter.regexFilter(cmbFilterStatus.getSelectedItem().toString(), 2));
                 }
             }
             this.tblIssues.setRowSorter(rowSorter);
-            tblIssues.setDefaultRenderer(Object.class, new IssueTableCellRenderer(this.getColorMap(filter)));
+            tblIssues.setDefaultRenderer(Object.class, new IssueTableCellRenderer());
             tblIssues.updateUI();
         });
     }
@@ -1829,17 +1826,5 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         this.cmdIssueAttachmentDelete.setIcon(AllIcons.General.Remove);
         this.cmdIssueAttachmentSave.setIcon(AllIcons.Actions.Menu_saveall);
         this.cmdIssueAttachmentAbort.setIcon(AllIcons.Actions.Cancel);
-    }
-
-    private Map<Integer, Color> getColorMap(String status) {
-        Map<Integer, Color> colorMap = new LinkedHashMap<>();
-        for(int row = 0; row<=this.tblIssues.getRowCount()-1; row++) {
-            if(status.trim().isEmpty()) {
-                colorMap.put(row, Helper.getColorOfStatus(tblIssues.getValueAt(row, 2).toString().trim()));
-            } else {
-                colorMap.put(row, Helper.getColorOfStatus(status));
-            }
-        }
-        return colorMap;
     }
 }

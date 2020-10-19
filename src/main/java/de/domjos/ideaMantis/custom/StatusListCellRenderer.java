@@ -28,12 +28,12 @@ public class StatusListCellRenderer extends BasicComboBoxRenderer {
         }
         if (c instanceof JLabel) {
             if (isSelected) {
-                c.setBackground(Helper.getColorOfStatus(item));
+                c.setBackground(IssueTableCellRenderer.getColorOfStatus(item));
             } else {
-                c.setBackground(Helper.getColorOfStatus(item));
+                c.setBackground(IssueTableCellRenderer.getColorOfStatus(item));
             }
         } else {
-            c.setBackground(Helper.getColorOfStatus(item));
+            c.setBackground(IssueTableCellRenderer.getColorOfStatus(item));
             c = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
         }
         return c;

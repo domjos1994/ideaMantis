@@ -3,7 +3,6 @@ package de.domjos.ideaMantis.soap;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.Task;
-import com.intellij.ui.JBColor;
 import de.domjos.ideaMantis.custom.IssueTableCellRenderer;
 import de.domjos.ideaMantis.model.MantisIssue;
 import de.domjos.ideaMantis.service.ConnectionSettings;
@@ -12,10 +11,7 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
-import java.awt.*;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 public class IssueLoadingTask extends Task.Backgroundable {
     private Action before, after;
@@ -79,18 +75,13 @@ public class IssueLoadingTask extends Task.Backgroundable {
                 List<MantisIssue> mantisIssues = new MantisSoapAPI(settings).getIssues(settings.getProjectID(), page, filterID);
                 progressIndicator.setFraction(0.0);
 
-                Map<Integer, Color> colorMap = new LinkedHashMap<>();
                 double factor = 100.0 / mantisIssues.size();
-
-                int row = 0;
                 for(MantisIssue issue : mantisIssues) {
-                    colorMap.put(row, Helper.getColorOfStatus(issue.getStatus()));
                     tblIssueModel.addRow(new Object[]{getStringId(issue.getId()), issue.getSummary(), issue.getStatus()});
                     progressIndicator.setFraction(progressIndicator.getFraction() + factor);
-                    row++;
                 }
                 tblIssues.setModel(tblIssueModel);
-                tblIssues.setDefaultRenderer(Object.class, new IssueTableCellRenderer(colorMap));
+                tblIssues.setDefaultRenderer(Object.class, new IssueTableCellRenderer());
             }
         } catch (Exception ex) {
             this.setCancelText(ex.getMessage());
