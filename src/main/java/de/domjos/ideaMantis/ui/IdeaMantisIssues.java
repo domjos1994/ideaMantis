@@ -1190,12 +1190,16 @@ public class IdeaMantisIssues implements ToolWindowFactory {
 
         cmbFilterStatus.addActionListener(e -> {
             TableRowSorter<DefaultTableModel> rowSorter = new TableRowSorter<>(tblIssueModel);
+            String filter = "";
             if(cmbFilterStatus.getSelectedItem()!=null) {
                 if(!cmbFilterStatus.getSelectedItem().toString().isEmpty()) {
+                    filter = cmbFilterStatus.getSelectedItem().toString();
                     rowSorter.setRowFilter(RowFilter.regexFilter(cmbFilterStatus.getSelectedItem().toString(), 2));
                 }
             }
             this.tblIssues.setRowSorter(rowSorter);
+            tblIssues.setDefaultRenderer(Object.class, new IssueTableCellRenderer(this.getColorMap(filter)));
+            tblIssues.updateUI();
         });
     }
 
@@ -1825,5 +1829,17 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         this.cmdIssueAttachmentDelete.setIcon(AllIcons.General.Remove);
         this.cmdIssueAttachmentSave.setIcon(AllIcons.Actions.Menu_saveall);
         this.cmdIssueAttachmentAbort.setIcon(AllIcons.Actions.Cancel);
+    }
+
+    private Map<Integer, Color> getColorMap(String status) {
+        Map<Integer, Color> colorMap = new LinkedHashMap<>();
+        for(int row = 0; row<=this.tblIssues.getRowCount()-1; row++) {
+            if(status.trim().isEmpty()) {
+                colorMap.put(row, Helper.getColorOfStatus(tblIssues.getValueAt(row, 2).toString().trim()));
+            } else {
+                colorMap.put(row, Helper.getColorOfStatus(status));
+            }
+        }
+        return colorMap;
     }
 }
