@@ -96,7 +96,7 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
     @Nls
     @Override
     public String getDisplayName() {
-        return "IdeaMantis-Settings";
+        return "IdeaMantis";
     }
 
     @Nullable

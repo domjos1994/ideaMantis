@@ -8,9 +8,9 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <toolWindow
-                id="Show MantisBT-Issues"
+                id="ideaMantis"
                 secondary="true"
-                icon="/icons/pluginIcon.svg"
+                icon="IdeaMantisIcons.ICON"
                 anchor="right"
                 factoryClass="de.domjos.ideaMantis.ui.IdeaMantisIssues">
         </toolWindow>

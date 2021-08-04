@@ -226,9 +226,12 @@ public abstract class Helper {
         ToolWindowManager manager = ToolWindowManager.getInstance(getProject());
         ApplicationManager.getApplication().invokeLater(()->{
             ToolWindow window = manager.getToolWindow("Show MantisBT-Issues");
-            ContentImpl content = new ContentImpl(null, "", true);
-            content.setDescription(description);
-            Objects.requireNonNull(window).getContentManager().addContent(content);
+            if(window != null) {
+                ContentImpl content = new ContentImpl(window.getComponent(), "", true);
+                content.setDescription(description);
+
+                window.getContentManager().addContent(content);
+            }
         });
     }
 }
