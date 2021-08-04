@@ -4,7 +4,7 @@ plugins {
 }
 
 group 'de.domjos'
-version '2.0'
+version '2.1'
 
 sourceCompatibility = 1.8
 
@@ -20,7 +20,6 @@ dependencies {
 // See https://github.com/JetBrains/gradle-intellij-plugin/
 intellij {
     version '2020.1'
-    type 'CL'
 }
 
 runIde {
@@ -29,6 +28,10 @@ runIde {
 
 patchPluginXml {
     changeNotes """
+        Version 2.1<br>
+        - solve bugs<br>
+        - rename ToolWindow<br>
+        - rename Settings<br>
         Version 2.0<br>
         - automatic reloading of bugs<br>
         - issue-list colored by status<br>
@@ -40,6 +43,9 @@ patchPluginXml {
         - solve several bugs and update ui
     """
     pluginDescription "IntelliJ-Idea Plugin to create, edit and delete Issues from Mantis BugTracker!"
+
+    sinceBuild '141.0'
+    untilBuild '212.*'
 }
 
 def file = new File("jetbrains.properties")

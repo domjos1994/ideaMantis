@@ -14,7 +14,6 @@ import com.intellij.openapi.vcs.changes.ChangeListManager;
 import com.intellij.openapi.vcs.changes.LocalChangeList;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowManager;
-import com.intellij.ui.JBColor;
 import com.intellij.ui.content.impl.ContentImpl;
 import de.domjos.ideaMantis.model.MantisIssue;
 import org.ksoap2.serialization.SoapObject;
@@ -176,11 +175,10 @@ public abstract class Helper {
         return comment;
     }
 
-    @SuppressWarnings("deprecation")
     public static void commitAllFiles(String comment, ChangeListManager changeListManager) {
         java.util.List<Change> changeList = new LinkedList<>(changeListManager.getAllChanges());
         for(LocalChangeList localChangeList : changeListManager.getChangeLists()) {
-            localChangeList.setComment(comment);
+            changeListManager.editComment(localChangeList.getName(), comment);
             changeListManager.commitChanges(localChangeList, changeList);
         }
     }
