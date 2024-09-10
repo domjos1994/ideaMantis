@@ -7,8 +7,8 @@ import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import de.domjos.ideaMantis.utils.Helper;
+import org.assertj.swing.dependency.jsr305.Nonnull;
 
-import javax.annotation.Nonnull;
 import java.io.File;
 
 public class WholeFileAsBugEditorAction extends AnAction {

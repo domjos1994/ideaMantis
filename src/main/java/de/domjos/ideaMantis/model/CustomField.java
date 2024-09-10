@@ -3,9 +3,8 @@ package de.domjos.ideaMantis.model;
 import com.intellij.ui.DocumentAdapter;
 import com.intellij.ui.components.*;
 import de.domjos.ideaMantis.utils.PanelCreator;
-import org.apache.commons.lang.math.NumberUtils;
+import org.assertj.swing.dependency.jsr305.Nonnull;
 
-import javax.annotation.Nonnull;
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import java.awt.*;
@@ -271,9 +270,10 @@ public class CustomField {
                         documentEvent.getDocument().addUndoableEditListener(e -> {
                             if(getTypeId()==1) {
                                 if(!field.getText().isEmpty()) {
-                                    if(!NumberUtils.isDigits(field.getText())) {
+                                    try {
+                                        Integer.parseInt(field.getText());
                                         field.setText(getDefaultValue());
-                                    }
+                                    } catch (Exception ignored) {}
                                 }
                             }
                             if(getTypeId()==2) {

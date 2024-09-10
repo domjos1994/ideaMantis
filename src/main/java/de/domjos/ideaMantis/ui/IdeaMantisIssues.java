@@ -24,7 +24,7 @@ import de.domjos.ideaMantis.soap.IssueLoadingTask;
 import de.domjos.ideaMantis.soap.MantisSoapAPI;
 import de.domjos.ideaMantis.soap.ObjectRef;
 import de.domjos.ideaMantis.utils.Helper;
-import org.apache.commons.lang.StringUtils;
+import org.assertj.core.util.Strings;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -219,7 +219,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
             CustomFieldDialog dialog = new CustomFieldDialog(Helper.getProject(), state, currentIssue.getCustomFields());
             dialog.show();
             for(CustomFieldResult fieldResult : dialog.getResults()) {
-                String result = StringUtils.join(fieldResult.getResult(), "|");
+                String result = Strings.join(fieldResult.getResult()).with("|");
                 this.currentIssue.addCustomField(fieldResult.getField(), result);
             }
         });
@@ -1247,7 +1247,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
         Helper.setProject(project);
         this.setIcons();
-        ContentFactory contentFactory = ContentFactory.SERVICE.getInstance();
+        ContentFactory contentFactory = ContentFactory.getInstance();
         Content content = contentFactory.createContent(this.pnlMain, "", false);
         toolWindow.getContentManager().addContent(content);
         settings = ConnectionSettings.getInstance(project);

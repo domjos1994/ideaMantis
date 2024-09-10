@@ -22,7 +22,8 @@
                 id="de.domjos.ideaMantis.ui.IdeaMantisConfigurable"
                 nonDefaultProject="true"
                 groupId="tools"
-                instance="de.domjos.ideaMantis.ui.IdeaMantisConfigurable"/>
+                instance="de.domjos.ideaMantis.ui.IdeaMantisConfigurable"
+                displayName=""/>
     </extensions>
 
     <actions>

@@ -1,0 +1,10 @@
+<ivy-module version="2.0">
+  <info organisation="bundledModule" module="intellij.platform.vcs.log.impl" revision="242.21829.142+589"/>
+  <configurations>
+    <conf name="default" visibility="public"/>
+  </configurations>
+  <publications>
+    <artifact name="/Users/hae/.gradle/caches/8.8/transforms/8601a4846c0242b931d470f0e3d8edd6/transformed/ideaIC-2024.2.1-win/lib/modules/intellij.platform.vcs.log.impl.jar" type="jar" conf="default"/>
+  </publications>
+  <dependencies/>
+</ivy-module>

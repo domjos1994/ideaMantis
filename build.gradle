@@ -1,59 +1,81 @@
+import org.jetbrains.intellij.platform.gradle.TestFrameworkType
+
 plugins {
-    id 'java'
-    id 'org.jetbrains.intellij' version '0.5.0'
+    id('org.jetbrains.intellij.platform') version '2.0.1'
+    //id('org.jetbrains.intellij.platform.migration') version '2.0.1'
 }
-
-group 'de.domjos'
-version '2.1'
-
-sourceCompatibility = 1.8
 
 repositories {
     mavenCentral()
+
+    intellijPlatform {
+        defaultRepositories()
+    }
+}
+
+intellijPlatform {
+    pluginConfiguration {
+        id = 'de.domjos.ideaMantis'
+        name = 'IdeaMantis'
+        version = '2.2'
+        description =  'IntelliJ-Idea Plugin to create, edit and delete Issues from Mantis BugTracker!'
+        changeNotes =  """
+            Version 2.1<br>
+            - solve bugs<br>
+            - rename ToolWindow<br>
+            - rename Settings<br>
+            Version 2.0<br>
+            - automatic reloading of bugs<br>
+            - issue-list colored by status<br>
+            - target-version: hide released versions<br>
+            - add version and customfields to fix-screen<br>
+            - duplicat an issue<br>
+            - move multiple issues to other versions<br>
+            - add tags to multiple issues<br>
+            - solve several bugs and update ui
+        """
+
+        ideaVersion {
+            sinceBuild =  '241'
+            untilBuild =  '242.*'
+        }
+
+        vendor {
+            name =  'Dominic Joas'
+            email =  'developing@domjos.de'
+            url =  'https://dojodev.de'
+        }
+    }
+
+    intellijPlatformTesting.runIde {
+        runIdeForUiTests {
+            tasks.register("testUi") {
+                jvmArgumentProviders.add({
+                    [
+                            "-Drobot-server.port=8082",
+                            "-Dide.mac.message.dialogs.as.sheets=false",
+                            "-Djb.privacy.policy.text=<!--999.999-->",
+                            "-Djb.consents.confirmation.enabled=false",
+                    ]
+                } as CommandLineArgumentProvider)
+            }
+        }
+    }
 }
 
 dependencies {
-    compile files('lib/ksoap2-j2se-full-2.1.2.jar')
-    testCompile group: 'junit', name: 'junit', version: '4.12'
-}
+    intellijPlatform {
+        intellijIdeaCommunity '2024.2.1'
 
-// See https://github.com/JetBrains/gradle-intellij-plugin/
-intellij {
-    version '2020.1'
-}
+        bundledPlugin 'com.intellij.java'
 
-runIde {
+        pluginVerifier()
+        zipSigner()
+        instrumentationTools()
 
-}
-
-patchPluginXml {
-    changeNotes """
-        Version 2.1<br>
-        - solve bugs<br>
-        - rename ToolWindow<br>
-        - rename Settings<br>
-        Version 2.0<br>
-        - automatic reloading of bugs<br>
-        - issue-list colored by status<br>
-        - target-version: hide released versions<br>
-        - add version and customfields to fix-screen<br>
-        - duplicat an issue<br>
-        - move multiple issues to other versions<br>
-        - add tags to multiple issues<br>
-        - solve several bugs and update ui
-    """
-    pluginDescription "IntelliJ-Idea Plugin to create, edit and delete Issues from Mantis BugTracker!"
-
-    sinceBuild '141.0'
-    untilBuild '212.*'
-}
-
-def file = new File("jetbrains.properties")
-if(file.exists()) {
-    def jetBrainsProperties = new Properties()
-    jetBrainsProperties.load(new FileInputStream(file))
-
-    publishPlugin {
-        token jetBrainsProperties['token']
+        testFramework TestFrameworkType.Platform.INSTANCE
     }
+
+    implementation files('lib/ksoap2-j2se-full-2.1.2.jar')
+    testImplementation 'junit:junit:4.13.2'
 }
