@@ -1,7 +1,5 @@
 package de.domjos.ideaMantis.utils;
 
-import com.intellij.credentialStore.CredentialAttributes;
-import com.intellij.ide.passwordSafe.PasswordSafe;
 import com.intellij.notification.Notification;
 import com.intellij.notification.NotificationType;
 import com.intellij.notification.Notifications;
@@ -15,11 +13,13 @@ import com.intellij.openapi.vcs.changes.LocalChangeList;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.ui.content.impl.ContentImpl;
+import de.domjos.ideaMantis.lang.Lang;
 import de.domjos.ideaMantis.model.MantisIssue;
 import org.ksoap2.serialization.SoapObject;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumnModel;
 import java.awt.*;
 import java.util.*;
 
@@ -58,6 +58,9 @@ public abstract class Helper {
         Notifications.Bus.notify(notification);
     }
 
+    public static void printWrongSettingsMsg() {
+        Helper.printNotification(Lang.SETTINGS_WRONG, Lang.SETTINGS_GO, NotificationType.WARNING);
+    }
 
     public static void printException(Exception ex) {
         String faultCode = "";
@@ -65,7 +68,7 @@ public abstract class Helper {
             faultCode = ex.getStackTrace()[0].getClassName() + ":" + ex.getStackTrace()[0].getLineNumber();
         }
         Helper.printNotification(
-                "Something went wrong!",
+                Lang.ERROR_HEADER,
                 ex.getMessage() + "\nFaultCode: " + faultCode,
                 NotificationType.ERROR
         );
@@ -131,9 +134,6 @@ public abstract class Helper {
         if(comment.contains("{additional_information")) {
             comment = comment.replace("{summary}", issue.getAdditional_information());
         }
-        if(comment.contains("{build}")) {
-            comment = comment.replace("{build}", issue.getBuild());
-        }
         if(comment.contains("{category}")) {
             comment = comment.replace("{category}", issue.getCategory());
         }
@@ -183,22 +183,6 @@ public abstract class Helper {
         }
     }
 
-    public static void setPassword(String password, String userName) {
-        if(password != null) {
-            if(!password.trim().isEmpty()) {
-                CredentialAttributes attributes = new CredentialAttributes("IdeaMantis", userName, Helper.class, false);
-                PasswordSafe safe = PasswordSafe.getInstance();
-                safe.setPassword(attributes, password);
-            }
-        }
-    }
-
-    public static String getPassword(String userName) {
-        CredentialAttributes attributes = new CredentialAttributes("IdeaMantis", userName, Helper.class, false);
-        PasswordSafe safe = PasswordSafe.getInstance();
-        return safe.getPassword(attributes);
-    }
-
     public static void setProject(Project project) {
         Helper.project = project;
     }
@@ -220,10 +204,27 @@ public abstract class Helper {
         return model;
     }
 
+    public static void setSizes(JTable table) {
+        TableColumnModel model = table.getColumnModel();
+
+        model.getColumn(0).setPreferredWidth(75);
+        model.getColumn(0).setWidth(75);
+        model.getColumn(0).setMaxWidth(75);
+
+        model.getColumn(2).setPreferredWidth(65);
+        model.getColumn(2).setWidth(65);
+        model.getColumn(2).setMaxWidth(65);
+
+        model.getColumn(3).setPreferredWidth(15);
+        model.getColumn(3).setWidth(15);
+        model.getColumn(3).setMaxWidth(15);
+    }
+
     public static void reloadToolWindow(String description) {
         ToolWindowManager manager = ToolWindowManager.getInstance(getProject());
+
         ApplicationManager.getApplication().invokeLater(()->{
-            ToolWindow window = manager.getToolWindow("Show MantisBT-Issues");
+            ToolWindow window = manager.getToolWindow(Lang.TOOL_HEADER);
             if(window != null) {
                 ContentImpl content = new ContentImpl(window.getComponent(), "", true);
                 content.setDescription(description);

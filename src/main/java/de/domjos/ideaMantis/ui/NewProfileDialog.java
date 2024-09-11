@@ -3,6 +3,7 @@ package de.domjos.ideaMantis.ui;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.ui.components.JBTextField;
+import de.domjos.ideaMantis.lang.Lang;
 import de.domjos.ideaMantis.model.MantisProfile;
 import de.domjos.ideaMantis.utils.Helper;
 import de.domjos.ideaMantis.utils.PanelCreator;
@@ -20,8 +21,8 @@ public class NewProfileDialog extends DialogWrapper {
         super(project);
         this.profile = null;
         try {
-            this.setTitle("Custom Profile");
-            this.setOKButtonText("Add");
+            this.setTitle(Lang.DIALOG_PROFILE_HEADER);
+            this.setOKButtonText(Lang.DIALOG_PROFILE_OK);
             this.init();
             if(this.getButton(this.getOKAction())!=null) {
                 JButton button = this.getButton(this.getOKAction());
@@ -61,9 +62,9 @@ public class NewProfileDialog extends DialogWrapper {
         txtBuild.setName("txtBuild");
         txtBuild.setPreferredSize(new Dimension(200, 50));
 
-        java.awt.Label lblPlatform = new java.awt.Label("Platform");
-        java.awt.Label lblOS = new java.awt.Label("OS");
-        java.awt.Label lblBuild = new java.awt.Label("Build");
+        java.awt.Label lblPlatform = new java.awt.Label(Lang.COLUMN_PROFILE_PLATFORM);
+        java.awt.Label lblOS = new java.awt.Label(Lang.COLUMN_PROFILE_OS);
+        java.awt.Label lblBuild = new java.awt.Label(Lang.COLUMN_PROFILE_Build);
 
         JPanel basicsPanel =
             PanelCreator.createPanel(

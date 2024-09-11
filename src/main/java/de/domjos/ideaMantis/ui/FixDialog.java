@@ -4,6 +4,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.ui.components.JBTextField;
+import de.domjos.ideaMantis.lang.Lang;
 import de.domjos.ideaMantis.model.CustomField;
 import de.domjos.ideaMantis.model.CustomFieldResult;
 import de.domjos.ideaMantis.model.MantisVersion;
@@ -12,6 +13,7 @@ import de.domjos.ideaMantis.soap.MantisSoapAPI;
 import de.domjos.ideaMantis.soap.ObjectRef;
 import de.domjos.ideaMantis.utils.Helper;
 import de.domjos.ideaMantis.utils.PanelCreator;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
@@ -26,7 +28,6 @@ public class FixDialog extends DialogWrapper {
     private java.awt.Label lblVersion;
     private MantisSoapAPI api;
     private final Project project;
-    private int pid;
     private java.util.List<CustomFieldResult> results;
 
     public FixDialog(@Nullable Project project, int id, String status) {
@@ -35,11 +36,11 @@ public class FixDialog extends DialogWrapper {
         this.results = new LinkedList<>();
 
         try {
+            assert project != null;
             ConnectionSettings connectionSettings = ConnectionSettings.getInstance(project);
-            this.pid = connectionSettings.getProjectID();
             this.api = new MantisSoapAPI(connectionSettings);
-            this.setTitle("Change Status");
-            this.setOKButtonText("Change Status");
+            this.setTitle(Lang.DIALOG_FIX_HEADER);
+            this.setOKButtonText(Lang.DIALOG_FIX_OK);
             this.init();
             this.changeSelectedStatus(status);
 
@@ -63,7 +64,7 @@ public class FixDialog extends DialogWrapper {
                                 version = this.cmbVersion.getSelectedItem().toString().trim();
                             }
 
-                            api.checkInIssue(id, summary, visibility, state, version, this.pid, this.results);
+                            api.checkInIssue(id, summary, visibility, state, version, this.results);
                         } catch (Exception ex) {
                             Helper.printException(ex);
                         }
@@ -101,25 +102,10 @@ public class FixDialog extends DialogWrapper {
         GridBagConstraints labelConstraint = PanelCreator.getLabelConstraint();
         GridBagConstraints txtConstraint = PanelCreator.getTxtConstraint();
 
-        JButton cmdCustomFields = new JButton();
-        cmdCustomFields.setName("cmdCustomFields");
-        cmdCustomFields.setText("Custom Fields");
-        cmdCustomFields.addActionListener(event -> {
-            if(this.cmbStatus.getSelectedItem() != null) {
-                String status = this.cmbStatus.getSelectedItem().toString().trim();
-                Map<CustomField, String> fieldStringMap = new LinkedHashMap<>();
-                for(CustomField customField : api.getCustomFields(this.pid, true)) {
-                    fieldStringMap.put(customField, "");
-                }
-                CustomFieldDialog customFieldDialog = new CustomFieldDialog(this.project, status, fieldStringMap);
-                customFieldDialog.show();
-                this.results = customFieldDialog.getResults();
-            }
-        });
-
+        JButton cmdCustomFields = getCustomFields();
         this.cmbVersion = new ComboBox<>();
         this.cmbVersion.setName("cmbVersion");
-        for(MantisVersion version : this.api.getVersions(this.pid)) {
+        for(MantisVersion version : this.api.getVersions()) {
             this.cmbVersion.addItem(version.getName());
         }
 
@@ -133,7 +119,7 @@ public class FixDialog extends DialogWrapper {
            if(this.cmbStatus.getSelectedItem() != null) {
                String item = this.cmbStatus.getSelectedItem().toString();
                if(item != null) {
-                   if(!item.trim().equals("")) {
+                   if(!item.trim().isEmpty()) {
                        if(item.toLowerCase().trim().equals("resolved") || item.toLowerCase().trim().equals("closed")) {
                            this.cmbVersion.setVisible(true);
                            this.lblVersion.setVisible(true);
@@ -156,10 +142,10 @@ public class FixDialog extends DialogWrapper {
             this.cmbVisibility.addItem(item.getName());
         }
 
-        java.awt.Label lblStatus = new java.awt.Label("Change Status");
-        this.lblVersion = new java.awt.Label("Fixed in Version");
-        java.awt.Label lblFixed = new java.awt.Label("Add Note");
-        java.awt.Label lblVisibility = new java.awt.Label("Visibility");
+        java.awt.Label lblStatus = new java.awt.Label(Lang.DIALOG_FIX_HEADER);
+        this.lblVersion = new java.awt.Label(Lang.COLUMN_VERSION_FIXED);
+        java.awt.Label lblFixed = new java.awt.Label(Lang.DIALOG_FIX_NOTES);
+        java.awt.Label lblVisibility = new java.awt.Label(Lang.COLUMN_VISIBILITY);
 
         JPanel basicsPanel = new JPanel(new GridBagLayout());
         basicsPanel.add(lblStatus, labelConstraint);
@@ -174,5 +160,24 @@ public class FixDialog extends DialogWrapper {
 
         root.add(basicsPanel);
         return root;
+    }
+
+    private @NotNull JButton getCustomFields() {
+        JButton cmdCustomFields = new JButton();
+        cmdCustomFields.setName("cmdCustomFields");
+        cmdCustomFields.setText(Lang.COLUMN_CUSTOM_FIELDS);
+        cmdCustomFields.addActionListener(event -> {
+            if(this.cmbStatus.getSelectedItem() != null) {
+                String status = this.cmbStatus.getSelectedItem().toString().trim();
+                Map<CustomField, String> fieldStringMap = new LinkedHashMap<>();
+                for(CustomField customField : api.getCustomFields(true)) {
+                    fieldStringMap.put(customField, "");
+                }
+                CustomFieldDialog customFieldDialog = new CustomFieldDialog(this.project, status, fieldStringMap);
+                customFieldDialog.show();
+                this.results = customFieldDialog.getResults();
+            }
+        });
+        return cmdCustomFields;
     }
 }

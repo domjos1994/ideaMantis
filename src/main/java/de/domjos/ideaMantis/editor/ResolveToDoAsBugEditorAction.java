@@ -1,5 +1,6 @@
 package de.domjos.ideaMantis.editor;
 
+import com.intellij.openapi.actionSystem.ActionUpdateThread;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
@@ -8,12 +9,17 @@ import com.intellij.openapi.project.Project;
 import de.domjos.ideaMantis.model.MantisIssue;
 import de.domjos.ideaMantis.service.ConnectionSettings;
 import de.domjos.ideaMantis.soap.MantisSoapAPI;
-import de.domjos.ideaMantis.soap.ObjectRef;
 import de.domjos.ideaMantis.ui.FixDialog;
 import de.domjos.ideaMantis.utils.Helper;
+import org.jetbrains.annotations.NotNull;
 
 public class ResolveToDoAsBugEditorAction extends AnAction {
     private String content;
+
+    @Override
+    public @NotNull ActionUpdateThread getActionUpdateThread() {
+        return ActionUpdateThread.BGT;
+    }
 
     @Override
     public void update(final AnActionEvent e) {
@@ -45,6 +51,7 @@ public class ResolveToDoAsBugEditorAction extends AnAction {
         //Making the replacement
         int id = Helper.getId(this.content);
         if(id!=0) {
+            assert project != null;
             MantisSoapAPI api = new MantisSoapAPI(ConnectionSettings.getInstance(project));
             MantisIssue issue = api.getIssue(id);
 

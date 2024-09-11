@@ -1,6 +1,5 @@
 package de.domjos.ideaMantis.editor;
 
-import com.intellij.notification.NotificationType;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
@@ -11,6 +10,7 @@ import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
+import de.domjos.ideaMantis.lang.Lang;
 import de.domjos.ideaMantis.model.MantisIssue;
 import de.domjos.ideaMantis.model.MantisVersion;
 import de.domjos.ideaMantis.service.ConnectionSettings;
@@ -39,14 +39,14 @@ public class CreateChangeLogAction extends AnAction {
 
         ConnectionSettings connectionSettings = ConnectionSettings.getInstance(project);
         if(connectionSettings.validateSettings()) {
-            Helper.printNotification("Wrong settings!", "The connection-settings are incorrect!", NotificationType.WARNING);
+            Helper.printWrongSettingsMsg();
             return;
         }
 
         ChooseVersionDialog dialog = new ChooseVersionDialog(project);
         if(dialog.showAndGet()) {
             ProgressManager manager = ProgressManager.getInstance();
-            Task.WithResult<String, Exception> task = new Task.WithResult<String, Exception>(project, "Load ChangeLog", true) {
+            Task.WithResult<String, Exception> task = new Task.WithResult<>(project, Lang.RELOAD_CHANGELOG, true) {
                 @Override
                 protected String compute(@NotNull ProgressIndicator progressIndicator) {
                     progressIndicator.setFraction(0.0);
@@ -67,12 +67,12 @@ public class CreateChangeLogAction extends AnAction {
                     progressIndicator.setFraction(0.0);
                     factor = 1.0 / resortedMap.entrySet().size();
                     for(Map.Entry<MantisVersion, List<MantisIssue>> entry : resortedMap.entrySet()) {
-                        if(builder.toString().equals("")) {
-                            builder.append("Resolved Bugs in version ");
+                        if(builder.toString().isEmpty()) {
+                            builder.append(Lang.CHANGELOG_HEADER + " ");
                             builder.append(entry.getKey().getName());
                             builder.append(":\n");
                         } else {
-                            builder.append("\n\nResolved Bugs in version ");
+                            builder.append("\n\n" + Lang.CHANGELOG_HEADER + " ");
                             builder.append(entry.getKey().getName());
                             builder.append(":\n");
                         }

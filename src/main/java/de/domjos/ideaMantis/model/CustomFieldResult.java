@@ -8,7 +8,7 @@ import java.util.List;
  */
 public class CustomFieldResult {
     private CustomField field;
-    private List<String> result;
+    private final List<String> result;
 
     public CustomFieldResult() {
         this.field = null;
@@ -29,9 +29,5 @@ public class CustomFieldResult {
 
     public void addResult(String result) {
         this.result.add(result);
-    }
-
-    public void setResult(List<String> result) {
-        this.result = result;
     }
 }

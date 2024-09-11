@@ -1,14 +1,20 @@
 package de.domjos.ideaMantis.service;
 
+import com.intellij.credentialStore.CredentialAttributes;
+import com.intellij.credentialStore.CredentialAttributesKt;
+import com.intellij.credentialStore.Credentials;
+import com.intellij.ide.passwordSafe.PasswordSafe;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.*;
 import com.intellij.openapi.project.Project;
+import de.domjos.ideaMantis.model.Connection;
 import de.domjos.ideaMantis.model.MantisUser;
 import de.domjos.ideaMantis.soap.MantisSoapAPI;
-import de.domjos.ideaMantis.utils.Helper;
-import org.jdom.Element;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
+import java.util.concurrent.atomic.AtomicReference;
+
+@Service(Service.Level.PROJECT)
 @State(
     name = "ideaMantisSettings",
     storages = {
@@ -16,84 +22,76 @@ import org.jetbrains.annotations.Nullable;
         @Storage("$PROJECT_CONFIG_DIR$/ideaMantis.xml")
     }
 )
-public class ConnectionSettings implements PersistentStateComponent<Element> {
-    private String hostName = "";
-    private String userName = "";
-    private String password = "";
+public final class ConnectionSettings implements PersistentStateComponent<Connection> {
     private int reloadTime = 300;
     private boolean fastTrack = false, reload = false;
     private int itemsPerPage = 0;
-    private int projectID = 0;
+    private long projectID = 0L;
 
-    @NotNull
     public static ConnectionSettings getInstance(Project project) {
-        return ServiceManager.getService(project, ConnectionSettings.class);
+        return project.getService(ConnectionSettings.class);
     }
 
-
-    @Nullable
     @Override
-    public Element getState() {
-        Element connection = new Element("connection");
-        connection.setAttribute("hostName", this.hostName);
-        connection.setAttribute("userName", this.userName);
-        Helper.setPassword(this.getPassword(), this.userName);
-        connection.setAttribute("itemsPerPage", String.valueOf(this.itemsPerPage));
-        connection.setAttribute("projectID", String.valueOf(this.getProjectID()));
-        connection.setAttribute("fastTrack", String.valueOf(this.fastTrack));
-        connection.setAttribute("reload", String.valueOf(this.reload));
-        connection.setAttribute("reloadTime", String.valueOf(this.reloadTime));
+    public @NotNull Connection getState() {
+        Connection connection = new Connection();
+        connection.setReload(this.reload);
+        connection.setFastTrack(this.fastTrack);
+        connection.setProjectId(this.projectID);
+        connection.setItemsPerPage(this.itemsPerPage);
+        connection.setReloadTime(this.reloadTime);
         return connection;
     }
 
     @Override
-    public void loadState(Element element) {
-        this.hostName = element.getAttributeValue("hostName");
-        this.userName = element.getAttributeValue("userName");
-        this.password = Helper.getPassword(this.userName);
-        this.itemsPerPage = Integer.parseInt(element.getAttributeValue("itemsPerPage", "-1"));
-        if(element.getAttributeValue("projectID")!=null) {
-            String content = element.getAttributeValue("projectID");
-            if(content.equals("")) {
-                this.setProjectID(0);
-            } else {
-                this.setProjectID(Integer.parseInt(content));
-            }
-        }
-        this.fastTrack = Boolean.parseBoolean(element.getAttributeValue("fastTrack"));
-        this.reload = Boolean.parseBoolean(element.getAttributeValue("reload"));
-        this.reloadTime = Integer.parseInt(element.getAttributeValue("reloadTime"));
+    public void loadState(@NotNull Connection connection) {
+        this.itemsPerPage = connection.getItemsPerPage();
+        this.projectID = connection.getProjectId();
+        this.fastTrack = connection.isFastTrack();
+        this.reload = connection.isReload();
+        this.reloadTime = connection.getReloadTime();
+    }
+
+    @Override
+    public void noStateLoaded() {
+        Connection connection = new Connection();
+        this.reloadTime = connection.getReloadTime();
+        this.fastTrack = connection.isFastTrack();
+        this.reload = connection.isReload();
+        this.itemsPerPage = connection.getItemsPerPage();
+        this.projectID = connection.getProjectId();
+    }
+
+    @Override
+    public void initializeComponent() {
+        PersistentStateComponent.super.initializeComponent();
     }
 
     public String getHostName() {
-        return hostName;
+        return this.getSensitiveData("host");
     }
 
     public void setHostName(String hostName) {
-        this.hostName = hostName;
+        this.setSensitiveData("host", hostName);
     }
 
     public String getUserName() {
-        return userName;
+        return this.getSensitiveData("user");
     }
 
     public void setUserName(String userName) {
-        this.userName = userName;
+        this.setSensitiveData("user", userName);
     }
 
     public String getPassword() {
-        if(password==null) {
-            return "";
-        } else {
-            return password;
-        }
+        return this.getSensitiveData("password");
     }
 
     public void setPassword(String password) {
-        this.password = password;
+        this.setSensitiveData("password", password);
     }
 
-    public int getProjectID() {
+    public long getProjectID() {
         return projectID;
     }
 
@@ -105,7 +103,7 @@ public class ConnectionSettings implements PersistentStateComponent<Element> {
         return this.itemsPerPage;
     }
 
-    public void setProjectID(int projectID) {
+    public void setProjectID(long projectID) {
         this.projectID = projectID;
     }
 
@@ -136,7 +134,37 @@ public class ConnectionSettings implements PersistentStateComponent<Element> {
     public boolean validateSettings() {
         MantisSoapAPI api = new MantisSoapAPI(this);
         MantisUser user = api.testConnection();
-        return user == null || projectID == 0;
+        return user != null && projectID != 0;
+    }
+
+    private CredentialAttributes createCredentialAttributes(String key) {
+        return new CredentialAttributes(
+                CredentialAttributesKt.generateServiceName("ideaMantis", key)
+        );
+    }
+
+    private String getSensitiveData(String key) {
+        try {
+            AtomicReference<String> result = new AtomicReference<>("");
+            ApplicationManager.getApplication().invokeAndWait(() -> {
+                CredentialAttributes attributes = createCredentialAttributes(key);
+                PasswordSafe passwordSafe = PasswordSafe.getInstance();
+                Credentials credentials = passwordSafe.get(attributes);
+                if(credentials != null) {
+                    result.set(credentials.getPasswordAsString());
+                }
+            });
+            return result.get();
+        } catch (Exception ignored) {}
+        return "";
+    }
+
+    private void setSensitiveData(String key, String value) {
+        try {
+            CredentialAttributes attributes = createCredentialAttributes(key);
+            Credentials credentials = new Credentials(key, value);
+            PasswordSafe.getInstance().set(attributes, credentials);
+        } catch (Exception ignored) {}
     }
 }
 

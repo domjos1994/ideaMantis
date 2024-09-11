@@ -15,9 +15,6 @@
                 factoryClass="de.domjos.ideaMantis.ui.IdeaMantisIssues">
         </toolWindow>
 
-        <projectService
-                serviceImplementation="de.domjos.ideaMantis.service.ConnectionSettings"/>
-
         <projectConfigurable
                 id="de.domjos.ideaMantis.ui.IdeaMantisConfigurable"
                 nonDefaultProject="true"

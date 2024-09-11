@@ -3,6 +3,7 @@ package de.domjos.ideaMantis.model;
 import java.util.AbstractMap;
 import java.util.Map;
 
+@SuppressWarnings("unused")
 public class MantisUser {
     private int id;
     private String userName, name, email, password;

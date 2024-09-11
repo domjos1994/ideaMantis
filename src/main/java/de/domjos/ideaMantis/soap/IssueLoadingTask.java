@@ -1,9 +1,9 @@
 package de.domjos.ideaMantis.soap;
 
-import com.intellij.notification.NotificationType;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.Task;
 import de.domjos.ideaMantis.custom.IssueTableCellRenderer;
+import de.domjos.ideaMantis.lang.Lang;
 import de.domjos.ideaMantis.model.MantisIssue;
 import de.domjos.ideaMantis.service.ConnectionSettings;
 import de.domjos.ideaMantis.utils.Helper;
@@ -21,9 +21,10 @@ public class IssueLoadingTask extends Task.Backgroundable {
     private final DefaultTableModel tblIssueModel;
     private final JComboBox<String> cmbFilters;
     private final int page;
+    private final MantisSoapAPI api;
 
     public IssueLoadingTask(ConnectionSettings settings, JTable tblIssues, DefaultTableModel tblIssueModel, JComboBox<String> cmbFilters, int page) {
-        super(Helper.getProject(), "Reload issues...", true);
+        super(Helper.getProject(), Lang.RELOAD_ISSUES, true);
 
         this.settings = settings;
         this.tblIssues = tblIssues;
@@ -31,6 +32,8 @@ public class IssueLoadingTask extends Task.Backgroundable {
         this.cmbFilters = cmbFilters;
         this.page = page;
         this.state = false;
+
+        this.api = new MantisSoapAPI(this.settings);
     }
 
     public void before(Action action) {
@@ -52,8 +55,8 @@ public class IssueLoadingTask extends Task.Backgroundable {
                 this.before.execute();
             }
 
-            if(settings.validateSettings()) {
-                Helper.printNotification("Wrong settings!", "The connection-settings are incorrect!", NotificationType.WARNING);
+            if(!settings.validateSettings()) {
+                Helper.printWrongSettingsMsg();
                 state = false;
                 tblIssues.removeAll();
                 for (int i = tblIssueModel.getRowCount() - 1; i >= 0; i--) {
@@ -68,11 +71,11 @@ public class IssueLoadingTask extends Task.Backgroundable {
                 tblIssues.setModel(tblIssueModel);
                 String filterID = "";
                 if(cmbFilters.getSelectedItem()!=null) {
-                    if(!cmbFilters.getSelectedItem().toString().equals("")) {
+                    if(!cmbFilters.getSelectedItem().toString().isEmpty()) {
                         filterID = cmbFilters.getSelectedItem().toString().split(":")[0].trim();
                     }
                 }
-                List<MantisIssue> mantisIssues = new MantisSoapAPI(settings).getIssues(settings.getProjectID(), page, filterID);
+                List<MantisIssue> mantisIssues = this.api.getIssues(this.page, filterID);
                 progressIndicator.setFraction(0.0);
 
                 double factor = 100.0 / mantisIssues.size();

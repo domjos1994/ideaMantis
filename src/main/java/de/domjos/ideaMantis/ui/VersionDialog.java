@@ -4,6 +4,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.ui.components.JBTextField;
 import com.intellij.util.ui.JBUI;
+import de.domjos.ideaMantis.lang.Lang;
 import de.domjos.ideaMantis.model.MantisVersion;
 import de.domjos.ideaMantis.service.ConnectionSettings;
 import de.domjos.ideaMantis.soap.MantisSoapAPI;
@@ -14,6 +15,7 @@ import java.awt.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+@SuppressWarnings("WriteOnlyObject")
 public class VersionDialog extends DialogWrapper {
     private final MantisSoapAPI api;
     private JBTextField txtName, txtDateOrder;
@@ -22,12 +24,13 @@ public class VersionDialog extends DialogWrapper {
     private JButton cmdDelete;
     private MantisVersion version = new MantisVersion();
 
-    VersionDialog(@Nullable Project project, int project_id) {
+    VersionDialog(@Nullable Project project) {
         super(project);
+        assert project != null;
         this.api = new MantisSoapAPI(ConnectionSettings.getInstance(project));
         this.init();
         cmdDelete.setVisible(version.getId()!=0);
-        this.setTitle("Version-Name");
+        this.setTitle(Lang.DIALOG_VERSION);
         if(this.getButton(this.getOKAction())!=null) {
             JButton button = this.getButton(this.getOKAction());
             if(button != null) {
@@ -37,14 +40,14 @@ public class VersionDialog extends DialogWrapper {
                     version.setDescription(txtDescription.getText());
                     version.setObsolete(chkObsolete.isSelected());
                     version.setReleased(chkReleased.isSelected());
-                    api.addVersion(version, project_id);
+                    api.addVersion(version);
                 });
             }
         }
     }
 
-    VersionDialog(@Nullable Project project, int project_id, MantisVersion version) {
-        this(project, project_id);
+    VersionDialog(@Nullable Project project, MantisVersion version) {
+        this(project);
         this.version = version;
         txtName.setText(version.getName());
         txtDateOrder.setText(version.getDate());
@@ -78,7 +81,7 @@ public class VersionDialog extends DialogWrapper {
         txtName.setPreferredSize(new Dimension(150, 25));
 
         txtDateOrder = new JBTextField();
-        txtDateOrder.setText(new SimpleDateFormat("dd-MM-yyyy hh:mm").format(new Date()));
+        txtDateOrder.setText(new SimpleDateFormat(Lang.DATE_FORMAT).format(new Date()));
         txtDateOrder.setName("txtDateOrder");
         txtDateOrder.setPreferredSize(new Dimension(150, 25));
 
@@ -104,9 +107,9 @@ public class VersionDialog extends DialogWrapper {
             }
         });
 
-        java.awt.Label lblName = new java.awt.Label("Name");
-        java.awt.Label lblDateOrder = new java.awt.Label("Date");
-        java.awt.Label lblDescription = new java.awt.Label("Description");
+        java.awt.Label lblName = new java.awt.Label(Lang.COLUMN_NAME);
+        java.awt.Label lblDateOrder = new java.awt.Label(Lang.COLUMN_DATE);
+        java.awt.Label lblDescription = new java.awt.Label(Lang.COLUMN_DESCRIPTION);
 
         JPanel basicsPanel = new JPanel(new GridBagLayout());
         basicsPanel.add(lblName, labelConstraint);

@@ -3,13 +3,14 @@ package de.domjos.ideaMantis.model;
 import com.intellij.ui.DocumentAdapter;
 import com.intellij.ui.components.*;
 import de.domjos.ideaMantis.utils.PanelCreator;
-import org.assertj.swing.dependency.jsr305.Nonnull;
+import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import java.awt.*;
 import java.util.Arrays;
 
+@SuppressWarnings("unused")
 public class CustomField {
     private int id, typeId, min, max, readAccessID, writeAccessID;
     private String name, typeName, possibleValues, defaultValue, readAccessName, writeAccessName;
@@ -19,21 +20,15 @@ public class CustomField {
     public CustomField() {
         this.id = 0;
         this.typeId = 0;
-        this.min = 0;
-        this.max = 0;
         this.readAccessID = 0;
         this.writeAccessID = 0;
         this.name = "";
-        this.typeName = "";
         this.possibleValues = "";
         this.defaultValue = "";
-        this.readAccessName = "";
-        this.writeAccessName = "";
         this.displayReport = false;
         this.displayUpdate = false;
         this.displayResolved = false;
         this.displayClosed = false;
-        this.requireReport = false;
         this.requireUpdate = false;
         this.requireReport = false;
         this.requireClosed = false;
@@ -266,7 +261,7 @@ public class CustomField {
                 }
                 field.getDocument().addDocumentListener(new DocumentAdapter() {
                     @Override
-                    protected void textChanged(@Nonnull DocumentEvent documentEvent) {
+                    protected void textChanged(@NotNull DocumentEvent documentEvent) {
                         documentEvent.getDocument().addUndoableEditListener(e -> {
                             if(getTypeId()==1) {
                                 if(!field.getText().isEmpty()) {
@@ -362,22 +357,7 @@ public class CustomField {
                 break;
             case 9:
                 if(!this.getPossibleValues().contains("|")) {
-                    JBRadioButton radioButton = new JBRadioButton(this.getPossibleValues());
-                    if(value.isEmpty()) {
-                        if(!this.getDefaultValue().isEmpty()) {
-                            if(this.getPossibleValues().equals(this.getDefaultValue())) {
-                                radioButton.setSelected(true);
-                            }
-                        }
-                    } else {
-                        if(value.contains("|")) {
-                            for(String text : value.split("\\|")) {
-                                if(radioButton.getText().equals(text.trim())) {
-                                    radioButton.setSelected(true);
-                                }
-                            }
-                        }
-                    }
+                    JBRadioButton radioButton = getButton(value);
                     panel.add(radioButton, txtConstraint);
                 } else {
                     JPanel pnlGroup = new JPanel(new GridBagLayout());
@@ -424,6 +404,26 @@ public class CustomField {
                 System.out.println("Not Supported!");
         }
         return panel;
+    }
+
+    private @NotNull JBRadioButton getButton(String value) {
+        JBRadioButton radioButton = new JBRadioButton(this.getPossibleValues());
+        if(value.isEmpty()) {
+            if(!this.getDefaultValue().isEmpty()) {
+                if(this.getPossibleValues().equals(this.getDefaultValue())) {
+                    radioButton.setSelected(true);
+                }
+            }
+        } else {
+            if(value.contains("|")) {
+                for(String text : value.split("\\|")) {
+                    if(radioButton.getText().equals(text.trim())) {
+                        radioButton.setSelected(true);
+                    }
+                }
+            }
+        }
+        return radioButton;
     }
 
     private void selectCheckbox(JBCheckBox checkBox, String value) {

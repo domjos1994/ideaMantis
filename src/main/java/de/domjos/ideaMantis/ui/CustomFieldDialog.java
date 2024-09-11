@@ -2,6 +2,7 @@ package de.domjos.ideaMantis.ui;
 
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
+import de.domjos.ideaMantis.lang.Lang;
 import de.domjos.ideaMantis.model.CustomField;
 import de.domjos.ideaMantis.model.CustomFieldResult;
 import de.domjos.ideaMantis.service.ConnectionSettings;
@@ -21,7 +22,6 @@ import java.util.Objects;
 
 public class CustomFieldDialog extends DialogWrapper {
     private MantisSoapAPI api;
-    private final Project project;
     private final String state;
     private JPanel panel;
     private java.util.List<CustomField> customFieldList = null;
@@ -31,20 +31,19 @@ public class CustomFieldDialog extends DialogWrapper {
     CustomFieldDialog(@Nullable Project project, String state, Map<CustomField, String> customFields) {
         super(project);
         this.resultList = new LinkedList<>();
-        this.project = project;
         this.state = state;
         this.customFields = customFields;
         try {
+            assert project != null;
             this.api = new MantisSoapAPI(ConnectionSettings.getInstance(project));
-            this.setTitle("Fill in Custom Fields");
-            this.setOKButtonText("Finish");
+            this.setTitle(Lang.DIALOG_CUSTOM_HEADER);
+            this.setOKButtonText(Lang.DIALOG_CUSTOM_OK);
             this.init();
             if(this.getButton(this.getOKAction())!=null) {
                 Objects.requireNonNull(this.getButton(this.getOKAction())).addActionListener((event) -> {
                     for(int i = 0; i<=this.panel.getComponentCount()-1; i++) {
-                        if(this.panel.getComponent(i) instanceof JPanel) {
+                        if(this.panel.getComponent(i) instanceof JPanel child) {
                             CustomFieldResult result = new CustomFieldResult();
-                            JPanel child = (JPanel) this.panel.getComponent(i);
                             String name = ((JLabel) child.getComponent(0)).getText();
                             if(name.endsWith("*")) {
                                 name = name.replace("*", "").trim();
@@ -60,12 +59,12 @@ public class CustomFieldDialog extends DialogWrapper {
                                     String value = ((JTextField) child.getComponent(j)).getText();
                                     if(result.getField().getTypeId()==8) {
                                         try {
-                                            DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                                            DateTimeFormatter dtf = DateTimeFormatter.ofPattern(Lang.DATE_ONLY_FORMAT_1);
                                             LocalDate localDate = LocalDate.parse(value, dtf);
                                             result.addResult(String.valueOf(Timestamp.valueOf(localDate.atTime(0,0)).getTime()/1000));
                                         } catch (Exception ex) {
                                             try {
-                                                DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+                                                DateTimeFormatter dtf = DateTimeFormatter.ofPattern(Lang.DATE_ONLY_FORMAT_2);
                                                 LocalDate localDate = LocalDate.parse(value, dtf);
                                                 result.addResult(String.valueOf(Timestamp.valueOf(localDate.atTime(0,0)).getTime()/1000));
                                             } catch (Exception ex2) {
@@ -80,8 +79,7 @@ public class CustomFieldDialog extends DialogWrapper {
                                     String value = ((JTextArea) child.getComponent(j)).getText();
                                     result.addResult(value);
                                 }
-                                if(child.getComponent(j) instanceof JList) {
-                                    JList<?> list = (JList<?>) child.getComponent(j);
+                                if(child.getComponent(j) instanceof JList<?> list) {
                                     if(list.getSelectionMode() == ListSelectionModel.MULTIPLE_INTERVAL_SELECTION) {
                                         for(Object selection : list.getSelectedValuesList()) {
                                             result.addResult((String) selection);
@@ -92,14 +90,12 @@ public class CustomFieldDialog extends DialogWrapper {
                                 }
                                 if(child.getComponent(j) instanceof JPanel) {
                                     for(Component component : ((JPanel)child.getComponent(j)).getComponents()) {
-                                        if(component instanceof JCheckBox) {
-                                            JCheckBox checkBox = (JCheckBox) component;
+                                        if(component instanceof JCheckBox checkBox) {
                                             if(checkBox.isSelected()) {
                                                 result.addResult(checkBox.getText());
                                             }
                                         }
-                                        if(component instanceof JRadioButton) {
-                                            JRadioButton radioButton = (JRadioButton) component;
+                                        if(component instanceof JRadioButton radioButton) {
                                             if(radioButton.isSelected()) {
                                                 result.addResult(radioButton.getText());
                                             }
@@ -131,7 +127,7 @@ public class CustomFieldDialog extends DialogWrapper {
         constraints.weightx = 2.0;
         constraints.weighty = 0.0;
         constraints.gridwidth = GridBagConstraints.REMAINDER;
-        this.customFieldList = api.getCustomFields(ConnectionSettings.getInstance(project).getProjectID(), false);
+        this.customFieldList = api.getCustomFields(false);
         for(CustomField field : customFieldList) {
             String entry = "";
             for(Map.Entry<CustomField, String> valueEntry : this.customFields.entrySet()) {

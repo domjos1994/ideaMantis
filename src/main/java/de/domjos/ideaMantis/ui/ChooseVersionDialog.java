@@ -3,6 +3,7 @@ package de.domjos.ideaMantis.ui;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.openapi.ui.DialogWrapper;
+import de.domjos.ideaMantis.lang.Lang;
 import de.domjos.ideaMantis.model.MantisVersion;
 import de.domjos.ideaMantis.service.ConnectionSettings;
 import de.domjos.ideaMantis.soap.MantisSoapAPI;
@@ -13,20 +14,23 @@ import javax.swing.*;
 import java.awt.*;
 
 public class ChooseVersionDialog extends DialogWrapper {
-    private final Project project;
     private ComboBox<String> cmbVersions;
     public static MantisVersion currentVersion = null;
+    private final MantisSoapAPI api;
 
     public ChooseVersionDialog(@Nullable Project project) {
         super(project);
-        this.project = project;
         this.init();
-        this.setTitle("Version-Name");
+        this.setTitle(Lang.COLUMN_VERSION);
+
+        assert project != null;
+        this.api = new MantisSoapAPI(ConnectionSettings.getInstance(project));
+
         if(this.getButton(this.getOKAction())!=null) {
             JButton button = this.getButton(this.getOKAction());
             if(button != null) {
                 button.addActionListener((event) -> {
-                    for(MantisVersion version : new MantisSoapAPI(ConnectionSettings.getInstance(project)).getVersions(ConnectionSettings.getInstance(project).getProjectID())) {
+                    for(MantisVersion version : this.api.getVersions()) {
                         if(version.getName().equals(cmbVersions.getSelectedItem())) {
                             currentVersion = version;
                             break;
@@ -44,10 +48,10 @@ public class ChooseVersionDialog extends DialogWrapper {
         GridBagConstraints labelConstraint = PanelCreator.getLabelConstraint();
         GridBagConstraints txtConstraint = PanelCreator.getTxtConstraint();
 
-        Label lblVersion = new Label("Fixed in Version");
+        Label lblVersion = new Label(Lang.COLUMN_VERSION_FIXED);
 
         cmbVersions = new ComboBox<>();
-        for(MantisVersion version : new MantisSoapAPI(ConnectionSettings.getInstance(project)).getVersions(ConnectionSettings.getInstance(project).getProjectID())) {
+        for(MantisVersion version : this.api.getVersions()) {
             cmbVersions.addItem(version.getName());
         }
         cmbVersions.addItem("");

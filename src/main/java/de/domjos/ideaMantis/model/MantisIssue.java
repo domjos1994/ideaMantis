@@ -12,7 +12,6 @@ public class MantisIssue {
     private String severity;
     private String status;
     private String summary;
-    private String build;
     private String reproducibility;
     private String tags;
     private String description, steps_to_reproduce, additional_information;
@@ -85,14 +84,6 @@ public class MantisIssue {
 
     public void setSummary(String summary) {
         this.summary = summary;
-    }
-
-    public String getBuild() {
-        return build;
-    }
-
-    public void setBuild(String build) {
-        this.build = build;
     }
 
     public String getReproducibility() {

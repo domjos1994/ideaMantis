@@ -1,7 +1,5 @@
 package de.domjos.ideaMantis.custom;
 
-import de.domjos.ideaMantis.utils.Helper;
-
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicComboBoxRenderer;
 import java.awt.*;
@@ -27,11 +25,7 @@ public class StatusListCellRenderer extends BasicComboBoxRenderer {
             }
         }
         if (c instanceof JLabel) {
-            if (isSelected) {
-                c.setBackground(IssueTableCellRenderer.getColorOfStatus(item));
-            } else {
-                c.setBackground(IssueTableCellRenderer.getColorOfStatus(item));
-            }
+            c.setBackground(IssueTableCellRenderer.getColorOfStatus(item));
         } else {
             c.setBackground(IssueTableCellRenderer.getColorOfStatus(item));
             c = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);

@@ -1,5 +1,6 @@
 package de.domjos.ideaMantis.editor;
 
+import com.intellij.openapi.actionSystem.ActionUpdateThread;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
@@ -7,13 +8,19 @@ import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import de.domjos.ideaMantis.utils.Helper;
-import org.assertj.swing.dependency.jsr305.Nonnull;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 
 public class WholeFileAsBugEditorAction extends AnAction {
+
     @Override
-    public void update(@Nonnull final AnActionEvent e) {
+    public @NotNull ActionUpdateThread getActionUpdateThread() {
+        return ActionUpdateThread.BGT;
+    }
+
+    @Override
+    public void update(final @NotNull AnActionEvent e) {
         super.update(e);
         final Project project = e.getData(CommonDataKeys.PROJECT);
         final Editor editor = e.getData(CommonDataKeys.EDITOR);

@@ -1,5 +1,7 @@
 package de.domjos.ideaMantis.custom;
 
+import de.domjos.ideaMantis.utils.Helper;
+
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -36,7 +38,7 @@ public class AutoComplete implements DocumentListener {
                 startPos = textField.getText().lastIndexOf(",");
             }
         } catch (BadLocationException e) {
-            e.printStackTrace();
+            Helper.printException(e);
         }
 
         // Find where the word starts

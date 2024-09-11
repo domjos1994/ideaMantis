@@ -3,6 +3,7 @@ package de.domjos.ideaMantis.model;
 /**
  * Created by Dominic Joas on 19.05.2017.
  */
+@SuppressWarnings("unused")
 public class MantisFilter {
     private int id;
     private String name;

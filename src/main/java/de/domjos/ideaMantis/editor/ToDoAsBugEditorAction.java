@@ -1,5 +1,6 @@
 package de.domjos.ideaMantis.editor;
 
+import com.intellij.openapi.actionSystem.ActionUpdateThread;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
@@ -7,12 +8,18 @@ import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 
 public class ToDoAsBugEditorAction extends AnAction {
     private Editor editor;
     private String content, originalContent;
+
+    @Override
+    public @NotNull ActionUpdateThread getActionUpdateThread() {
+        return ActionUpdateThread.BGT;
+    }
 
     @Override
     public void update(final AnActionEvent e) {
@@ -57,6 +64,11 @@ public class ToDoAsBugEditorAction extends AnAction {
             }
         });
 
+        String text = getText(pathToDocument, project);
+        WriteCommandAction.runWriteCommandAction(project, () -> editor.getDocument().setText(text));
+    }
+
+    private @NotNull String getText(String[] pathToDocument, Project project) {
         MarkedTextAsBugDialog markedTextAsBugDialog;
         if(new File(pathToDocument[0]).exists()) {
             markedTextAsBugDialog = new MarkedTextAsBugDialog(project, this.content, pathToDocument[0]);
@@ -69,7 +81,6 @@ public class ToDoAsBugEditorAction extends AnAction {
         String sub = this.originalContent.substring(0, index + 4);
         String newContent = sub + " Mantis#" + id + " " + this.originalContent.replace(sub, "");
 
-        String text = editor.getDocument().getText().replace(this.originalContent, newContent);
-        WriteCommandAction.runWriteCommandAction(project, () -> editor.getDocument().setText(text));
+        return editor.getDocument().getText().replace(this.originalContent, newContent);
     }
 }

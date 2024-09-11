@@ -1,5 +1,6 @@
 package de.domjos.ideaMantis.editor;
 
+import com.intellij.openapi.actionSystem.ActionUpdateThread;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
@@ -9,10 +10,17 @@ import com.intellij.openapi.editor.SelectionModel;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
 import de.domjos.ideaMantis.utils.Helper;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 
 public class MarkedTextAsBugEditorAction extends AnAction {
+
+    @Override
+    public @NotNull ActionUpdateThread getActionUpdateThread() {
+        return ActionUpdateThread.BGT;
+    }
+
     @Override
     public void update(final AnActionEvent e) {
         final Project project = e.getData(CommonDataKeys.PROJECT);
