@@ -37,7 +37,7 @@
                 nonDefaultProject="true"
                 groupId="tools"
                 instance="de.domjos.ideaMantis.ui.IdeaMantisConfigurable"
-                displayName=""/>
+                displayName="IdeaMantis"/>
     </extensions>
 
     <actions>

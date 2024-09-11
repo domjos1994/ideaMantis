@@ -44,6 +44,13 @@ public final class ConnectionSettings implements PersistentStateComponent<Connec
     private boolean fastTrack = false, reload = false;
     private int itemsPerPage = 0;
     private long projectID = 0L;
+    private String colorNew;
+    private String colorFeedback;
+    private String colorAcknowledged;
+    private String colorConfirmed;
+    private String colorAssigned;
+    private String colorResolved;
+    private String colorClosed;
 
     public static ConnectionSettings getInstance(Project project) {
         return project.getService(ConnectionSettings.class);
@@ -57,6 +64,13 @@ public final class ConnectionSettings implements PersistentStateComponent<Connec
         connection.setProjectId(this.projectID);
         connection.setItemsPerPage(this.itemsPerPage);
         connection.setReloadTime(this.reloadTime);
+        connection.setColorNew(this.colorNew);
+        connection.setColorFeedback(this.colorFeedback);
+        connection.setColorAcknowledged(this.colorAcknowledged);
+        connection.setColorConfirmed(this.colorConfirmed);
+        connection.setColorAssigned(this.colorAssigned);
+        connection.setColorResolved(this.colorResolved);
+        connection.setColorClosed(this.colorClosed);
         return connection;
     }
 
@@ -67,6 +81,13 @@ public final class ConnectionSettings implements PersistentStateComponent<Connec
         this.fastTrack = connection.isFastTrack();
         this.reload = connection.isReload();
         this.reloadTime = connection.getReloadTime();
+        this.colorNew = connection.getColorNew();
+        this.colorFeedback = connection.getColorFeedback();
+        this.colorAcknowledged = connection.getColorAcknowledged();
+        this.colorConfirmed = connection.getColorConfirmed();
+        this.colorAssigned = connection.getColorAssigned();
+        this.colorResolved = connection.getColorResolved();
+        this.colorClosed = connection.getColorClosed();
     }
 
     @Override
@@ -77,6 +98,13 @@ public final class ConnectionSettings implements PersistentStateComponent<Connec
         this.reload = connection.isReload();
         this.itemsPerPage = connection.getItemsPerPage();
         this.projectID = connection.getProjectId();
+        this.colorNew = connection.getColorNew();
+        this.colorFeedback = connection.getColorFeedback();
+        this.colorAcknowledged = connection.getColorAcknowledged();
+        this.colorConfirmed = connection.getColorConfirmed();
+        this.colorAssigned = connection.getColorAssigned();
+        this.colorResolved = connection.getColorResolved();
+        this.colorClosed = connection.getColorClosed();
     }
 
     @Override
@@ -146,6 +174,62 @@ public final class ConnectionSettings implements PersistentStateComponent<Connec
 
     public void setReloadTime(int reloadTime) {
         this.reloadTime = reloadTime;
+    }
+
+    public String getColorNew() {
+        return this.colorNew;
+    }
+
+    public void setColorNew(String colorNew) {
+        this.colorNew = colorNew;
+    }
+
+    public String getColorFeedback() {
+        return this.colorFeedback;
+    }
+
+    public void setColorFeedback(String colorFeedback) {
+        this.colorFeedback = colorFeedback;
+    }
+
+    public String getColorAcknowledged() {
+        return this.colorAcknowledged;
+    }
+
+    public void setColorAcknowledged(String colorAcknowledged) {
+        this.colorAcknowledged = colorAcknowledged;
+    }
+
+    public String getColorConfirmed() {
+        return this.colorConfirmed;
+    }
+
+    public void setColorConfirmed(String colorConfirmed) {
+        this.colorConfirmed = colorConfirmed;
+    }
+
+    public String getColorAssigned() {
+        return this.colorAssigned;
+    }
+
+    public void setColorAssigned(String colorAssigned) {
+        this.colorAssigned = colorAssigned;
+    }
+
+    public String getColorResolved() {
+        return this.colorResolved;
+    }
+
+    public void setColorResolved(String colorResolved) {
+        this.colorResolved = colorResolved;
+    }
+
+    public String getColorClosed() {
+        return this.colorClosed;
+    }
+
+    public void setColorClosed(String colorClosed) {
+        this.colorClosed = colorClosed;
     }
 
     public boolean validateSettings() {

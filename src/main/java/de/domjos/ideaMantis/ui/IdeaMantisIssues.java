@@ -156,7 +156,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                     }
                     tblIssues.setModel(tblIssueModel);
                     Helper.setSizes(tblIssues);
-                    tblIssues.setDefaultRenderer(Object.class, new IssueTableCellRenderer());
+                    tblIssues.setDefaultRenderer(Object.class, new IssueTableCellRenderer(settings));
                     cmdIssueNew.setEnabled(true);
                     tblIssues.updateUI();
                 }
@@ -209,7 +209,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
         this.cmdIssueSave.setPreferredSize(new Dimension(30, 20));
         this.cmdIssueAbort.setPreferredSize(new Dimension(30, 20));
         this.cmdIssueResolve.setPreferredSize(new Dimension(30, 20));
-        this.cmbIssueStatus.setRenderer(new StatusListCellRenderer(this.cmbIssueStatus.getRenderer()));
+        this.cmbIssueStatus.setRenderer(new StatusListCellRenderer(this.cmbIssueStatus.getRenderer(), settings));
 
         JPopupMenu popupMenu = getMenu();
         this.tblIssues.setComponentPopupMenu(popupMenu);
@@ -1143,7 +1143,7 @@ public class IdeaMantisIssues implements ToolWindowFactory {
                 }
             }
             this.tblIssues.setRowSorter(rowSorter);
-            tblIssues.setDefaultRenderer(Object.class, new IssueTableCellRenderer());
+            tblIssues.setDefaultRenderer(Object.class, new IssueTableCellRenderer(settings));
             tblIssues.updateUI();
         });
     }

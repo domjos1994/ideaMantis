@@ -101,7 +101,7 @@ public class IssueLoadingTask extends Task.Backgroundable {
                     progressIndicator.setFraction(progressIndicator.getFraction() + factor);
                 }
                 tblIssues.setModel(tblIssueModel);
-                tblIssues.setDefaultRenderer(Object.class, new IssueTableCellRenderer());
+                tblIssues.setDefaultRenderer(Object.class, new IssueTableCellRenderer(settings));
             }
         } catch (Exception ex) {
             this.setCancelText(ex.getMessage());

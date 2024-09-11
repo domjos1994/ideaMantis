@@ -17,6 +17,8 @@
 
 package de.domjos.ideaMantis.custom;
 
+import de.domjos.ideaMantis.service.ConnectionSettings;
+
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicComboBoxRenderer;
 import java.awt.*;
@@ -24,9 +26,11 @@ import java.awt.*;
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class StatusListCellRenderer extends BasicComboBoxRenderer {
     private final ListCellRenderer defaultRenderer;
+    private final ConnectionSettings settings;
 
-    public StatusListCellRenderer(ListCellRenderer defaultRenderer) {
+    public StatusListCellRenderer(ListCellRenderer defaultRenderer, ConnectionSettings settings) {
         this.defaultRenderer = defaultRenderer;
+        this.settings = settings;
     }
 
 
@@ -42,9 +46,9 @@ public class StatusListCellRenderer extends BasicComboBoxRenderer {
             }
         }
         if (c instanceof JLabel) {
-            c.setBackground(IssueTableCellRenderer.getColorOfStatus(item));
+            c.setBackground(IssueTableCellRenderer.getColorOfStatus(settings, item));
         } else {
-            c.setBackground(IssueTableCellRenderer.getColorOfStatus(item));
+            c.setBackground(IssueTableCellRenderer.getColorOfStatus(settings, item));
             c = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
         }
         return c;

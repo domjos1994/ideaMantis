@@ -28,6 +28,7 @@ import com.intellij.ui.IdeBorderFactory;
 import com.intellij.ui.JBColor;
 import com.intellij.ui.components.*;
 import com.intellij.util.ui.UIUtil;
+import de.domjos.ideaMantis.custom.ColorPickerWithDefault;
 import de.domjos.ideaMantis.lang.Lang;
 import de.domjos.ideaMantis.utils.PanelCreator;
 import de.domjos.ideaMantis.model.MantisProject;
@@ -50,6 +51,7 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
     private JBCheckBox chkProjectEnabled, chkFastTrackEnabled, chkReloadAutomatically;
     private JBLabel lblConnectionState;
     private JButton cmdTestConnection, cmdCreateNewProject;
+    private ColorPickerWithDefault newCP, feedbackCP, acknowledgedCP, confirmedCP, assignedCP, resolvedCP, closedCP;
     private JBPanelWithEmptyText newProjectPanel, projectPanel;
     private ComboBox<String> cmbProjects, cmbProjectViewState;
     private int projectID = 0;
@@ -119,10 +121,6 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
         JBLabel lblProjectDescription = new JBLabel(Lang.COLUMN_DESCRIPTION);
         JBLabel lblProjectFastTrack = new JBLabel(Lang.SETTINGS_FAST_TRACK_DESCR);
         JBLabel lblProjectViewState = new JBLabel(Lang.COLUMN_STATUS);
-
-
-
-
 
         this.changeConnectionLabel(null);
 
@@ -230,6 +228,24 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
         this.newProjectPanel.add(cmdProjectAdd, PanelCreator.getCustomConstraint(4, 0, 1.0f, 2));
         this.newProjectPanel.setVisible(false);
 
+        JBPanelWithEmptyText colorPanel = new JBPanelWithEmptyText(new GridBagLayout());
+        colorPanel.setBorder(IdeBorderFactory.createTitledBorder(Lang.SETTINGS_COLORS));
+
+        this.newCP = new ColorPickerWithDefault(Lang.SETTINGS_COLORS_NEW, Lang.SETTINGS_COLORS_NEW_DEFAULT, Lang.SETTINGS_COLORS_NEW_DEFAULT);
+        this.feedbackCP = new ColorPickerWithDefault(Lang.SETTINGS_COLORS_FEEDBACK, Lang.SETTINGS_COLORS_FEEDBACK_DEFAULT, Lang.SETTINGS_COLORS_FEEDBACK_DEFAULT);
+        this.acknowledgedCP = new ColorPickerWithDefault(Lang.SETTINGS_COLORS_ACKNOWLEDGED, Lang.SETTINGS_COLORS_ACKNOWLEDGED_DEFAULT, Lang.SETTINGS_COLORS_ACKNOWLEDGED_DEFAULT);
+        this.confirmedCP = new ColorPickerWithDefault(Lang.SETTINGS_COLORS_CONFIRMED, Lang.SETTINGS_COLORS_CONFIRMED_DEFAULT, Lang.SETTINGS_COLORS_CONFIRMED_DEFAULT);
+        this.assignedCP = new ColorPickerWithDefault(Lang.SETTINGS_COLORS_ASSIGNED, Lang.SETTINGS_COLORS_ASSIGNED_DEFAULT, Lang.SETTINGS_COLORS_ASSIGNED_DEFAULT);
+        this.resolvedCP = new ColorPickerWithDefault(Lang.SETTINGS_COLORS_RESOLVED, Lang.SETTINGS_COLORS_RESOLVED_DEFAULT, Lang.SETTINGS_COLORS_RESOLVED_DEFAULT);
+        this.closedCP = new ColorPickerWithDefault(Lang.SETTINGS_COLORS_CLOSED, Lang.SETTINGS_COLORS_CLOSED_DEFAULT, Lang.SETTINGS_COLORS_CLOSED_DEFAULT);
+        colorPanel.add(this.newCP, PanelCreator.getCustomConstraint(0, 0, 1.0f, -1));
+        colorPanel.add(this.feedbackCP, PanelCreator.getCustomConstraint(1, 0, 1.0f, -1));
+        colorPanel.add(this.acknowledgedCP, PanelCreator.getCustomConstraint(2, 0, 1.0f, -1));
+        colorPanel.add(this.confirmedCP, PanelCreator.getCustomConstraint(3, 0, 1.0f, -1));
+        colorPanel.add(this.assignedCP, PanelCreator.getCustomConstraint(4, 0, 1.0f, -1));
+        colorPanel.add(this.resolvedCP, PanelCreator.getCustomConstraint(5, 0, 1.0f, -1));
+        colorPanel.add(this.closedCP, PanelCreator.getCustomConstraint(6, 0, 1.0f, -1));
+
         cmdProjectAdd.addActionListener(e -> {
             String oldSettings = this.temporarilyChangeSettings();
 
@@ -260,7 +276,7 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
         });
         newProjectPanel.setBorder(IdeBorderFactory.createTitledBorder(Lang.SETTINGS_PROJECT_NEW));
 
-        cmdCreateNewProject.addActionListener(e -> newProjectPanel.setVisible(true));
+        cmdCreateNewProject.addActionListener(e -> newProjectPanel.setVisible(!newProjectPanel.isVisible()));
 
         JPanel root = new JPanel(new GridBagLayout());
         GridBagConstraints constraints = PanelCreator.getRootConstraint();
@@ -270,6 +286,8 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
         root.add(projectPanel,constraints);
         constraints.weighty = 2.0;
         root.add(newProjectPanel,constraints);
+        constraints.weighty = 2.0;
+        root.add(colorPanel, constraints);
         this.component = root;
         return root;
     }
@@ -298,7 +316,14 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
                 (this.settings.getProjectID()!=projectID && projectID!=0) ||
                 !this.settings.isFastTrack()==chkFastTrackEnabled.isSelected() ||
                 !this.settings.isReload()==chkReloadAutomatically.isSelected() ||
-                !String.valueOf(this.settings.getReloadTime()).equals(txtReloadTime.getText());
+                !String.valueOf(this.settings.getReloadTime()).equals(txtReloadTime.getText()) ||
+                !this.settings.getColorNew().equals(this.newCP.getColor()) ||
+                !this.settings.getColorFeedback().equals(this.feedbackCP.getColor()) ||
+                !this.settings.getColorAcknowledged().equals(this.acknowledgedCP.getColor()) ||
+                !this.settings.getColorConfirmed().equals(this.confirmedCP.getColor()) ||
+                !this.settings.getColorAssigned().equals(this.assignedCP.getColor()) ||
+                !this.settings.getColorResolved().equals(this.resolvedCP.getColor()) ||
+                !this.settings.getColorClosed().equals(this.closedCP.getColor());
         } else {
             return false;
         }
@@ -322,6 +347,13 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
         txtReloadTime.setEnabled(chkReloadAutomatically.isSelected());
         txtReloadTime.setText(String.valueOf(this.settings.getReloadTime()));
         txtIssuesPerPage.setText(String.valueOf(this.settings.getItemsPerPage()));
+        newCP.setColor(this.settings.getColorNew());
+        feedbackCP.setColor(this.settings.getColorFeedback());
+        acknowledgedCP.setColor(this.settings.getColorAcknowledged());
+        confirmedCP.setColor(this.settings.getColorConfirmed());
+        assignedCP.setColor(this.settings.getColorAssigned());
+        resolvedCP.setColor(this.settings.getColorResolved());
+        closedCP.setColor(this.settings.getColorClosed());
         cmdTestConnection.doClick();
         for(int i = 0; i<=cmbProjects.getItemCount()-1; i++) {
             if(Integer.parseInt(cmbProjects.getItemAt(i).split(":")[0])==this.settings.getProjectID()) {
@@ -341,6 +373,13 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
         UIUtil.dispose(chkFastTrackEnabled);
         UIUtil.dispose(chkReloadAutomatically);
         UIUtil.dispose(txtReloadTime);
+        UIUtil.dispose(newCP);
+        UIUtil.dispose(feedbackCP);
+        UIUtil.dispose(acknowledgedCP);
+        UIUtil.dispose(confirmedCP);
+        UIUtil.dispose(assignedCP);
+        UIUtil.dispose(resolvedCP);
+        UIUtil.dispose(closedCP);
     }
 
     private boolean changeConnectionLabel(MantisUser user) {
@@ -416,6 +455,13 @@ public class IdeaMantisConfigurable implements SearchableConfigurable {
                     Helper.reloadToolWindow(Lang.RELOAD_COMBO_BOXES);
                     settings.setFastTrack(chkFastTrackEnabled.isSelected());
                     settings.setReload(chkReloadAutomatically.isSelected());
+                    settings.setColorNew(newCP.getColor());
+                    settings.setColorFeedback(feedbackCP.getColor());
+                    settings.setColorAcknowledged(acknowledgedCP.getColor());
+                    settings.setColorConfirmed(confirmedCP.getColor());
+                    settings.setColorAssigned(assignedCP.getColor());
+                    settings.setColorResolved(resolvedCP.getColor());
+                    settings.setColorClosed(closedCP.getColor());
 
                     int reloadTime;
                     try {

@@ -18,14 +18,18 @@
 package de.domjos.ideaMantis.custom;
 
 import com.intellij.ui.JBColor;
+import de.domjos.ideaMantis.service.ConnectionSettings;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
 
 public class IssueTableCellRenderer extends DefaultTableCellRenderer {
+    private final ConnectionSettings settings;
 
-    public IssueTableCellRenderer() {
+    public IssueTableCellRenderer(ConnectionSettings settings) {
         super();
+        this.settings = settings;
     }
 
     @Override
@@ -33,14 +37,14 @@ public class IssueTableCellRenderer extends DefaultTableCellRenderer {
         Component current = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
         if(column == 3) {
             String status = table.getValueAt(row,2).toString().trim();
-            current.setBackground(getColorOfStatus(status));
+            current.setBackground(getColorOfStatus(settings, status));
         } else {
             current.setBackground(null);
         }
         return current;
     }
 
-    public static Color getColorOfStatus(String status) {
+    public static Color getColorOfStatus(ConnectionSettings settings, String status) {
         try {
             if(status != null) {
                 if(!status.trim().isEmpty()) {
@@ -48,19 +52,19 @@ public class IssueTableCellRenderer extends DefaultTableCellRenderer {
 
                     switch (status) {
                         case "new":
-                            return Color.decode("#fcbdbd".toUpperCase());
+                            return Color.decode(settings.getColorNew().toUpperCase());
                         case "feedback":
-                            return Color.decode("#e3b7eb".toUpperCase());
+                            return Color.decode(settings.getColorFeedback().toUpperCase());
                         case "acknowledged":
-                            return Color.decode("#ffcd85".toUpperCase());
+                            return Color.decode(settings.getColorAcknowledged().toUpperCase());
                         case "confirmed":
-                            return Color.decode("#fff494".toUpperCase());
+                            return Color.decode(settings.getColorConfirmed().toUpperCase());
                         case "assigned":
-                            return Color.decode("#c2dfff".toUpperCase());
+                            return Color.decode(settings.getColorAssigned().toUpperCase());
                         case "resolved":
-                            return Color.decode("#d2f5b0".toUpperCase());
+                            return Color.decode(settings.getColorResolved().toUpperCase());
                         case "closed":
-                            return Color.decode("#c9ccc4".toUpperCase());
+                            return Color.decode(settings.getColorClosed().toUpperCase());
                     }
                 }
             }

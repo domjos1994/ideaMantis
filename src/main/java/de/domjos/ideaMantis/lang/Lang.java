@@ -65,6 +65,21 @@ public class Lang {
     public static final String SETTINGS_PAGE = "Issues per page (-1 for all)";
     public static final String SETTINGS_RELOAD_HEADER = "Time (in s)";
     public static final String SETTINGS_ENABLED = "Enabled";
+    public static final String SETTINGS_COLORS = "Colors";
+    public static final String SETTINGS_COLORS_NEW = "New";
+    public static final String SETTINGS_COLORS_NEW_DEFAULT = "#fcbdbd";
+    public static final String SETTINGS_COLORS_FEEDBACK = "Feedback";
+    public static final String SETTINGS_COLORS_FEEDBACK_DEFAULT = "#e3b7eb";
+    public static final String SETTINGS_COLORS_ACKNOWLEDGED = "Acknowledged";
+    public static final String SETTINGS_COLORS_ACKNOWLEDGED_DEFAULT = "#ffcd85";
+    public static final String SETTINGS_COLORS_CONFIRMED = "Confirmed";
+    public static final String SETTINGS_COLORS_CONFIRMED_DEFAULT = "#fff494";
+    public static final String SETTINGS_COLORS_ASSIGNED = "Assigned";
+    public static final String SETTINGS_COLORS_ASSIGNED_DEFAULT = "#c2dfff";
+    public static final String SETTINGS_COLORS_RESOLVED = "Resolved";
+    public static final String SETTINGS_COLORS_RESOLVED_DEFAULT = "#d2f5b0";
+    public static final String SETTINGS_COLORS_CLOSED = "Closed";
+    public static final String SETTINGS_COLORS_CLOSED_DEFAULT = "#c9ccc4";
 
     public static final String CHANGELOG_HEADER = "Resolved Bugs in version";
 
@@ -114,4 +129,6 @@ public class Lang {
     public static final String ERROR_HEADER = "Exception";
     public static final String ERROR_DELETE = "Can't delete %s!";
     public static final String ERROR_UPDATE = "Can't add or update %s!";
+
+    public static final String RESET_TO_DEFAULT = "Reset to default!";
 }
