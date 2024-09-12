@@ -33,9 +33,13 @@ intellijPlatform {
     pluginConfiguration {
         id = 'de.domjos.ideaMantis'
         name = 'IdeaMantis'
-        version = '2.2'
+        version = '3.0'
         description =  'IntelliJ-Idea Plugin to create, edit and delete Issues from Mantis BugTracker!'
         changeNotes =  """
+            Version 3.0<br>
+            - Improve Compatibility
+            - Improve GUI
+            - Change Colors in Settings
             Version 2.1<br>
             - solve bugs<br>
             - rename ToolWindow<br>
@@ -52,7 +56,7 @@ intellijPlatform {
         """
 
         ideaVersion {
-            sinceBuild =  '241'
+            sinceBuild =  '242'
             untilBuild =  '242.*'
         }
 
